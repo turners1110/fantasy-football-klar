@@ -143,6 +143,38 @@ edit the constants and re-run rather than treating them as fixed:
    as they're announced (well before the "locks one week before auction"
    deadline).
 
+## Known limitation: no multi-year salary history
+
+`data/historical_salaries_2025_raw.csv` only covers 2025 — there's no 2023
+or 2024 record. That means the model can't distinguish a player who was
+freshly drafted at, say, $25 in 2025 from one who's been kept 2-3 years
+running and stacked up to $25 via repeated +$10 bumps (e.g. $5 → $15 →
+$25). This matters for judgment calls (a stacked keeper is closer to its
+real market ceiling than a fresh $25 price suggests) but **not** for the
+keeper math itself: `keepers.py` always bumps off *last year's actual paid
+salary*, so any prior stacking is already baked into `salary_2025` and
+compounds correctly without needing to know the full history. If 2023/2024
+salary and keeper records ever turn up, they'd sharpen this distinction —
+until then, treat any $15–$45 anchor as ambiguous between "real 2025 market
+price" and "multi-year keeper stack."
+
+## Reading the multi-model comparison
+
+`build_fantasypros_valuations.py` and `compare_valuation_models.py` produce
+`output/model_comparison_all.csv` with up to four prices per player:
+
+- `price_yahoo_forward`, `price_yahoo_actuals_2025` — **the real models.**
+  Both are built on this league's actual budget, actual salary history, and
+  the keeper-driven inflation multiplier. Bid off these.
+- `price_fp_rank_curve_REFERENCE_ONLY`, `price_fp_vbd_position_rank_REFERENCE_ONLY`
+  — FantasyPros consensus rank, rescaled to this league's total budget but
+  **not** adjusted for keeper-driven scarcity. A standard/generic league has
+  no returning rosters and no $10/$5 keeper bump inflating the market the
+  way this one does, so these two columns will systematically undervalue
+  the players this league's keeper structure makes scarce. Useful for
+  spotting general consensus/tier patterns — never use them as a bid
+  target.
+
 ## Layout
 
 ```

@@ -1,132 +1,460 @@
 player,position,nfl_team,projected_points,VBD_score,suggested_auction_price,historical_salary_if_known,notes
-Josh Jacobs,RB,,,,99.0,89.0,
-Alvin Kamara,RB,,,,98.0,88.0,
-DeVonta Smith,WR,,,,95.0,85.0,
-Terry McLaurin,WR,,,,93.0,83.0,
-James Cook,RB,,,,88.0,79.0,
-Jaylen Waddle,WR,,,,86.0,77.0,
-Bucky Irving,RB,,,,86.0,77.0,
-DJ Moore,WR,,,,84.0,75.0,
-Tee Higgins,WR,,,,80.0,72.0,
-RJ Harvey,RB,,,,78.0,70.0,
-Tony Pollard,RB,,,,78.0,70.0,
-Matthew Golden,WR,,,,78.0,70.0,
-Joe Burrow,QB,,,,77.0,69.0,
-Isiah Pacheco,RB,,,,74.0,66.0,
-Aaron Jones Sr,RB,,,,74.0,66.0,
-George Kittle,TE,,,,71.0,64.0,
-Josh Allen,QB,,,,71.0,64.0,
-Lamar Jackson,QB,,,,70.0,63.0,
-James Conner,RB,,,,66.0,59.0,
-Ladd McConkey,WR,,,,64.0,57.0,
-Jalen Hurts,QB,,,,64.0,57.0,
-Rashee Rice,WR,,,,61.0,55.0,
-Cooper Kupp,WR,,,,61.0,55.0,
-Jaylen Warren,RB,,,,60.0,54.0,
-Khalil Shakir,WR,,,,59.0,53.0,
-Deebo Samuel,WR,,,,59.0,53.0,
-TJ Hockenson,TE,,,,54.0,48.0,
-Bill Croskey-Merritt,RB,,,,51.0,46.0,
-Jordan Mason,RB,,,,48.0,43.0,
-Chris Godwin Jr,WR,,,,46.0,41.0,
-Jonathan Taylor,RB,,,,46.0,41.0,
-Davante Adams,WR,,,,46.0,41.0,
-Travis Etienne,RB,,,,43.0,39.0,
-Nick Chubb,RB,,,,41.0,37.0,
-CeeDee Lamb,WR,,,,40.0,36.0,tagged 2025
-Trey Benson,RB,,,,12.0,11.0,
-Jajuan Jennings,WR,,,,12.0,11.0,
-Baker Mayfield,QB,,,,12.0,11.0,
-Caleb Williams,QB,,,,12.0,11.0,
-Xavier Worthy,WR,,,,12.0,11.0,
-AD Mitchell,WR,,,,12.0,11.0,
-Tyrone Tracy Jr,RB,,,,12.0,11.0,
-Tucker Kraft,TE,,,,12.0,11.0,
-Jayden Higgins,WR,,,,11.0,10.0,
-Rashid Shaheed,WR,,,,11.0,10.0,
-Najee Harris,RB,,,,9.0,8.0,
-Dak Prescott,QB,,,,9.0,8.0,
-Pat Bryant,WR,,,,8.0,7.0,
-Kyle Pitts Sr,TE,,,,7.0,6.0,
-Jake Ferguson,TE,,,,7.0,6.0,
-Brian Thomas Jr,WR,,,,7.0,6.0,
-Dalton Kincaid,TE,,,,7.0,6.0,
-Brock Bowers,TE,,,,7.0,6.0,
-Cedric Tillman,WR,,,,6.0,5.0,
-Brock Purdy,QB,,,,6.0,5.0,
-Jaydon Blue,RB,,,,4.0,4.0,
-Justin Herbert,QB,,,,4.0,4.0,
-Jalen Coker,WR,,,,3.0,3.0,
-Tyjae Spears,RB,,,,3.0,3.0,
-Rico Dowdle,RB,,,,3.0,3.0,
-Hunter Henry,TE,,,,2.0,2.0,
+James Cook,RB,,,,78.0,79.0,
+Aaron Jones Sr,RB,,,,65.0,66.0,
+Josh Jacobs,RB,,189.35,150.70999999999998,53.0,89.0,
+Deebo Samuel,WR,,,,52.0,53.0,
+Bucky Irving,RB,,175.8,137.16000000000003,47.0,77.0,
+DeVonta Smith,WR,,189.84,112.72,47.0,85.0,
+TJ Hockenson,TE,,,,47.0,48.0,
+Bill Croskey-Merritt,RB,,,,45.0,46.0,
+Terry McLaurin,WR,,173.93,96.81,44.0,83.0,
+Jaylen Waddle,WR,,177.9,100.78,42.0,77.0,
+Jonathan Taylor,RB,,256.35,217.71000000000004,42.0,41.0,
+Tee Higgins,WR,,181.9,104.78,41.0,72.0,
+Chris Godwin Jr,WR,,,,40.0,41.0,
+Tony Pollard,RB,,143.2,104.55999999999999,40.0,70.0,
+Travis Etienne,RB,,,,39.0,39.0,
+DJ Moore,WR,,154.17,77.04999999999998,39.0,75.0,
+RJ Harvey,RB,,136.65,98.01,39.0,70.0,
+Alvin Kamara,RB,,68.7,30.060000000000002,38.0,88.0,
+Nick Chubb,RB,,,,37.0,37.0,
+Rashee Rice,WR,,197.11,119.99000000000001,36.0,55.0,
+Jaylen Warren,RB,,162.0,123.36,36.0,54.0,
+AJ Brown,WR,,,,36.0,36.0,
+Matthew Golden,WR,,127.74,50.61999999999999,34.0,70.0,
+Josh Allen,QB,,328.82,72.5,34.0,64.0,
+Ladd McConkey,WR,,165.85,88.72999999999999,33.0,57.0,
+Jahmyr Gibbs,RB,DET,296.35,257.71000000000004,31.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #2, tier 1"
+Bijan Robinson,RB,ATL,295.2,256.56,31.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #4, tier 1"
+Joe Burrow,QB,,282.7,26.379999999999995,30.0,69.0,
+Isiah Pacheco,RB,,73.93,35.290000000000006,30.0,66.0,
+George Kittle,TE,,130.46,32.010000000000005,29.0,64.0,
+Lamar Jackson,QB,,289.92,33.60000000000002,29.0,63.0,
+Jordan Mason,RB,,137.2,98.55999999999999,29.0,43.0,
+Jalen Hurts,QB,,297.46,41.139999999999986,27.0,57.0,
+Christian McCaffrey,RB,SF,265.35,226.71000000000004,27.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #8, tier 2"
+Khalil Shakir,WR,,122.83,45.709999999999994,26.0,53.0,
+Davante Adams,WR,,161.35,84.22999999999999,26.0,41.0,
+James Conner,RB,,42.62,3.979999999999997,24.0,59.0,
+De'Von Achane,RB,MIA,242.2,203.56,24.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #20, tier 3"
+Ja'Marr Chase,WR,CIN,266.33,189.20999999999998,23.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #1, tier 1"
+Derrick Henry,RB,BAL,227.4,188.76,23.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #37, tier 5"
+Chase Brown,RB,CIN,227.25,188.61,23.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #15, tier 3"
+Cooper Kupp,WR,,69.66,0.0,22.0,55.0,
+Saquon Barkley,RB,PHI,222.8,184.16000000000003,22.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #21, tier 4"
+Jaxon Smith-Njigba,WR,SEA,253.78,176.66,21.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #5, tier 1"
+Kenneth Walker III,RB,KC,217.65,179.01,21.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #24, tier 4"
+Puka Nacua,WR,LAR,256.87,179.75,21.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #3, tier 1"
+Omarion Hampton,RB,,205.65,167.01,20.0,1.0,
+Jeremiyah Love,RB,ARI,202.4,163.76,20.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #42, tier 5"
+Ashton Jeanty,RB,,199.4,160.76,20.0,1.0,
+Amon-Ra St. Brown,WR,DET,247.22,170.1,20.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #6, tier 1"
+Javonte Williams,RB,DAL,196.9,158.26,19.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #43, tier 5"
+Breece Hall,RB,NYJ,201.5,162.86,19.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #39, tier 5"
+Kyren Williams,RB,LAR,196.2,157.56,19.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #41, tier 5"
+CeeDee Lamb,WR,DAL,224.28,147.16,18.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #7, tier 2"
+Cam Skattebo,RB,NYG,186.4,147.76,18.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #59, tier 6"
+Justin Jefferson,WR,MIN,221.18,144.06,17.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #9, tier 2"
+Drake London,WR,ATL,221.3,144.18,17.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #11, tier 2"
+Quinshon Judkins,RB,,177.8,139.16000000000003,17.0,1.0,
+D'Andre Swift,RB,CHI,180.15,141.51,17.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #53, tier 6"
+Nico Collins,WR,HOU,214.51,137.39,16.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #14, tier 3"
+Jadarian Price,RB,SEA,169.9,131.26,16.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #70, tier 6"
+David Montgomery,RB,HOU,176.5,137.86,16.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #62, tier 6"
+George Pickens,WR,DAL,209.94,132.82,16.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #18, tier 3"
+Bhayshul Tuten,RB,,160.4,121.76,15.0,,no salary on record
+TreVeyon Henderson,RB,,158.6,119.96,15.0,1.0,
+Rico Dowdle,RB,,157.15,118.51,15.0,3.0,
+Zay Flowers,WR,BAL,205.23,128.10999999999999,15.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #30, tier 4"
+Chris Olave,WR,NO,194.65,117.53,14.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #16, tier 3"
+Rhamondre Stevenson,RB,NE,157.55,118.91000000000001,14.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #73, tier 7"
+Tetairoa McMillan,WR,CAR,184.82,107.69999999999999,13.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #34, tier 4"
+Kyle Monangai,RB,,144.3,105.66000000000001,13.0,1.0,
+Jonathon Brooks,RB,CAR,148.6,109.96,13.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #89, tier 7"
+Malik Nabers,WR,NYG,183.51,106.38999999999999,13.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #23, tier 4"
+Blake Corum,RB,,134.1,95.46,12.0,1.0,
+Chuba Hubbard,RB,CAR,143.25,104.61,12.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #97, tier 8"
+Kenny Gainwell,RB,TB,136.45,97.80999999999999,12.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #98, tier 8"
+Brock Bowers,TE,,177.91,79.46,12.0,6.0,
+Tyrone Tracy Jr,RB,,,,11.0,11.0,
+Trey McBride,TE,ARI,188.05,89.60000000000001,11.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #19, tier 3"
+J.K. Dobbins,RB,DEN,134.15,95.51,11.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #100, tier 8"
+Christian Watson,WR,,161.94,84.82,11.0,1.0,
+Rachaad White,RB,WAS,127.05,88.41,11.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #111, tier 8"
+AD Mitchell,WR,,,,11.0,11.0,
+Jacory Croskey-Merritt,RB,WAS,127.0,88.36,11.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #113, tier 8"
+Emeka Egbuka,WR,,166.25,89.13,11.0,1.0,
+Parker Washington,WR,,162.09,84.97,11.0,1.0,
+Jajuan Jennings,WR,,,,11.0,11.0,
+Mike Evans,WR,,164.95,87.82999999999998,10.0,,no salary on record
+Tyjae Spears,RB,,113.45,74.81,10.0,3.0,
+Tucker Kraft,TE,,143.34,44.89,10.0,11.0,
+Alec Pierce,WR,,154.64,77.51999999999998,10.0,1.0,
+Jayden Higgins,WR,,,,10.0,10.0,
+Rome Odunze,WR,CHI,159.72,82.6,10.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #57, tier 6"
+Garrett Wilson,WR,NYJ,163.37,86.25,10.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #29, tier 4"
+Xavier Worthy,WR,,118.5,41.379999999999995,9.0,11.0,
+Jameson Williams,WR,DET,156.45,79.32999999999998,9.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #54, tier 6"
+DK Metcalf,WR,PIT,148.53,71.41,9.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #78, tier 7"
+Jayden Reed,WR,GB,143.93,66.81,8.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #103, tier 8"
+Woody Marks,RB,,104.75,66.11,8.0,1.0,
+Tyler Warren,TE,,162.68,64.23,8.0,1.0,
+Marvin Harrison Jr.,WR,ARI,145.68,68.56,8.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #67, tier 6"
+Carnell Tate,WR,TEN,140.03,62.91,8.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #66, tier 6"
+Josh Downs,WR,IND,145.07,67.94999999999999,8.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #86, tier 7"
+Courtland Sutton,WR,,137.35,60.22999999999999,7.0,,no salary on record
+Rashid Shaheed,WR,,105.92,28.799999999999997,7.0,10.0,
+Michael Pittman Jr.,WR,PIT,137.83,60.71000000000001,7.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #81, tier 7"
+Jakobi Meyers,WR,JAC,131.61,54.49000000000001,7.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #105, tier 8"
+Jalen Coker,WR,,124.35,47.22999999999999,7.0,3.0,
+Michael Wilson,WR,,132.1,54.97999999999999,7.0,1.0,
+Wan'Dale Robinson,WR,,133.19,56.06999999999999,7.0,1.0,
+Colston Loveland,TE,,157.08,58.63000000000001,7.0,1.0,
+Jordan Addison,WR,MIN,131.03,53.91,6.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #106, tier 8"
+Keaton Mitchell,RB,LAC,90.45,51.81,6.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #144, tier 9"
+Stefon Diggs,WR,,130.42,53.29999999999998,6.0,,no salary on record
+Brian Thomas Jr,WR,,,,6.0,6.0,
+Tyler Allgeier,RB,ARI,86.65,48.010000000000005,6.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #136, tier 9"
+Dak Prescott,QB,,278.54,22.220000000000027,6.0,8.0,
+Caleb Williams,QB,,271.0,14.680000000000007,6.0,11.0,
+Kyle Pitts Sr,TE,,,,6.0,6.0,
+Romeo Doubs,WR,,122.25,45.129999999999995,6.0,1.0,
+Quentin Johnston,WR,,125.4,48.28,6.0,1.0,
+Sam LaPorta,TE,DET,139.7,41.249999999999986,5.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #85, tier 7"
+Drake Maye,QB,NE,296.32,40.0,5.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #38, tier 5"
+Mike Washington Jr.,RB,LV,80.65,42.010000000000005,5.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #163, tier 10"
+Jake Ferguson,TE,,117.94,19.489999999999995,5.0,6.0,
+Makai Lemon,WR,PHI,119.03,41.91,5.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #108, tier 8"
+Dylan Sampson,RB,CLE,79.3,40.66,5.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #142, tier 9"
+KC Concepcion,WR,CLE,118.36,41.239999999999995,5.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #117, tier 8"
+Dalton Kincaid,TE,,118.1,19.64999999999999,5.0,6.0,
+Braelon Allen,RB,,68.77,30.129999999999995,4.0,,no salary on record; on IR
+MarShawn Lloyd,RB,GB,75.39,36.75,4.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #162, tier 10"
+Travis Kelce,TE,KC,129.94,31.489999999999995,4.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #94, tier 8"
+Tank Bigsby,RB,PHI,68.64,30.0,4.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #159, tier 10"
+Samaje Perine,RB,CIN,68.35,29.709999999999994,4.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #262, tier 12"
+Baker Mayfield,QB,,243.4,0.0,4.0,11.0,
+Trey Benson,RB,,11.03,0.0,4.0,11.0,
+Mark Andrews,TE,BAL,128.18,29.730000000000004,4.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #131, tier 9"
+Jayden Daniels,QB,WAS,293.28,36.95999999999998,4.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #52, tier 6"
+Jalen McMillan,WR,,92.48,15.36,3.0,2.0,
+Jonah Coleman,RB,DEN,67.3,28.659999999999997,3.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #148, tier 9"
+Denzel Boston,WR,CLE,106.28,29.159999999999997,3.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #145, tier 9"
+Dallas Goedert,TE,,119.45,21.0,3.0,,no salary on record
+Emmett Johnson,RB,KC,63.25,24.61,3.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #183, tier 10"
+Tre Tucker,WR,,95.11,17.989999999999995,3.0,1.0,
+Najee Harris,RB,,41.47,2.8299999999999983,3.0,8.0,
+Ray Davis,RB,BUF,61.54,22.9,3.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #187, tier 10"
+Pat Bryant,WR,,79.5,2.3799999999999955,3.0,7.0,
+Jaydon Blue,RB,,54.64,16.0,3.0,4.0,
+Hunter Henry,TE,,119.7,21.25,3.0,2.0,
+Justice Hill,RB,BAL,57.9,19.259999999999998,2.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #238, tier 11"
+Isaiah Likely,TE,NYG,115.25,16.799999999999997,2.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #122, tier 8"
+Jordyn Tyson,WR,NO,94.75,17.629999999999995,2.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #132, tier 9"
+De'Zhaun Stribling,WR,SF,92.85,15.72999999999999,2.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #134, tier 9"
+Jerry Jeudy,WR,CLE,93.02,15.899999999999991,2.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #161, tier 10"
+Jaxson Dart,QB,,273.12,16.80000000000001,2.0,1.0,
+Brock Purdy,QB,,256.32,0.0,2.0,5.0,
+Jalen Nailor,WR,LV,94.21,17.08999999999999,2.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #185, tier 10"
+Brenton Strange,TE,,112.65,14.200000000000003,2.0,1.0,
 Chris Rodriguez Jr,RB,,,,2.0,2.0,
-Jalen McMillan,WR,,,,2.0,2.0,
-Colston Loveland,TE,,,,1.0,1.0,
-Dalton Schultz,TE,,,,1.0,1.0,
-Matthew Stafford,QB,,,,1.0,1.0,
+Malik Washington,WR,,92.28,15.159999999999997,2.0,1.0,
+Juwan Johnson,TE,,111.55,13.099999999999994,2.0,1.0,
+Dalton Schultz,TE,,109.4,10.950000000000003,2.0,1.0,
+Trevor Lawrence,QB,,272.04,15.720000000000027,2.0,1.0,
+Justin Herbert,QB,,263.56,7.240000000000009,2.0,4.0,
+Kimani Vidal,RB,,54.72,16.08,2.0,1.0,
+Cedric Tillman,WR,,19.7,0.0,2.0,5.0,
+Tahj Brooks,RB,CIN,23.18,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #319, tier 13"
+Darnell Washington,TE,PIT,60.1,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #320, tier 13"
+Jahan Dotson,WR,ATL,66.13,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #321, tier 13"
+Oscar Delp,TE,NO,34.7,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #322, tier 13"
+Michael Mayer,TE,LV,58.35,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #324, tier 13"
+Elijah Arroyo,TE,SEA,52.8,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #326, tier 13"
+Charlie Kolar,TE,LAC,48.57,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #327, tier 13"
+Jalen Tolbert,WR,MIA,43.35,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #329, tier 13"
+Bryce Lance,WR,NO,36.45,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #328, tier 13"
+DeMario Douglas,WR,NE,61.67,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #317, tier 13"
+Xavier Hutchinson,WR,HOU,33.06,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #330, tier 13"
+Carson Beck,QB,ARI,51.46,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #332, tier 13"
+Cole Kmet,TE,CHI,53.05,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #333, tier 13"
+Erick All Jr.,TE,CIN,52.0,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #334, tier 13"
+Tyler Higbee,TE,LAR,33.6,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #336, tier 13"
+Tez Johnson,WR,TB,33.4,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #337, tier 13"
+Eli Raridon,TE,NE,33.55,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #338, tier 13"
+Olamide Zaccheaus,WR,ATL,41.59,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #340, tier 13"
+Kendrick Bourne,WR,ARI,56.62,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #342, tier 13"
+Audric Estime,RB,NO,12.38,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #318, tier 13"
+Theo Johnson,TE,,56.7,0.0,1.0,1.0,
+Andrei Iosivas,WR,CIN,65.06,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #313, tier 13"
+Kyle Williams,WR,NE,37.34,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #293, tier 12"
+Malik Davis,RB,DAL,30.01,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #278, tier 12"
+Michael Penix Jr.,QB,ATL,122.75,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #279, tier 12"
+Marvin Mims Jr.,WR,DEN,47.9,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #280, tier 12"
+Kirk Cousins,QB,LV,50.52,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #284, tier 12"
+DJ Giddens,RB,IND,33.72,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #285, tier 12"
+Deshaun Watson,QB,CLE,101.26,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #287, tier 12"
+Seth McGowan,RB,IND,34.66,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #288, tier 12"
+Eli Stowers,TE,PHI,48.79,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #290, tier 12"
+Shedeur Sanders,QB,CLE,101.58,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #291, tier 12"
+Kendre Miller,RB,NO,19.51,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #292, tier 12"
+Brashard Smith,RB,KC,31.53,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #294, tier 12"
+Jake Tonges,TE,SF,46.75,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #309, tier 13"
+Emari Demercado,RB,KC,26.21,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #295, tier 12"
+Hollywood Brown,WR,PHI,41.95,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #296, tier 12"
+Adam Randall,RB,BAL,33.18,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #297, tier 12"
+Mike Gesicki,TE,CIN,71.5,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #298, tier 12"
+Devin Singletary,RB,NYG,24.69,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #299, tier 12"
+Mack Hollins,WR,NE,34.99,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #300, tier 12"
+Isaiah Bond,WR,CLE,48.37,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #301, tier 13"
+Skyler Bell,WR,BUF,38.52,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #303, tier 13"
+Trevor Etienne,RB,CAR,27.98,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #307, tier 13"
+Bam Knight,RB,ARI,6.21,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #344, tier 13"
+Luke McCaffrey,WR,WAS,24.25,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #343, tier 13"
+Noah Gray,TE,KC,42.1,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #352, tier 14"
+Dawson Knox,TE,BUF,58.6,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #348, tier 14"
+Tyler Goodson,RB,ATL,11.22,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #430, tier 15"
+Roschon Johnson,RB,CHI,12.5,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #398, tier 14"
+Ashton Dulin,WR,IND,25.13,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #402, tier 14"
+Tommy Tremble,TE,CAR,27.95,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #407, tier 14"
+Ben Sinnott,TE,WAS,28.2,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #419, tier 15"
+Elijah Higgins,TE,ARI,36.0,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #422, tier 15"
+Austin Hooper,TE,ATL,31.35,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #423, tier 15"
+Mitchell Evans,TE,CAR,16.86,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #425, tier 15"
+Daniel Bellinger,TE,TEN,39.7,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #426, tier 15"
+Greg Dortch,WR,DET,31.14,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #429, tier 15"
+Marlin Klein,TE,HOU,27.9,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #443, tier 15"
+Brenen Thompson,WR,LAC,36.51,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #349, tier 14"
+Jahdae Walker,WR,CHI,29.43,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #457, tier 15"
+DeAndre Hopkins,WR,BAL,2.0,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #467, tier 15"
+Josh Oliver,TE,MIN,33.3,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #468, tier 15"
+Tyler Lockett,WR,LV,22.8,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #471, tier 15"
+Tim Patrick,WR,NYJ,14.07,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #481, tier 15"
+Jackson Hawes,TE,BUF,26.45,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #487, tier 16"
+Adam Trautman,TE,DEN,28.15,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #496, tier 16"
+Tanner Hudson,TE,CIN,18.22,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #510, tier 16"
+Tyler Conklin,TE,DET,2.97,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #511, tier 16"
+Devontez Walker,WR,BAL,35.2,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #397, tier 14"
+CJ Daniels,WR,LAR,23.65,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #394, tier 14"
+Demarcus Robinson,WR,SF,28.84,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #393, tier 14"
+Phil Mafah,RB,DAL,14.11,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #391, tier 14"
+Joshua Palmer,WR,BUF,37.3,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #351, tier 14"
+Elijah Sarratt,WR,BAL,45.38,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #274, tier 12"
+Mac Jones,QB,SF,27.06,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #353, tier 14"
+Treylon Burks,WR,WAS,37.54,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #356, tier 14"
+Ja'Tavion Sanders,TE,CAR,29.55,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #357, tier 14"
+Malik Benson,WR,LV,41.85,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #363, tier 14"
+Justin Fields,QB,KC,40.19,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #364, tier 14"
+Jawhar Jordan,RB,HOU,21.18,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #365, tier 14"
+Roman Wilson,WR,PIT,42.4,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #367, tier 14"
+Savion Williams,WR,GB,38.77,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #372, tier 14"
+Kalif Raymond,WR,CHI,32.99,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #375, tier 14"
+KaVontae Turpin,WR,DAL,56.6,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #376, tier 14"
+Raheim Sanders,RB,CLE,16.41,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #378, tier 14"
+Zavion Thomas,WR,CHI,32.09,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #381, tier 14"
+Colbie Young,WR,CIN,33.1,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #382, tier 14"
+Noah Fant,TE,NO,29.15,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #383, tier 14"
+Joe Flacco,QB,CIN,28.58,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #386, tier 14"
+Tutu Atwell,WR,LAR,22.9,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #387, tier 14"
+John Metchie III,WR,CAR,27.49,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #389, tier 14"
+Christian Kirk,WR,SF,37.77,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #275, tier 12"
+LeQuint Allen Jr.,RB,JAC,38.64,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #265, tier 12"
+Chris Brooks,RB,GB,38.97,0.3299999999999983,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #273, tier 12"
+C.J. Stroud,QB,HOU,245.14,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #139, tier 9"
+Luther Burden,WR,,,,1.0,1.0,
+Jordan Love,QB,GB,256.74,0.4200000000000159,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #121, tier 8"
+Troy Franklin,WR,,51.54,0.0,1.0,1.0,
+Tyler Shough,QB,NO,258.88,2.5600000000000023,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #125, tier 8"
+Malik Willis,QB,MIA,253.88,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #128, tier 8"
+Matthew Stafford,QB,,250.22,0.0,1.0,1.0,
+Emanuel Wilson,RB,,38.92,0.28000000000000114,1.0,1.0,
+Dontayavion Wicks,WR,,,,1.0,1.0,
+Sam Darnold,QB,SEA,229.22,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #138, tier 9"
+Cade Otton,TE,,85.45,0.0,1.0,1.0,
+Omar Cooper Jr.,WR,NYJ,71.98,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #174, tier 10"
+Elic Ayomanor,WR,,45.4,0.0,1.0,1.0,
+Tory Horton,WR,,55.15,0.0,1.0,1.0,
+Cam Ward,QB,TEN,221.28,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #146, tier 9"
+Chig Okonkwo,TE,WAS,98.45,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #150, tier 9"
+Adonai Mitchell,WR,NYJ,84.34,7.219999999999999,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #157, tier 9"
+Bryce Young,QB,CAR,218.36,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #160, tier 10"
+Darren Waller,TE,,82.85,0.0,1.0,1.0,
+Daniel Jones,QB,,223.84,0.0,1.0,1.0,
+Jauan Jennings,WR,MIN,89.4,12.280000000000001,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #166, tier 10"
+Isaiah Davis,RB,,45.95,7.310000000000002,1.0,1.0,
+Kyler Murray,QB,MIN,255.34,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #112, tier 8"
+AJ Barner,TE,,99.04,0.5900000000000034,1.0,1.0,
+Jared Goff,QB,DET,261.71,5.389999999999986,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #107, tier 8"
+Darius Slayton,WR,,55.66,0.0,1.0,1.0,
+Colby Parkinson,TE,,62.2,0.0,1.0,1.0,
+Harold Fannin Jr,TE,,,,1.0,1.0,
+Bo Nix,QB,,262.52,6.199999999999989,1.0,,no salary on record
+Van Jefferson,WR,,6.01,0.0,1.0,1.0,
+JJ McCarthy,QB,,,,1.0,1.0,
+Jacoby Brissett,QB,,179.82,0.0,1.0,,no salary on record
+Devaughn Vele,WR,,81.38,4.259999999999991,1.0,,no salary on record
+Michael Carter,RB,,6.54,0.0,1.0,1.0,
+Will Shipley,RB,,,,1.0,1.0,
+Kaleb Johnson,RB,,,,1.0,1.0,
 Ollie Gordon,RB,,,,1.0,1.0,
 Kenneth Gainwell,RB,,,,1.0,1.0,
-Alec Pierce,WR,,,,1.0,1.0,
-Emanuel Wilson,RB,,,,1.0,1.0,
-Isaiah Davis,RB,,,,1.0,1.0,
-Malik Washington,WR,,,,1.0,1.0,
-Mason Taylor,TE,,,,1.0,1.0,
-Emeka Egbuka,WR,,,,1.0,1.0,
-Colby Parkinson,TE,,,,1.0,1.0,
-JJ McCarthy,QB,,,,1.0,1.0,
-Will Shipley,RB,,,,1.0,1.0,
 Zach Ertz,TE,,,,1.0,1.0,
-Jaxson Dart,QB,,,,1.0,1.0,
-Michael Carter,RB,,,,1.0,1.0,
-Travis Hunter,WR,,,,1.0,1.0,
-Van Jefferson,WR,,,,1.0,1.0,
-Theo Johnson,TE,,,,1.0,1.0,
-Darius Slayton,WR,,,,1.0,1.0,
-Harold Fannin Jr,TE,,,,1.0,1.0,
-Kimani Vidal,RB,,,,1.0,1.0,
-Quinshon Judkins,RB,,,,1.0,1.0,
-TreVeyon Henderson,RB,,,,1.0,1.0,
-Tyler Warren,TE,,,,1.0,1.0,
-Kaleb Johnson,RB,,,,1.0,1.0,
-Dontayavion Wicks,WR,,,,1.0,1.0,
-Cade Otton,TE,,,,1.0,1.0,
-Parker Washington,WR,,,,1.0,1.0,
-Elic Ayomanor,WR,,,,1.0,1.0,
-Tory Horton,WR,,,,1.0,1.0,
-Devin Neal,RB,,,,1.0,1.0,
-Daniel Jones,QB,,,,1.0,1.0,
-Omarion Hampton,RB,,,,1.0,1.0,
-Ashton Jeanty,RB,,,,1.0,1.0,
-Juwan Johnson,TE,,,,1.0,1.0,
-Darren Waller,TE,,,,1.0,1.0,
-Michael Wilson,WR,,,,1.0,1.0,
-Oronde Gadsden,TE,,,,1.0,1.0,
-Brenton Strange,TE,,,,1.0,1.0,
-Kareem Hunt,RB,,,,1.0,1.0,
-Tre Harris,WR,,,,1.0,1.0,
-Wan'Dale Robinson,WR,,,,1.0,1.0,
-Trevor Lawrence,QB,,,,1.0,1.0,
-AJ Barner,TE,,,,1.0,1.0,
-Kyle Monangai,RB,,,,1.0,1.0,
-Quentin Johnston,WR,,,,1.0,1.0,
-Troy Franklin,WR,,,,1.0,1.0,
-Luther Burden,WR,,,,1.0,1.0,
-Romeo Doubs,WR,,,,1.0,1.0,
-Woody Marks,RB,,,,1.0,1.0,
-Evan Hull,RB,,,,1.0,1.0,
-Christian Watson,WR,,,,1.0,1.0,
-Kayshon Boutte,WR,,,,1.0,1.0,
-Tre Tucker,WR,,,,1.0,1.0,
-Blake Corum,RB,,,,1.0,1.0,
+Xavier Legette,WR,,60.63,0.0,1.0,1.0,
 Tet McMillan,WR,,,,1.0,1.0,
-Xavier Legette,WR,,,,1.0,1.0,
-Bo Nix,QB,,,,,,no salary on record
-Courtland Sutton,WR,,,,,,no salary on record
-Mike Evans,WR,,,,,,no salary on record
-Stefon Diggs,WR,,,,,,no salary on record
-Dallas Goedert,TE,,,,,,no salary on record
-Jacoby Brissett,QB,,,,,,no salary on record
-Bhayshul Tuten,RB,,,,,,no salary on record
-Devaughn Vele,WR,,,,,,no salary on record
-Braelon Allen,RB,,,,,,no salary on record; on IR
+Evan Hull,RB,,,,1.0,1.0,
+Mason Taylor,TE,,58.65,0.0,1.0,1.0,
+Kayshon Boutte,WR,,86.3,9.179999999999993,1.0,1.0,
+Dontayvion Wicks,WR,PHI,73.95,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #173, tier 10"
+Ryan Flournoy,WR,DAL,88.9,11.780000000000001,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #177, tier 10"
+Tyquan Thornton,WR,KC,57.5,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #270, tier 12"
+Chris Bell,WR,MIA,59.45,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #252, tier 12"
+George Holani,RB,SEA,36.01,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #240, tier 11"
+Caleb Douglas,WR,MIA,83.27,6.1499999999999915,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #241, tier 11"
+Jaylen Wright,RB,MIA,47.44,8.799999999999997,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #242, tier 11"
+Kaelon Black,RB,SF,47.43,8.79,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #243, tier 11"
+Malachi Fields,WR,NYG,69.38,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #244, tier 11"
+Evan Engram,TE,DEN,59.49,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #246, tier 11"
+Jack Bech,WR,LV,58.15,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #248, tier 11"
+Keon Coleman,WR,BUF,60.6,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #249, tier 11"
+David Njoku,TE,LAC,56.0,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #250, tier 11"
+Ted Hurst III,WR,TB,61.33,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #253, tier 12"
+Devin Neal,RB,,15.95,0.0,1.0,1.0,
+Fernando Mendoza,QB,LV,171.1,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #254, tier 12"
+Chimere Dike,WR,TEN,52.35,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #255, tier 12"
+Demond Claiborne,RB,MIN,32.59,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #258, tier 12"
+Ty Johnson,RB,BUF,48.65,10.009999999999998,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #261, tier 12"
+Oronde Gadsden,TE,,72.1,0.0,1.0,1.0,
+Cyrus Allen,WR,KC,66.53,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #264, tier 12"
+Travis Hunter,WR,,73.58,0.0,1.0,1.0,
+Jordan James,RB,SF,50.45,11.810000000000002,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #266, tier 12"
+Tua Tagovailoa,QB,ATL,103.67,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #269, tier 12"
+Antonio Williams,WR,WAS,51.37,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #239, tier 11"
+Greg Dulcich,TE,MIA,101.4,2.950000000000003,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #237, tier 11"
+Zachariah Branch,WR,ATL,63.51,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #236, tier 11"
+Germie Bernard,WR,PIT,67.71,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #234, tier 11"
+Tre Harris,WR,,,,1.0,1.0,
+Kareem Hunt,RB,,,,1.0,1.0,
+Keenan Allen,WR,IND,80.85,3.7299999999999898,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #190, tier 10"
+Calvin Ridley,WR,TEN,72.14,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #195, tier 10"
+Terrance Ferguson,TE,LAR,82.7,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #198, tier 10"
+Jaylin Noel,WR,HOU,77.12,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #201, tier 11"
+Sean Tucker,RB,TB,48.94,10.299999999999997,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #202, tier 11"
+Gunnar Helm,TE,TEN,85.2,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #206, tier 11"
+Nicholas Singleton,RB,TEN,48.11,9.469999999999999,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #208, tier 11"
+Aaron Rodgers,QB,PIT,191.83,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #209, tier 11"
+Geno Smith,QB,NYJ,177.54,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #210, tier 11"
+Kenyon Sadiq,TE,NYJ,85.03,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #211, tier 11"
+Tank Dell,WR,HOU,58.82,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #214, tier 11"
+Rashod Bateman,WR,BAL,79.23,2.1099999999999994,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #219, tier 11"
+Darnell Mooney,WR,NYG,63.83,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #220, tier 11"
+Isaac TeSlaa,WR,DET,66.3,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #223, tier 11"
+Pat Freiermuth,TE,PIT,96.9,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #229, tier 11"
+Kaytron Allen,RB,WAS,42.77,4.130000000000003,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #230, tier 11"
+Ja'Kobi Lane,WR,BAL,79.35,2.2299999999999898,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #231, tier 11"
+Lil'Jordan Humphrey,WR,DEN,14.96,0.0,1.0,,"not on a 2025 league roster -- FantasyPros 2026 rank #518, tier 16"
+Patrick Mahomes II,QB,KC,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #101, tier 8"
+Zach Charbonnet,RB,SEA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #147, tier 9"
+Brian Robinson Jr.,RB,ATL,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #171, tier 10"
+Brandon Aiyuk,WR,SF,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #308, tier 13"
+Jarquez Hunter,RB,MIA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #311, tier 13"
+Isaac Guerendo,RB,SF,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #314, tier 13"
+Jerome Ford,RB,WAS,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #315, tier 13"
+Jaleel McLaughlin,RB,DEN,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #316, tier 13"
+Tyreek Hill,WR,FA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #323, tier 13"
+Konata Mumpfield,WR,LAR,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #339, tier 13"
+Jalen Royals,WR,KC,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #341, tier 13"
+Joe Mixon,RB,FA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #346, tier 13"
+Max Klare,TE,LAR,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #350, tier 14"
+Chris Brazzell II,WR,CAR,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #354, tier 14"
+Eli Heidenreich,RB,PIT,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #360, tier 14"
+Justin Joly,TE,DEN,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #366, tier 14"
+Ty Simpson,QB,LAR,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #369, tier 14"
+Kevin Coleman Jr.,WR,MIA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #377, tier 14"
+Dont'e Thornton Jr.,WR,LV,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #380, tier 14"
+Kyle Juszczyk,RB,SF,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #384, tier 14"
+Anthony Richardson Sr.,QB,IND,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #385, tier 14"
+Nick Westbrook-Ikhine,WR,IND,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #390, tier 14"
+J'Mari Taylor,RB,JAC,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #392, tier 14"
+Jaylin Lane,WR,WAS,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #396, tier 14"
+Luke Musgrave,TE,GB,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #400, tier 14"
+Jameis Winston,QB,NYG,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #406, tier 14"
+Marcus Mariota,QB,WAS,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #410, tier 14"
+Jam Miller,RB,NE,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #412, tier 14"
+Jordan Whittington,WR,LAR,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #413, tier 14"
+Barion Brown,WR,NO,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #414, tier 14"
+Rasheen Ali,RB,BAL,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #415, tier 14"
+Sione Vaki,RB,DET,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #416, tier 14"
+Cade Klubnik,QB,NYJ,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #417, tier 15"
+Joe Milton III,QB,DAL,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #420, tier 15"
+John Bates,TE,WAS,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #421, tier 15"
+Isaiah Williams,WR,NYJ,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #424, tier 15"
+Dyami Brown,WR,WAS,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #428, tier 15"
+Tommy Myers,TE,FA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #431, tier 15"
+Odell Beckham Jr.,WR,NYG,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #432, tier 15"
+Hunter Luepke,RB,DAL,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #433, tier 15"
+Dameon Pierce,RB,PHI,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #434, tier 15"
+Austin Ekeler,RB,FA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #435, tier 15"
+Deion Burks,WR,IND,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #436, tier 15"
+Terrell Jennings,RB,FA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #437, tier 15"
+Tai Felton,WR,MIN,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #442, tier 15"
+Zavier Scott,RB,MIN,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #445, tier 15"
+Matt Hibner,TE,BAL,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #446, tier 15"
+Alec Ingold,RB,LAC,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #448, tier 15"
+Jeremy McNichols,RB,WAS,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #449, tier 15"
+Reggie Gilliam,RB,NE,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #450, tier 15"
+Robert Henry Jr.,RB,WAS,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #451, tier 15"
+Jonnu Smith,TE,GB,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #452, tier 15"
+Ronnie Rivers,RB,LAR,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #453, tier 15"
+Josh Williams,RB,TB,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #454, tier 15"
+Dylan Laube,RB,LV,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #455, tier 15"
+Roman Hemby,RB,LV,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #458, tier 15"
+Mitch Tinsley,WR,CIN,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #459, tier 15"
+Tyler Badie,RB,DEN,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #460, tier 15"
+Patrick Ricard,RB,NYG,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #461, tier 15"
+Elijah Moore,WR,PHI,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #462, tier 15"
+Will Kacmarek,TE,MIA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #463, tier 15"
+Damien Martinez,RB,GB,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #464, tier 15"
+Riley Leonard,QB,IND,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #465, tier 15"
+Khalil Herbert,RB,SF,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #466, tier 15"
+Max Bredeson,RB,MIN,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #469, tier 15"
+Tanner Koziol,TE,JAC,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #470, tier 15"
+Adam Prentice,RB,DEN,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #472, tier 15"
+Jordan Watkins,WR,SF,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #473, tier 15"
+Antonio Gibson,RB,FA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #474, tier 15"
+Xavier Smith,WR,LAR,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #475, tier 15"
+Jacob Cowing,WR,SF,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #476, tier 15"
+Quinn Ewers,QB,MIA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #477, tier 15"
+British Brooks,RB,HOU,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #478, tier 15"
+Cade Stover,TE,HOU,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #479, tier 15"
+Jimmy Horn Jr.,WR,CAR,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #480, tier 15"
+Lew Nichols III,RB,PIT,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #482, tier 15"
+Drew Allar,QB,PIT,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #483, tier 15"
+Marquez Valdes-Scantling,WR,DAL,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #484, tier 15"
+Jacob Saylors,RB,DET,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #485, tier 15"
+Chris Blair,WR,ATL,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #486, tier 16"
+Tyrod Taylor,QB,GB,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #488, tier 16"
+Moliki Matavao,TE,NO,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #489, tier 16"
+Jake Browning,QB,TB,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #490, tier 16"
+Michael Woods II,WR,DEN,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #491, tier 16"
+Jalen Reagor,WR,MIA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #492, tier 16"
+Xavier Restrepo,WR,TEN,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #493, tier 16"
+Frank Gore Jr.,RB,BUF,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #494, tier 16"
+Drew Sample,TE,CIN,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #495, tier 16"
+Kene Nwangwu,RB,NYJ,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #498, tier 16"
+Reggie Virgil,WR,ARI,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #499, tier 16"
+Sam Roush,TE,CHI,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #500, tier 16"
+Gardner Minshew II,QB,ARI,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #501, tier 16"
+Noah Whittington,RB,HOU,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #502, tier 16"
+Cash Jones,RB,ATL,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #503, tier 16"
+Michael Burton,RB,CLE,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #504, tier 16"
+Durham Smythe,TE,BAL,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #505, tier 16"
+Tyson Bagent,QB,CHI,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #506, tier 16"
+Nate Boerkircher,TE,JAC,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #507, tier 16"
+Jeremy Ruckert,TE,NYJ,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #508, tier 16"
+KeAndre Lambert-Smith,WR,LAC,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #509, tier 16"
+Luke Schoonmaker,TE,DAL,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #512, tier 16"
+Jaret Patterson,RB,LAC,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #513, tier 16"
+Josh Cameron,WR,JAC,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #514, tier 16"
+Velus Jones Jr.,WR,SEA,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #515, tier 16"
+Jaydn Ott,RB,KC,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #516, tier 16"
+Trey Lance,QB,LAC,,,,,"not on a 2025 league roster -- FantasyPros 2026 rank #517, tier 16"

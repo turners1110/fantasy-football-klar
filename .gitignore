@@ -7,3 +7,5 @@ node_modules/
 __pycache__/
 *.pyc
 .DS_Store
+data/nflverse/
+draft_ui/draft_state.json

@@ -34,6 +34,12 @@ OUTPUT_DIR = BASE_DIR / "output"
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--salaries", default=DATA_DIR / "historical_salaries_2025_raw.csv")
+    p.add_argument(
+        "--fantasypros-rankings", default=BASE_DIR / "FantasyPros_2026_Draft_ALL_Rankings.csv",
+        help="FantasyPros 'ALL Rankings' export, used only to widen the draftable "
+        "pool beyond players who happened to be on a 2025 league roster. Rank/tier "
+        "data only -- never used to fabricate a point projection.",
+    )
     p.add_argument("--projections", default=DATA_DIR / "projections_2026.csv")
     p.add_argument("--keeper-overrides", default=DATA_DIR / "keeper_overrides.csv")
     p.add_argument("--rookie-pool", default=DATA_DIR / "rookie_pool.csv")
@@ -99,6 +105,17 @@ def main() -> None:
 
     pool = with_keepers[~with_keepers["will_keep"]].copy()
 
+    fp_rankings = data_pipeline.load_fantasypros_rankings(args.fantasypros_rankings)
+    n_before = len(pool)
+    pool = data_pipeline.expand_pool_with_full_universe(pool, fp_rankings)
+    n_added = len(pool) - n_before
+    if fp_rankings is not None:
+        print(
+            f"\nWidened draftable pool with {n_added} players from "
+            f"{args.fantasypros_rankings} who weren't on a 2025 league roster "
+            "(no historical salary; unpriced until a projection is supplied)."
+        )
+
     projections = data_pipeline.load_optional_csv(args.projections)
     blend_weight = args.blend_weight
     if projections is None:
@@ -137,6 +154,8 @@ def main() -> None:
     priced_out = priced.copy()
     if "nfl_team" not in priced_out.columns:
         priced_out["nfl_team"] = ""
+    else:
+        priced_out["nfl_team"] = priced_out["nfl_team"].fillna("")
     priced_out = priced_out.rename(columns={"salary_2025": "historical_salary_if_known"})
     auction_cols = [c if c != "salary_2025" else "historical_salary_if_known" for c in auction_cols]
     auction_out_path = args.output_dir / "veteran_auction_price_sheet.csv"

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Draft Day</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Draft Day</h1>
+    <div id="summary" class="summary"></div>
+  </header>
+
+  <main>
+    <section class="panel pool-panel">
+      <div class="pool-header">
+        <h2>Available Players</h2>
+        <input id="filter" type="search" placeholder="Filter by name/position...">
+      </div>
+      <table id="pool-table">
+        <thead>
+          <tr>
+            <th data-sort="player">Player</th>
+            <th data-sort="position">Pos</th>
+            <th data-sort="nfl_team">Team</th>
+            <th data-sort="recommended_live">Recommended</th>
+            <th data-sort="my_target_price">My Target</th>
+            <th data-sort="need_multiplier">Need x</th>
+          </tr>
+        </thead>
+        <tbody id="pool-body"></tbody>
+      </table>
+    </section>
+
+    <aside class="panel side-panel">
+      <div class="card">
+        <h2>Close a Pick</h2>
+        <form id="pick-form">
+          <label>Player
+            <input id="pick-player" list="player-list" autocomplete="off" required>
+            <datalist id="player-list"></datalist>
+          </label>
+          <label>Price ($)
+            <input id="pick-price" type="number" min="1" max="100" step="1" required>
+          </label>
+          <label class="checkbox">
+            <input id="pick-is-me" type="checkbox"> This is my team
+          </label>
+          <button type="submit">Log pick</button>
+        </form>
+        <div class="actions">
+          <button id="undo-btn" type="button">Undo last</button>
+          <button id="export-btn" type="button">Export log</button>
+          <button id="reset-btn" type="button" class="danger">Reset draft</button>
+        </div>
+        <p id="msg"></p>
+      </div>
+
+      <div class="card">
+        <h2>My Roster</h2>
+        <table id="roster-table">
+          <thead><tr><th>Player</th><th>Pos</th><th>$</th><th>Src</th></tr></thead>
+          <tbody id="roster-body"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2 class="collapsible" id="log-toggle">Draft Log &#9662;</h2>
+        <table id="log-table" hidden>
+          <thead><tr><th>#</th><th>Player</th><th>Pos</th><th>$</th><th>Mine</th><th>Rec@time</th></tr></thead>
+          <tbody id="log-body"></tbody>
+        </table>
+      </div>
+    </aside>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
