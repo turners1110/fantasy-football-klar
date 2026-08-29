@@ -1,0 +1,61 @@
+team,player,position,salary_2025,tag_used,on_ir,keeper_price_2026,keep_source
+Sam,Garrett Wilson,WR,21.0,False,False,31.0,heuristic
+Sam,Austin Ekeler,RB,34.0,False,False,44.0,heuristic
+Sam,CJ Stroud,QB,16.0,False,False,26.0,heuristic
+Sam,David Montgomery,RB,35.0,False,False,45.0,heuristic
+Sam,Travis Kelce,TE,36.0,False,False,46.0,heuristic
+Brandon,Justin Jefferson,WR,36.0,False,False,46.0,heuristic
+Brandon,Nico Collins,WR,26.0,False,False,36.0,heuristic
+Brandon,Breece Hall,RB,21.0,False,False,31.0,heuristic
+Brandon,Christian McCaffrey,RB,36.0,False,False,46.0,heuristic
+Brandon,Cam Skattebo,RB,18.0,False,False,28.0,heuristic
+Brandon,Brian Robinson Jr,RB,31.0,False,False,41.0,heuristic
+Coby,Derrick Henry,RB,41.0,False,False,51.0,heuristic
+Coby,Kyren Williams,RB,21.0,False,False,31.0,heuristic
+Coby,Kyler Murray,QB,16.0,False,True,16.0,heuristic
+Brad,Patrick Mahomes,QB,36.0,False,False,46.0,heuristic
+Brad,Jaxon Smith-Njigba,WR,21.0,False,False,31.0,heuristic
+Brad,Jameson Williams,WR,31.0,False,False,41.0,heuristic
+Brad,Marvin Harrison Jr,WR,6.0,False,False,16.0,heuristic
+Brad,JK Dobbins,RB,37.0,False,False,47.0,heuristic
+Brad,Christian Kirk,WR,19.0,False,False,29.0,heuristic
+Reid,Jordan Love,QB,17.0,False,False,27.0,heuristic
+Reid,Drake Maye,QB,20.0,False,False,30.0,heuristic
+Reid,Chris Olave,WR,31.0,False,False,41.0,heuristic
+Reid,Chuba Hubbard,RB,27.0,False,False,37.0,heuristic
+Reid,Javonte Williams,RB,24.0,False,False,34.0,heuristic
+Reid,Rashod Bateman,WR,15.0,False,False,25.0,heuristic
+Evan,Amon-Ra St Brown,WR,36.0,False,False,46.0,heuristic
+Evan,Drake London,WR,26.0,False,False,36.0,heuristic
+Evan,Saquon Barkley,RB,36.0,False,False,46.0,heuristic
+Evan,George Pickens,WR,31.0,False,False,41.0,heuristic
+Evan,Puka Nacua,WR,21.0,False,False,31.0,heuristic
+James,Jayden Daniels,QB,26.0,False,False,36.0,heuristic
+James,Jordan Addison,WR,21.0,False,False,31.0,heuristic
+James,Zay Flowers,WR,21.0,False,False,31.0,heuristic
+James,Keenan Allen,WR,29.0,False,False,39.0,heuristic
+James,Zach Charbonnet,RB,40.0,False,False,50.0,heuristic
+James,Michael Pittman Jr,WR,30.0,False,False,40.0,heuristic
+Ryan J,DK Metcalf,WR,36.0,False,False,46.0,heuristic
+Ryan J,Keon Coleman,WR,6.0,False,False,16.0,heuristic
+Ryan J,DeVon Achane,RB,16.0,False,False,26.0,heuristic
+Ryan J,Jakobi Meyers,WR,39.0,False,False,49.0,heuristic
+CJ,Ja'Marr Chase,WR,36.0,False,False,46.0,heuristic
+CJ,Chase Brown,RB,21.0,False,False,31.0,heuristic
+CJ,Sam LaPorta,TE,21.0,False,False,31.0,heuristic
+CJ,Ricky Pearsall,WR,16.0,False,False,26.0,heuristic
+CJ,D'Andre Swift,RB,42.0,False,False,52.0,heuristic
+Jason,Trey McBride,TE,21.0,False,False,31.0,heuristic
+Jason,AJ Brown,WR,36.0,False,False,46.0,heuristic
+Jason,Bijan Robinson,RB,16.0,False,False,26.0,heuristic
+Jason,Jahmyr Gibbs,RB,21.0,False,False,31.0,heuristic
+Jason,Kenneth Walker,RB,31.0,False,False,41.0,heuristic
+Jason,Josh Downs,WR,26.0,False,False,36.0,heuristic
+Shane,Rome Odunze,WR,6.0,False,False,16.0,heuristic
+Shane,Keaton Mitchell,RB,21.0,False,False,31.0,heuristic
+Travis,Jayden Reed,WR,16.0,False,False,26.0,heuristic
+Travis,Malik Nabers,WR,6.0,False,False,16.0,heuristic
+Travis,Mark Andrews,TE,43.0,False,False,53.0,heuristic
+Travis,Jared Goff,QB,27.0,False,False,37.0,heuristic
+Travis,Rhamondre Stevenson,RB,32.0,False,False,42.0,heuristic
+Travis,Tyler Allgeier,RB,15.0,False,False,25.0,heuristic
