@@ -1,0 +1,4 @@
+pick_number,round,original_team,current_owner,trade_notes
+# Default: each team owns its original slot picks unless traded.
+# Edit current_owner when picks change hands.
+# Pick order (non-snake): Sam 1/13/25, Travis 2/14/26, Reid 3/15/27, etc.

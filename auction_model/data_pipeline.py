@@ -5,7 +5,10 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+
+from . import config
 
 REQUIRED_COLUMNS = ["team", "player", "position", "salary_2025", "notes"]
 
@@ -64,9 +67,45 @@ def load_historical_salaries(path: str | Path) -> tuple[pd.DataFrame, list[str]]
     df["is_tagged_2025"] = df["notes"].str.contains("tagged", case=False)
     df["on_ir"] = df["notes"].str.contains(r"\bIR\b", case=False, regex=True)
     df["games_played_note"] = df["notes"]
+    # v4 Part 2: Paul Rule needs VERIFIED games played, not an IR note --
+    # this dataset has no games-played column at all, so eligibility here
+    # is inferred from the IR note and explicitly labeled unverified.
+    df["paul_rule_eligible"] = False
+    df["paul_rule_verified"] = False
+    df["paul_rule_source"] = "unverified_no_games_data"
+
+    df["salary_origin"], df["origin_confidence"] = classify_salary_origin(df)
 
     df = df.reset_index(drop=True)
     return df, log
+
+
+def classify_salary_origin(df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
+    """Infer salary-origin labels. Nothing is promoted to *_CONFIRMED without
+    explicit manual override or league-record evidence in the source data."""
+    origin = pd.Series("UNKNOWN", index=df.index, dtype=object)
+    confidence = pd.Series(
+        config.SALARY_ORIGIN_RELIABILITY["UNKNOWN"], index=df.index, dtype=float
+    )
+
+    no_salary = df["salary_2025"].isna()
+    origin[no_salary] = "UNKNOWN"
+    confidence[no_salary] = 0.0
+
+    is_one_dollar_no_notes = (df["salary_2025"] == 1) & (df["notes"].fillna("") == "")
+    origin[is_one_dollar_no_notes] = "UNKNOWN_DOLLAR_ONE"
+    confidence[is_one_dollar_no_notes] = config.SALARY_ORIGIN_RELIABILITY["UNKNOWN_DOLLAR_ONE"]
+
+    has_real_salary = df["salary_2025"].notna() & ~is_one_dollar_no_notes
+    origin[has_real_salary] = "UNKNOWN_NON_DOLLAR_ONE"
+    confidence[has_real_salary] = config.SALARY_ORIGIN_RELIABILITY["UNKNOWN_NON_DOLLAR_ONE"]
+
+    tagged = df.get("is_tagged_2025", pd.Series(False, index=df.index))
+    keeper_escalation = tagged & df["salary_2025"].notna() & (df["salary_2025"] > 1)
+    origin[keeper_escalation] = "KEEPER_ESCALATION_CONFIRMED"
+    confidence[keeper_escalation] = config.SALARY_ORIGIN_RELIABILITY["KEEPER_ESCALATION_CONFIRMED"]
+
+    return origin, confidence
 
 
 def load_optional_csv(path: str | Path) -> pd.DataFrame | None:
@@ -127,12 +166,109 @@ def load_fantasypros_rankings(path: str | Path) -> pd.DataFrame | None:
     return out
 
 
-def expand_pool_with_full_universe(pool: pd.DataFrame, fp_rankings: pd.DataFrame | None) -> pd.DataFrame:
+def merge_fp_tiers(pool: pd.DataFrame, fp_rankings: pd.DataFrame | None) -> pd.DataFrame:
+    """Attach FantasyPros' own analyst-drawn tier per player (fp_tier) to
+    ``pool`` by normalized name. Real auctions price in tiers, not a smooth
+    curve -- players within a tier go for near-identical prices, with a real
+    cliff between tiers -- so this is the pricing model's tier signal.
+    Players FantasyPros doesn't rank (or that don't match) get no tier and
+    fall back to individual-player pricing.
+    """
+    pool = pool.copy()
+    if fp_rankings is None or fp_rankings.empty:
+        pool["fp_tier"] = pd.NA
+        return pool
+
+    pool["_key"] = pool["player"].map(_normalize_name)
+    tier_lookup = fp_rankings.drop_duplicates("_key").set_index("_key")["fp_tier"]
+    pool["fp_tier"] = pool["_key"].map(tier_lookup)
+    pool["fp_tier"] = pd.to_numeric(pool["fp_tier"], errors="coerce")
+    return pool.drop(columns=["_key"])
+
+
+def fill_anchor_fallback(pool: pd.DataFrame) -> pd.DataFrame:
+    """Priority 5 fallback chain for players with NO usable anchor and NO
+    projection at all (e.g. deep waiver-tier names FantasyPros ranks but
+    Yahoo didn't project) -- without this they'd stay silently unpriced
+    even though they have real position/tier information to lean on.
+
+    Order actually implemented (see README/changelog for the two skipped
+    rungs and why):
+      1. Yahoo projection -- not this function's job, already the primary
+         signal upstream; this only runs for players who have neither.
+      2. (SKIPPED) an alternate raw projection source -- none exists in
+         this repo today. Flagged as a real gap, not silently faked.
+      3. FantasyPros (position, tier) -> this league's own historical price
+         curve: median `salary_2025` among real players confirmed in that
+         same (position, tier) group.
+      4. Position-only median salary_2025, if no tier-mate has a confirmed
+         salary at all.
+      5. Left null -- flagged in `notes` for manual review -- if neither
+         3 nor 4 produces a number (no salaried comparable exists anywhere
+         at that position).
+
+    Filled rows get `has_confirmed_salary=True` so they flow through the
+    normal anchor-dollars proportional split (and are therefore
+    automatically rescaled to sum to the real remaining budget along with
+    everyone else -- no separate rescale step needed), plus
+    `anchor_source="tier_median_fallback"` so they're never confused with a
+    real observed salary downstream.
+    """
+    pool = pool.copy()
+    pool["anchor_source"] = np.where(pool["has_confirmed_salary"], "observed_2025_salary", pd.NA)
+
+    needs_fallback = pool["salary_2025"].isna() & pool.get("projected_points", pd.Series(pd.NA, index=pool.index)).isna()
+    if not needs_fallback.any():
+        return pool
+
+    observed = pool[pool["has_confirmed_salary"]]
+    tier_median = observed.groupby(["position", "fp_tier"])["salary_2025"].median()
+    position_median = observed.groupby("position")["salary_2025"].median()
+
+    for idx in pool.index[needs_fallback]:
+        position = pool.at[idx, "position"]
+        tier = pool.at[idx, "fp_tier"] if "fp_tier" in pool.columns else pd.NA
+
+        value = pd.NA
+        source = None
+        if pd.notna(tier) and (position, tier) in tier_median.index:
+            value = tier_median.loc[(position, tier)]
+            source = "tier_median_fallback"
+        elif position in position_median.index:
+            value = position_median.loc[position]
+            source = "position_median_fallback"
+
+        if pd.notna(value):
+            pool.at[idx, "salary_2025"] = value
+            pool.at[idx, "has_confirmed_salary"] = True
+            pool.at[idx, "anchor_source"] = source
+            existing_notes = pool.at[idx, "notes"] if pd.notna(pool.at[idx, "notes"]) else ""
+            pool.at[idx, "notes"] = (existing_notes + f"; anchor imputed via {source}").strip("; ")
+        else:
+            existing_notes = pool.at[idx, "notes"] if pd.notna(pool.at[idx, "notes"]) else ""
+            pool.at[idx, "notes"] = (existing_notes + "; FLAG: no anchor or projection available at all -- manual review").strip("; ")
+
+    return pool
+
+
+def expand_pool_with_full_universe(
+    pool: pd.DataFrame,
+    fp_rankings: pd.DataFrame | None,
+    also_exclude: pd.Series | None = None,
+) -> pd.DataFrame:
     """Add rows for any FantasyPros-ranked player not already in ``pool``
-    (i.e. not on a 2025 league roster). They get no historical salary --
-    they're draftable this year but unpriceable without a projection, and
-    will correctly surface in the "no data to price" sanity check rather
-    than being silently absent from the auction sheet entirely.
+    and not already rostered anywhere else this year. They get no
+    historical salary -- they're draftable this year but unpriceable
+    without a projection, and will correctly surface in the "no data to
+    price" sanity check rather than being silently absent from the auction
+    sheet entirely.
+
+    ``pool`` is normally the *keeper-filtered* live-draftable pool (kept
+    players already removed) -- so on its own it can't tell a kept
+    superstar from a real free agent, and would wrongly re-add the kept
+    player as if they were undrafted. Pass ``also_exclude`` (a Series of
+    player names covering the FULL roster, keepers included) so kept
+    players never leak back into the live pool as phantom free agents.
     """
     if fp_rankings is None or fp_rankings.empty:
         return pool
@@ -140,6 +276,8 @@ def expand_pool_with_full_universe(pool: pd.DataFrame, fp_rankings: pd.DataFrame
     pool = pool.copy()
     pool["_key"] = pool["player"].map(_normalize_name)
     existing_keys = set(pool["_key"])
+    if also_exclude is not None:
+        existing_keys |= set(also_exclude.map(_normalize_name))
 
     new_rows = fp_rankings[~fp_rankings["_key"].isin(existing_keys)].drop_duplicates("_key")
 

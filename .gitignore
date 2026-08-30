@@ -9,3 +9,4 @@ __pycache__/
 .DS_Store
 data/nflverse/
 draft_ui/draft_state.json
+outputs/

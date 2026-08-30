@@ -1,0 +1,145 @@
+pick_overall,draft_class,draft_class_label,round,slot_in_round,owner,player,position,college,nfl_status_sheet,notes
+1,1,oldest (~2023-24 class),1,1,Travis,Marvin Harrison Jr.,WR,Ohio State,In college (per sheet),verify — likely stale
+2,1,oldest (~2023-24 class),1,2,Coby,Braelon Allen,RB,Wisconsin,In college (per sheet),verify
+3,1,oldest (~2023-24 class),1,3,Brandon,Jordan Addison,WR,USC,In NFL,2 games played
+4,1,oldest (~2023-24 class),1,4,Paul,Josh Downs,WR,UNC,In NFL,1 game played; legacy owner Paul
+5,1,oldest (~2023-24 class),1,5,Sam,Bryce Young,QB,Alabama,In NFL,1 game played
+6,1,oldest (~2023-24 class),1,6,Brandon,Brock Bowers,TE,Georgia,In college (per sheet),confirmed stale — active NFL starter
+7,1,oldest (~2023-24 class),1,7,Ryan J,Sean Tucker,RB,Syracuse,In NFL,1 game played
+8,1,oldest (~2023-24 class),1,8,Coby,Quinshon Judkins,RB,Ole Miss,In college (per sheet),verify
+9,1,oldest (~2023-24 class),1,9,Jason,Nicholas Singleton,RB,PSU,In college (per sheet),verify
+10,1,oldest (~2023-24 class),1,10,Coby,Jalin Hyatt,WR,Tennessee,In NFL,1 game played
+11,1,oldest (~2023-24 class),1,11,Shane,Darnell Washington,TE,Georgia,In NFL,1 game played
+12,1,oldest (~2023-24 class),1,12,Jason,Emeka Egbuka,WR,Ohio State,In college (per sheet),verify
+13,1,oldest (~2023-24 class),2,1,Brandon,Blake Corum,RB,Michigan,In college (per sheet),verify
+14,1,oldest (~2023-24 class),2,2,James,Will Shipley,RB,Clemson,In college (per sheet),verify
+15,1,oldest (~2023-24 class),2,3,Paul,Raheem Sanders,RB,Arkansas,In college (per sheet),legacy owner Paul
+16,1,oldest (~2023-24 class),2,4,Jason,Luther Burden,WR,Mizzou,In college (per sheet),verify
+17,1,oldest (~2023-24 class),2,5,Sam,Jase McClellan,RB,Alabama,In college (per sheet),verify
+18,1,oldest (~2023-24 class),2,6,Paul,Donovan Edwards,RB,Michigan,In college (per sheet),legacy owner Paul
+19,1,oldest (~2023-24 class),2,7,Evan,Deuce Vaughn,RB,KSU,In NFL,
+20,1,oldest (~2023-24 class),2,8,Paul,Troy Franklin,WR,Oregon,In college (per sheet),legacy owner Paul
+21,1,oldest (~2023-24 class),2,9,Brandon,Branson Robinson,RB,Georgia,In college (per sheet),verify
+22,1,oldest (~2023-24 class),2,10,Coby,Ja'Corey Brooks,WR,Alabama,In college (per sheet),verify
+23,1,oldest (~2023-24 class),2,11,Shane,Jermaine Burton,WR,Alabama,In college (per sheet),verify
+24,1,oldest (~2023-24 class),2,12,CJ,Parker Washington,WR,Penn State,In college (per sheet),verify
+25,1,oldest (~2023-24 class),3,1,Jason,Evan Stewart,WR,Texas A&M,In college (per sheet),verify
+26,1,oldest (~2023-24 class),3,2,Ryan B,Israel Abanikanda,RB,Pitt,In NFL,legacy owner Ryan B
+27,1,oldest (~2023-24 class),3,3,Paul,Jaydn Ott,RB,Cal,In college (per sheet),legacy owner Paul
+28,1,oldest (~2023-24 class),3,4,Ryan J,Johnny Wilson,WR,FSU,In college (per sheet),verify
+29,1,oldest (~2023-24 class),3,5,Sam,Jojo Earle,WR,Alabama,In college (per sheet),verify — still in college 2026
+30,1,oldest (~2023-24 class),3,6,Brandon,Zay Flowers,WR,Boston College,In NFL,1 game played
+31,1,oldest (~2023-24 class),3,7,James,Xavier Hutchinson,WR,Iowa State,In NFL,
+32,1,oldest (~2023-24 class),3,8,Brandon,Caleb Williams,QB,USC,In college (per sheet),confirmed stale — active NFL starter
+33,1,oldest (~2023-24 class),3,9,Paul,CJ Stroud,QB,Ohio State,In NFL,1 game played; legacy owner Paul
+34,1,oldest (~2023-24 class),3,10,Evan,Mohamed Ibrahim,RB,Minnesota,In NFL,
+35,1,oldest (~2023-24 class),3,11,Ryan J,Adam Randall,WR,Clemson,In college (per sheet),verify
+36,1,oldest (~2023-24 class),3,12,Paul,Mario Williams,WR,USC,In college (per sheet),legacy owner Paul
+1,2,~2024-25 class,1,1,Travis,Malik Nabers,WR,LSU,,
+2,2,~2024-25 class,1,2,Ryan J,Keon Coleman,WR,FSU,,
+3,2,~2024-25 class,1,3,Shane,Rome Odunze,WR,Washington,,
+4,2,~2024-25 class,1,4,James,Trey Benson,RB,FSU,,
+5,2,~2024-25 class,1,5,Brandon,Cedric Baxter Jr,RB,Texas,,
+6,2,~2024-25 class,1,6,Travis,Xavier Legette,WR,USC,,
+7,2,~2024-25 class,1,7,Jason,Zachariah Branch,WR,USC,,
+8,2,~2024-25 class,1,8,Ryan B,Trevor Etienne,RB,Florida,,
+9,2,~2024-25 class,1,9,Travis,Tetairoa McMillan,WR,Arizona,,
+10,2,~2024-25 class,1,10,Coby,Ja'Lynn Polk,WR,Washington,,
+11,2,~2024-25 class,1,11,Brandon,Devin Neal,RB,Kansas,,traded to James
+12,2,~2024-25 class,1,12,Jason,Carnell Tate,WR,Ohio State,,
+13,2,~2024-25 class,2,1,Brandon,Adonai Mitchell,WR,Texas,,
+14,2,~2024-25 class,2,2,Jason,Justice Haynes,RB,Alabama,,
+15,2,~2024-25 class,2,3,Shane,Zakhari Franklin,WR,Ole Miss,,
+16,2,~2024-25 class,2,4,Brandon,Tez Walker,WR,UNC,,
+17,2,~2024-25 class,2,5,Coby,Alton McCaskill,RB,Colorado,,
+18,2,~2024-25 class,2,6,Sam,Bucky Irving,RB,Oregon,,
+19,2,~2024-25 class,2,7,Travis,Ja'Tavion Sanders,TE,Texas,,
+20,2,~2024-25 class,2,8,Ryan B,Kaytron Allen,RB,PSU,,
+21,2,~2024-25 class,2,9,CJ,Tory Horton,WR,CSU,,
+22,2,~2024-25 class,2,10,Ryan J,Ashton Jeanty,RB,Boise State,,
+23,2,~2024-25 class,2,11,Brandon,Jonathon Brooks,RB,Texas,,
+24,2,~2024-25 class,2,12,Evan,Hykeem Williams,WR,FSU,,
+25,2,~2024-25 class,3,1,Travis,Damien Martinez,RB,Oregon State,,
+26,2,~2024-25 class,3,2,Coby,Brian Thomas Jr.,WR,LSU,,
+27,2,~2024-25 class,3,3,Shane,Audric Estime,RB,Notre Dame,,
+28,2,~2024-25 class,3,4,Ryan J,Oscar Delp,TE,Georgia,,
+29,2,~2024-25 class,3,5,Jason,Johntay Cook,WR,Texas,,
+30,2,~2024-25 class,3,6,Jason,Ollie Gordon,RB,Ohio State,,
+31,2,~2024-25 class,3,7,Travis,Jurrion Dickey,WR,Oregon,,
+32,2,~2024-25 class,3,8,Ryan B,Roderick Robinson II,RB,Georgia,,
+33,2,~2024-25 class,3,9,CJ,Rasheen Ali,RB,Marshall,,
+34,2,~2024-25 class,3,10,Jason,Antonio Williams,WR,Clemson,,
+35,2,~2024-25 class,3,11,Brandon,Travis Hunter,WR,Colorado,,
+36,2,~2024-25 class,3,12,Evan,Malachi Coleman,WR,Nebraska,,
+1,3,most recent completed (~2025-26 class),1,1,Brandon,Jeremiah Smith,WR,Ohio State,,
+2,3,most recent completed (~2025-26 class),1,2,James,Ryan Williams,WR,Alabama,,
+3,3,most recent completed (~2025-26 class),1,3,Sam,Isaiah Bond,WR,Texas,,confirmed debuted Cleveland Browns 2025
+4,3,most recent completed (~2025-26 class),1,4,Coby,Cam Coleman,WR,Auburn,,
+5,3,most recent completed (~2025-26 class),1,5,Brandon,Omarion Hampton,RB,UNC,,traded to CJ
+6,3,most recent completed (~2025-26 class),1,6,Shane,Dylan Sampson,RB,Tennessee,,
+7,3,most recent completed (~2025-26 class),1,7,Jason,Micah Hudson,WR,Texas Tech,,
+8,3,most recent completed (~2025-26 class),1,8,Brandon,Ryan Wingo,WR,Texas,,
+9,3,most recent completed (~2025-26 class),1,9,Ryan B,Le'Veon Moss,RB,Texas A&M,legacy owner Ryan B,
+10,3,most recent completed (~2025-26 class),1,10,Ryan J,Tre Harris,WR,Ole Miss,,
+11,3,most recent completed (~2025-26 class),1,11,CJ,Elic Ayomanor,WR,Stanford,,
+12,3,most recent completed (~2025-26 class),1,12,Travis,Denzel Boston,WR,Washington,,
+13,3,most recent completed (~2025-26 class),2,1,James,Colston Loveland,TE,Michigan,,
+14,3,most recent completed (~2025-26 class),2,2,Ryan J,Tai Felton,WR,Maryland,,
+15,3,most recent completed (~2025-26 class),2,3,Coby,Kevin Concepcion,WR,NC State,,
+16,3,most recent completed (~2025-26 class),2,4,James,Nic Anderson,WR,Oklahoma,,
+17,3,most recent completed (~2025-26 class),2,5,Brad,Kaleb Johnson,RB,Iowa,,
+18,3,most recent completed (~2025-26 class),2,6,Shane,Jeremiyah Love,RB,Notre Dame,,
+19,3,most recent completed (~2025-26 class),2,7,Travis,Jalen Royals,WR,Utah State,,
+20,3,most recent completed (~2025-26 class),2,8,Jason,T.J. Moore,WR,Clemson,,
+21,3,most recent completed (~2025-26 class),2,9,Evan,Perry Thompson,WR,Auburn,,
+22,3,most recent completed (~2025-26 class),2,10,Travis,Quinton Martin Jr.,RB,Penn State,,
+23,3,most recent completed (~2025-26 class),2,11,Sam,Jordan James,RB,Oregon,,confirmed debuted SF 49ers 2025
+24,3,most recent completed (~2025-26 class),2,12,Evan,Mike Matthews,WR,Tennessee,,
+25,3,most recent completed (~2025-26 class),3,1,Brandon,Nate Frazier,RB,Georgia,,
+26,3,most recent completed (~2025-26 class),3,2,Travis,Makhi Hughes,RB,Tulane,,
+27,3,most recent completed (~2025-26 class),3,3,Brad,Tyler Warren,TE,Penn State,,
+28,3,most recent completed (~2025-26 class),3,4,Coby,Harold Fannin Jr.,TE,Bowling Green,,
+29,3,most recent completed (~2025-26 class),3,5,Brad,Makai Lemon,WR,USC,,
+30,3,most recent completed (~2025-26 class),3,6,Travis,Nick Marsh,WR,Michigan State,,
+31,3,most recent completed (~2025-26 class),3,7,Ryan B,Shedeur Sanders,QB,Colorado,legacy owner Ryan B,
+32,3,most recent completed (~2025-26 class),3,8,James,Kyren Lacy,WR,LSU,,
+33,3,most recent completed (~2025-26 class),3,9,Ryan B,Arch Manning,QB,Texas,legacy owner Ryan B,
+34,3,most recent completed (~2025-26 class),3,10,Ryan J,Darius Taylor,RB,Minnesota,,
+35,3,most recent completed (~2025-26 class),3,11,Coby,Jordyn Tyson,WR,Arizona State,,
+36,3,most recent completed (~2025-26 class),3,12,Evan,Jerrick Gibson,RB,Texas,,
+1,4,current college-picks class (newest),1,1,James,Dakorien Moore,WR,Oregon,,
+2,4,current college-picks class (newest),1,2,Brad,Ahmad Hardy,RB,Mizzou,,
+3,4,current college-picks class (newest),1,3,Shane,Jadarian Price,RB,Notre Dame,,
+4,4,current college-picks class (newest),1,4,Brad,Chris Bell,WR,Louisville,,
+5,4,current college-picks class (newest),1,5,Ryan B,Kenyon Sadiq,TE,Oregon,legacy owner Ryan B,
+6,4,current college-picks class (newest),1,6,CJ,Germie Bernard,WR,Alabama,,
+7,4,current college-picks class (newest),1,7,Ryan J,Eric Singleton Jr.,WR,Auburn,,
+8,4,current college-picks class (newest),1,8,Sam,Fernando Mendoza,QB,Indiana,,confirmed debuted #1 overall 2026 Las Vegas Raiders
+9,4,current college-picks class (newest),1,9,Travis,Bryant Wesco,WR,Clemson,,
+10,4,current college-picks class (newest),1,10,Jason,Dallas Wilson,WR,Florida,,
+11,4,current college-picks class (newest),1,11,James,Bo Jackson,RB,Ohio State,,
+12,4,current college-picks class (newest),1,12,Travis,Chris Brazzell II,WR,Tennessee,,
+13,4,current college-picks class (newest),2,1,Travis,Ja'Kobi Lane,WR,USC,,
+14,4,current college-picks class (newest),2,2,James,Malachi Toney,WR,Miami,,
+15,4,current college-picks class (newest),2,3,Shane,Elijah Sarratt,WR,Indiana,,
+16,4,current college-picks class (newest),2,4,Travis,Jeremiah Koger,WR,South Florida,,
+17,4,current college-picks class (newest),2,5,Ryan B,Jonah Coleman,RB,Washington,legacy owner Ryan B,
+18,4,current college-picks class (newest),2,6,CJ,Hollywood Smothers,RB,NC State,,
+19,4,current college-picks class (newest),2,7,Ryan J,Isaac Brown,RB,Louisville,,
+20,4,current college-picks class (newest),2,8,Sam,Nyck Harbor,WR,South Carolina,,
+21,4,current college-picks class (newest),2,9,Evan,Quincy Porter,WR,Ohio State,,
+22,4,current college-picks class (newest),2,10,Travis,Caleb Hawkins,RB,North Texas,,
+23,4,current college-picks class (newest),2,11,Coby,Harlem Berry,RB,LSU,,
+24,4,current college-picks class (newest),2,12,Brandon,Jadan Baugh,RB,Florida,,
+25,4,current college-picks class (newest),3,1,James,Kewan Lacy,RB,Ole Miss,,
+26,4,current college-picks class (newest),3,2,Brad,Jordan Marshall,RB,Michigan,,
+27,4,current college-picks class (newest),3,3,Shane,Malachi Fields,WR,Notre Dame,,
+28,4,current college-picks class (newest),3,4,Brad,Julian Sayin,QB,Ohio State,,
+29,4,current college-picks class (newest),3,5,Brandon,LJ Martin,RB,BYU,,
+30,4,current college-picks class (newest),3,6,CJ,James Peoples,RB,Penn State,,
+31,4,current college-picks class (newest),3,7,Ryan J,Duce Robinson,WR,Florida State,,
+32,4,current college-picks class (newest),3,8,Sam,Eugene Wilson III,WR,Florida,,
+33,4,current college-picks class (newest),3,9,Evan,Jordon Davison,RB,Oregon,,
+34,4,current college-picks class (newest),3,10,Jason,Vernell Brown,WR,Florida,,
+35,4,current college-picks class (newest),3,11,Coby,Trey'Dez Green,TE,LSU,,
+36,4,current college-picks class (newest),3,12,Brad,Emmett Johnson,RB,Nebraska,,

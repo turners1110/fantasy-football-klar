@@ -62,16 +62,80 @@ def heuristic_keep_flag(df: pd.DataFrame) -> pd.Series:
     return result
 
 
-def apply_keeper_overrides(df: pd.DataFrame, overrides: pd.DataFrame | None) -> pd.DataFrame:
-    """Merge confirmed keeper decisions on top of the heuristic flag.
+def neutral_alpha_keep_flag(df: pd.DataFrame, neutral_value: pd.Series) -> pd.Series:
+    """v4 Part 3: the DEFAULT keeper forecast, replacing the $15-45
+    salary-band heuristic. Selects up to config.MAX_KEEPERS_PER_TEAM
+    players per team by highest NEUTRAL ALPHA (neutral_value - standard
+    keeper cost), requiring positive alpha unless
+    config.KEEPER_COUNT_IS_EXACT forces exactly six.
+
+    ``neutral_value`` must be a Series aligned to df's index -- talent-VBD-
+    based hypothetical open-market value, computed independent of who ends
+    up kept (see valuation.price_live_and_hypothetical's "hypothetical"
+    pass). Standard (untagged, non-Paul-Rule) keeper cost is used for this
+    initial ranking pass; tag optimization across a team's own candidates
+    happens separately (see optimize_tag_placement) rather than assumed
+    from salary alone.
+
+    NOTE (reduced scope): this is a single pass, not the full iterative
+    keeper-market convergence process (build live auction from this set,
+    recompute depleted-market alpha, re-select, repeat to convergence)
+    described in the v4 spec. That loop is NOT implemented here -- flagged
+    explicitly rather than silently approximated. This single pass still
+    replaces the salary-band heuristic as the default forecast.
+    """
+    cost = df.apply(
+        lambda row: keeper_price(row["salary_2025"], False, bool(row.get("paul_rule_eligible", False)))
+        if pd.notna(row["salary_2025"]) else pd.NA,
+        axis=1,
+    )
+    alpha = neutral_value - cost
+
+    result = pd.Series(False, index=df.index)
+    for team, idx in df.groupby("team").groups.items():
+        team_alpha = alpha.loc[idx].dropna()
+        if config.KEEPER_COUNT_IS_EXACT:
+            candidates = team_alpha.sort_values(ascending=False).index[: config.MAX_KEEPERS_PER_TEAM]
+        else:
+            positive = team_alpha[team_alpha > config.KEEPER_ALPHA_SELECTION_THRESHOLD]
+            candidates = positive.sort_values(ascending=False).index[: config.MAX_KEEPERS_PER_TEAM]
+        result.loc[candidates] = True
+    return result
+
+
+def apply_keeper_overrides(
+    df: pd.DataFrame,
+    overrides: pd.DataFrame | None,
+    neutral_value: pd.Series | None = None,
+    skip_default_forecast: bool = False,
+) -> pd.DataFrame:
+    """Merge confirmed keeper decisions on top of the default forecast.
 
     ``overrides`` columns: team, player, will_keep (bool-like), tag_used
-    (bool-like). Rows not present in overrides keep the heuristic flag.
+    (bool-like). Rows not present in overrides keep the default forecast.
+
+    v4: default forecast is neutral-alpha-based (neutral_alpha_keep_flag),
+    NOT the retired $15-45 salary-band heuristic -- pass ``neutral_value``
+    (talent-VBD hypothetical value per player) to use it. Omitting
+    neutral_value falls back to the legacy heuristic, kept only as a
+    comparison field (df["legacy_heuristic_keeper"]), per the instruction
+    to preserve it for existing outputs rather than delete it outright.
     """
     df = df.copy()
-    df["will_keep"] = heuristic_keep_flag(df)
-    df["tag_used"] = False
-    df["keep_source"] = "heuristic"
+    df["legacy_heuristic_keeper"] = heuristic_keep_flag(df)
+    if skip_default_forecast:
+        if "will_keep" not in df.columns:
+            df["will_keep"] = False
+        if "keep_source" not in df.columns:
+            df["keep_source"] = "authoritative_file"
+    elif neutral_value is not None:
+        df["will_keep"] = neutral_alpha_keep_flag(df, neutral_value)
+        df["keep_source"] = "neutral_alpha"
+    else:
+        df["will_keep"] = df["legacy_heuristic_keeper"]
+        df["keep_source"] = "legacy_heuristic_fallback"
+    if "tag_used" not in df.columns:
+        df["tag_used"] = False
 
     if overrides is None or overrides.empty:
         return df
@@ -128,7 +192,7 @@ def price_keepers(df: pd.DataFrame) -> pd.DataFrame:
             return pd.NA
         if pd.isna(row["salary_2025"]):
             return pd.NA  # can't price a keeper with no known prior salary
-        return keeper_price(row["salary_2025"], row["tag_used"], row["on_ir"])
+        return keeper_price(row["salary_2025"], row["tag_used"], bool(row.get("paul_rule_eligible", False)))
 
     df["keeper_price_2026"] = df.apply(_price, axis=1)
     return df

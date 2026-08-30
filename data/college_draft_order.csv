@@ -1,0 +1,16 @@
+# Fancy Football League — fixed college draft order (non-snake, same order all 3 rounds)
+# Source: 2025 Fancy Football League Rosters Google Sheet, pulled 2026-08-29
+# Round 1 = picks 1-12, Round 2 = 13-24, Round 3 = 25-36
+draft_slot,team,picks_overall
+1,Sam,"1,13,25"
+2,Travis,"2,14,26"
+3,Reid,"3,15,27"
+4,James,"4,16,28"
+5,Shane,"5,17,29"
+6,CJ,"6,18,30"
+7,Brad,"7,19,31"
+8,Ryan J,"8,20,32"
+9,Evan,"9,21,33"
+10,Brandon,"10,22,34"
+11,Jason,"11,23,35"
+12,Coby,"12,24,36"

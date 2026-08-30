@@ -50,6 +50,17 @@ def parse_args() -> argparse.Namespace:
         "ignored (forced to 0) if no projections file is supplied at all.",
     )
     p.add_argument("--output-dir", default=OUTPUT_DIR)
+    p.add_argument(
+        "--keepers",
+        default=None,
+        help="Authoritative projected keeper file (default: outputs/keepers_2026.csv if present).",
+    )
+    p.add_argument(
+        "--keeper-mode",
+        choices=["authoritative", "fallback_neutral"],
+        default="authoritative",
+        help="authoritative loads --keepers file; fallback_neutral uses single-pass neutral alpha.",
+    )
     return p.parse_args()
 
 
@@ -84,6 +95,40 @@ def merge_projections(pool: pd.DataFrame, projections: pd.DataFrame | None) -> p
     return pool.drop(columns=["_key"])
 
 
+def _load_authoritative_keepers(path: Path, salaries: pd.DataFrame) -> pd.DataFrame:
+    """Apply keeper flags from authoritative CSV onto salary roster."""
+    keepers_df = pd.read_csv(path)
+    required = {"team", "player"}
+    if not required.issubset(keepers_df.columns):
+        raise ValueError(f"Keeper file {path} missing columns {required - set(keepers_df.columns)}")
+
+    roster = salaries.copy()
+    roster["will_keep"] = False
+    roster["tag_used"] = False
+    key_set = set(zip(keepers_df["team"], keepers_df["player"]))
+    for idx, row in roster.iterrows():
+        if (row["team"], row["player"]) in key_set:
+            roster.loc[idx, "will_keep"] = True
+    if "tag_used" in keepers_df.columns:
+        tag_rows = keepers_df[keepers_df["tag_used"].astype(bool)]
+        for _, tr in tag_rows.iterrows():
+            mask = (roster["team"] == tr["team"]) & (roster["player"] == tr["player"])
+            roster.loc[mask, "tag_used"] = True
+    return roster
+
+
+def _reconcile_keeper_budget(roster: pd.DataFrame, inflation: dict) -> None:
+    total = inflation["total_keeper_spend"] + inflation["remaining_budget"]
+    if abs(total - config.TOTAL_LEAGUE_BUDGET) > 1.0:
+        raise ValueError(
+            f"Budget reconciliation failed: keepers ${inflation['total_keeper_spend']:.0f} + "
+            f"auction ${inflation['remaining_budget']:.0f} = ${total:.0f} (expected ${config.TOTAL_LEAGUE_BUDGET})"
+        )
+    n_keepers = int(roster["will_keep"].astype(bool).sum())
+    print(f"  Reconciliation OK: {n_keepers} keepers, ${inflation['total_keeper_spend']:.0f} keeper spend, "
+          f"${inflation['remaining_budget']:.0f} auction pool")
+
+
 def main() -> None:
     args = parse_args()
     args.output_dir = Path(args.output_dir)
@@ -94,28 +139,12 @@ def main() -> None:
     for line in log:
         print(f"  [data quality] {line}")
 
-    overrides = data_pipeline.load_optional_csv(args.keeper_overrides)
-    with_keepers = keepers.apply_keeper_overrides(salaries, overrides)
-    with_keepers = keepers.price_keepers(with_keepers)
-
-    inflation = keepers.inflation_summary(with_keepers)
-    print("\nKeeper / inflation summary:")
-    for k, v in inflation.items():
-        print(f"  {k}: {v}")
-
-    pool = with_keepers[~with_keepers["will_keep"]].copy()
-
+    # v4 Part 3: the default keeper forecast is neutral-alpha-based, which
+    # needs a neutral (talent-VBD) value for every player BEFORE any
+    # keeper decision exists. Build that pre-pass pool first -- it doesn't
+    # need or use will_keep at all, since talent VBD is defined against
+    # the full universe regardless of who ends up kept.
     fp_rankings = data_pipeline.load_fantasypros_rankings(args.fantasypros_rankings)
-    n_before = len(pool)
-    pool = data_pipeline.expand_pool_with_full_universe(pool, fp_rankings)
-    n_added = len(pool) - n_before
-    if fp_rankings is not None:
-        print(
-            f"\nWidened draftable pool with {n_added} players from "
-            f"{args.fantasypros_rankings} who weren't on a 2025 league roster "
-            "(no historical salary; unpriced until a projection is supplied)."
-        )
-
     projections = data_pipeline.load_optional_csv(args.projections)
     blend_weight = args.blend_weight
     if projections is None:
@@ -127,14 +156,92 @@ def main() -> None:
             "2026 point projections."
         )
         blend_weight = 0.0
-    pool = merge_projections(pool, projections)
 
-    priced = valuation.price_pool(
-        pool,
-        remaining_budget=inflation["remaining_budget"],
-        inflation_multiplier=inflation["inflation_multiplier"],
-        blend_weight=blend_weight,
+    neutral_pool = data_pipeline.expand_pool_with_full_universe(salaries.copy(), fp_rankings)
+    neutral_pool = data_pipeline.merge_fp_tiers(neutral_pool, fp_rankings)
+    neutral_pool = merge_projections(neutral_pool, projections)
+    neutral_pool = data_pipeline.fill_anchor_fallback(neutral_pool)
+    neutral_priced = valuation.price_neutral_value(neutral_pool, blend_weight)
+    neutral_value_by_key = neutral_priced.set_index(
+        neutral_priced["player"].map(data_pipeline._normalize_name)
+    )["hypothetical_open_market_value"]
+    neutral_value = salaries["player"].map(data_pipeline._normalize_name).map(neutral_value_by_key)
+
+    overrides = data_pipeline.load_optional_csv(args.keeper_overrides)
+    neutral_value_by_key = neutral_priced.set_index(
+        neutral_priced["player"].map(data_pipeline._normalize_name)
+    )["hypothetical_open_market_value"]
+    neutral_value = salaries["player"].map(data_pipeline._normalize_name).map(neutral_value_by_key)
+
+    keepers_path = Path(args.keepers) if args.keepers else BASE_DIR / config.AUTHORITATIVE_KEEPERS_PATH
+    use_authoritative = args.keeper_mode == "authoritative" and keepers_path.exists()
+
+    if use_authoritative:
+        print(f"\nLoading authoritative keepers from {keepers_path}")
+        with_keepers = _load_authoritative_keepers(keepers_path, salaries)
+        with_keepers = keepers.apply_keeper_overrides(
+            with_keepers, overrides, neutral_value=neutral_value, skip_default_forecast=True
+        )
+        with_keepers = keepers.price_keepers(with_keepers)
+        print(f"  Loaded {int(with_keepers['will_keep'].astype(bool).sum())} projected keepers from file")
+    elif args.keeper_mode == "authoritative":
+        raise FileNotFoundError(
+            f"Authoritative keeper file not found at {keepers_path}. "
+            "Run run_keeper_decisions.py first or pass --keeper-mode fallback_neutral."
+        )
+    else:
+        print("\nUsing fallback neutral-alpha keeper projection (single pass)")
+        with_keepers = keepers.apply_keeper_overrides(salaries, overrides, neutral_value=neutral_value)
+        with_keepers["will_keep"] = keepers.neutral_alpha_keep_flag(with_keepers, neutral_value)
+        with_keepers = keepers.price_keepers(with_keepers)
+
+    inflation = keepers.inflation_summary(with_keepers)
+    _reconcile_keeper_budget(with_keepers, inflation)
+
+    if use_authoritative:
+        file_keepers = pd.read_csv(keepers_path)
+        file_count = len(file_keepers)
+        file_spend = float(file_keepers["keeper_price_2026"].sum()) if "keeper_price_2026" in file_keepers.columns else None
+        loaded_count = int(with_keepers["will_keep"].astype(bool).sum())
+        if loaded_count != file_count:
+            raise ValueError(
+                f"Keeper count mismatch: file has {file_count}, roster loaded {loaded_count}"
+            )
+        if file_spend is not None and abs(file_spend - inflation["total_keeper_spend"]) > 0.01:
+            raise ValueError(
+                f"Keeper spend mismatch: file ${file_spend:.0f} vs loaded ${inflation['total_keeper_spend']:.0f}"
+            )
+    print("\nKeeper / inflation summary:")
+    for k, v in inflation.items():
+        print(f"  {k}: {v}")
+
+    # Price against the FULL rostered universe (keepers included) -- see
+    # valuation.price_full_market_and_live for why this gives a stable
+    # "hypothetical open-market value" instead of one distorted by
+    # redistributing this year's shrunken live budget across whoever's left.
+    full_pool = with_keepers.copy()
+    n_before = len(full_pool)
+    full_pool = data_pipeline.expand_pool_with_full_universe(full_pool, fp_rankings)
+    full_pool = data_pipeline.merge_fp_tiers(full_pool, fp_rankings)
+    n_added = len(full_pool) - n_before
+    if fp_rankings is not None:
+        print(
+            f"\nWidened draftable pool with {n_added} players from "
+            f"{args.fantasypros_rankings} who weren't on a 2025 league roster "
+            "(no historical salary; unpriced until a projection is supplied)."
+        )
+
+    full_pool = merge_projections(full_pool, projections)
+    full_pool = data_pipeline.fill_anchor_fallback(full_pool)
+    n_flagged = full_pool["notes"].fillna("").str.contains("manual review").sum()
+    n_imputed = full_pool["notes"].fillna("").str.contains("anchor imputed").sum()
+    print(
+        f"\nAnchor fallback (Priority 5): {n_imputed} players with no salary and no "
+        f"projection got a position/tier-median imputed anchor; {n_flagged} had no "
+        "comparable at all and are flagged 'manual review' in their notes."
     )
+
+    priced, priced_hypothetical = valuation.price_live_and_hypothetical(full_pool, inflation, blend_weight)
 
     report = valuation.run_sanity_checks(priced, inflation["remaining_budget"])
     print("\nSanity checks:")
@@ -149,7 +256,7 @@ def main() -> None:
 
     auction_cols = [
         "player", "position", "nfl_team", "projected_points", "VBD_score",
-        "suggested_auction_price", "salary_2025", "notes",
+        "suggested_auction_price", "hypothetical_open_market_value", "salary_2025", "notes",
     ]
     priced_out = priced.copy()
     if "nfl_team" not in priced_out.columns:
