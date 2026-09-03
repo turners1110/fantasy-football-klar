@@ -1,4 +1,52 @@
-# Recommended Auction Strategy
+## ⚠️ RETRACTED PENDING REVALIDATION (auction rebuild, phase 1+2)
+
+**Do not use this strategy or its numbers to draft.** The entire
+recommendation below was optimized against a fitness function phase 1's
+audit (`outputs/auction_rebuild/audit/current_architecture.md`,
+`audit_qb_arbitrage.py`) proved invalid:
+
+1. The evolutionary search (`run_evolution.py`) and the best-response test
+   (`run_best_response.py`) both scored a roster by **summing every one of
+   its 15 rostered players' projected points equally** (`Team.total_points`)
+   -- not by what that roster could actually start in this league's real
+   1QB/2RB/2WR/1TE/3FLEX lineup.
+2. Because "prioritize QB" was the winning genome's single biggest lever,
+   this rewarded rostering as many quarterbacks as possible: the winning
+   genome (`gen15_elite0`) averaged **4.5 QBs per roster** across the 40
+   audited matches -- far beyond the 1 a roster can ever start.
+3. That naive metric credited those rosters with **1,302.7 points from the
+   QB position alone** (summing QB1 through QB4/5 as if all could start).
+4. Re-scored under a legal-1QB-starting-lineup-aware metric
+   (`mock_draft/legal_lineup.py`), the SAME rosters' real, startable QB
+   credit drops to **228.7 points** -- an ~82% reduction, because only one
+   QB per roster can ever actually start.
+5. **15 of the 40 audited rosters were illegal** under this league's real
+   lineup rules (missing a legal starter at some position) once actually
+   checked -- rosters the old metric happily scored anyway.
+6. **No strategic recommendation from the prior evolutionary run remains
+   approved.** The "+813 points above baseline" best-response result cited
+   below is retracted -- it was measured on the same invalid metric. The
+   specific numeric parameters (`position_weight: {QB: 1.56}`,
+   `max_stars: 0`, `price_ceiling_pct: ~10.5%`, etc.) are NOT validated
+   findings and must not be used to draft.
+
+Phase 2 (`outputs/auction_rebuild/`) fixed the fitness function
+(`legal_lineup.build_production_lineup(...).total_roster_utility` now
+drives `evolution.py` and `best_response.py` in place of
+`Team.total_points`), removed forced-final-slot spending from the auction
+engine, and established one authoritative confirmed-keeper/budget
+pipeline -- but explicitly **did not re-run evolution or re-validate a
+strategy** under the corrected metric (out of phase-2 scope by design).
+A new strategic recommendation requires a fresh evolutionary run under the
+corrected fitness function, followed by a fresh best-response test, before
+anything below this notice can be trusted again.
+
+The old findings are preserved verbatim below as an audit trail, NOT as
+current guidance.
+
+---
+
+# Recommended Auction Strategy [RETRACTED -- see notice above]
 
 **Source**: genome `gen15_elite0` from the co-evolutionary optimizer
 (`run_evolution.py`), validated via a best-response test — see

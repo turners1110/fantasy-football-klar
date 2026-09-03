@@ -1,17 +1,27 @@
 """Co-evolutionary optimizer: teams learn to bid better against EACH OTHER
-(not against a fixed target), optimizing for total roster projected points
--- the actual "max point roster" objective, not dollar efficiency.
+(not against a fixed target), optimizing for legal-lineup roster utility
+-- the actual "max legally-startable-points roster" objective, not dollar
+efficiency, and NOT the naive sum of all 15 rostered players' points.
+
+PHASE 2 CHANGE: fitness is now
+legal_lineup.build_production_lineup(roster).total_roster_utility (legal
+starting lineup points + weighted bench option value) instead of
+Team.total_points (which summed every rostered player equally and was
+the root cause of the retracted "overweight QB" result -- see
+outputs/auction_rebuild/audit/current_architecture.md and STRATEGY.md).
+An illegal final roster contributes 0 utility for that match rather than
+being silently scored on its (illegal) point total.
 
 Each generation, genomes from the population are randomly assigned to the
 12 real teams (different pairing every match, so a genome's fitness
 reflects how it does against a variety of opponents, not one fixed
 matchup), a full mock auction is run, and each genome's fitness is its
-average roster points across every match it appeared in. The population
-then evolves: elites survive, the rest are bred via crossover + mutation
-of the fitter genomes, and a few fresh random genomes are injected every
-generation to keep exploring. Population state persists to disk
-(learned_population.json) so intelligence accumulates across separate
-runs of this script, not just within one.
+average legal-lineup utility across every match it appeared in. The
+population then evolves: elites survive, the rest are bred via crossover
++ mutation of the fitter genomes, and a few fresh random genomes are
+injected every generation to keep exploring. Population state persists to
+disk (learned_population.json) so intelligence accumulates across
+separate runs of this script, not just within one.
 """
 
 from __future__ import annotations
@@ -25,7 +35,15 @@ import numpy as np
 from .archetypes import Archetype
 from .auction import run_single_auction
 from .genome import crossover, genome_from_dict, genome_to_dict, mutate, random_genome
+from .legal_lineup import build_production_lineup
 from .models import Player, Team
+
+
+def _roster_utility(team: Team) -> float:
+    """Legal-lineup utility for one finished team -- 0 if the roster can't
+    field a legal starting lineup (never silently fall back to raw
+    points for an illegal roster)."""
+    return build_production_lineup(team.roster).total_roster_utility
 
 DEFAULT_STATE_PATH = Path(__file__).parent.parent / "mock_draft_learned_population.json"
 
@@ -61,7 +79,7 @@ def compute_team_baselines(
     for _ in range(n_matches):
         _, final_teams = run_single_auction(players, teams_template, rng)
         for name, team in final_teams.items():
-            totals[name].append(team.total_points)
+            totals[name].append(_roster_utility(team))
     return {name: float(np.mean(vals)) for name, vals in totals.items()}
 
 
@@ -95,7 +113,7 @@ def evaluate_generation(
 
         for i, team_name in enumerate(team_names):
             gi = genome_idx[i]
-            adjusted_points = final_teams[team_name].total_points - baselines[team_name]
+            adjusted_points = _roster_utility(final_teams[team_name]) - baselines[team_name]
             fitness_sums[gi] += adjusted_points
             fitness_counts[gi] += 1
 

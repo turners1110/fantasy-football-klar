@@ -11,11 +11,15 @@ from pathlib import Path
 
 import pandas as pd
 
+import sys
+
 from . import config_bridge as cfg
 from .models import Player, Team
 from .points import build_points_lookup, compute_fallback_ratio, points_for
 
 BASE_DIR = Path(__file__).parent.parent
+sys.path.insert(0, str(BASE_DIR))
+from auction_model.confirmed_keeper_pipeline import normalize_name  # noqa: E402
 
 
 def build_tiers(pool: pd.DataFrame, tier_size: int = cfg.TIER_SIZE) -> pd.DataFrame:
@@ -83,3 +87,93 @@ def load_pool_and_teams(snapshot_dir: str | Path = BASE_DIR / "output_mock_draft
         teams[team_name] = Team(name=team_name, budget_remaining=float(cfg.BUDGET_PER_TEAM))
 
     return players, teams
+
+
+def load_confirmed_pool_and_teams(
+    snapshot_dir: str | Path = BASE_DIR / "output_mock_draft_snapshot",
+    keepers_path: str | Path = BASE_DIR / "data" / "keepers_2026_confirmed.csv",
+    team_states_path: str | Path = BASE_DIR / "outputs" / "auction_rebuild" / "data" / "team_starting_states.csv",
+    budget_scenario: str = "primary",
+):
+    """Confirmed-keeper-mode loader for phase 2 -- the one authoritative
+    source for who's on which team, at what price, with what budget.
+
+    KNOWN LIMITATION (documented, not silently glossed over): player
+    `base_value` (dollar prices) still comes from
+    output_mock_draft_snapshot/veteran_auction_price_sheet.csv, which was
+    priced under the OLD fallback_neutral keeper set, not these confirmed
+    keepers. Re-deriving suggested_auction_price under the real keeper-
+    driven scarcity is a pricing-model concern outside phase 2's three
+    goals (authoritative keeper/budget pipeline, legal-lineup fitness,
+    forced-final-slot removal) -- tracked as required before any real
+    price/strategy output is published. What THIS function guarantees
+    correctly: pool composition (every confirmed keeper and college-
+    rights hold is excluded from the auction-eligible pool) and starting
+    budgets (from team_starting_states.csv, itself built from the
+    confirmed keeper file + user-confirmed / sheet-reported budgets).
+
+    budget_scenario: "primary" (SAM_PRIMARY_223) or "conversions" (SAM_CONVERSIONS_221).
+    """
+    if budget_scenario not in ("primary", "conversions"):
+        raise ValueError(f"budget_scenario must be 'primary' or 'conversions', got {budget_scenario!r}")
+
+    snapshot_dir = Path(snapshot_dir)
+    confirmed_keepers = pd.read_csv(keepers_path)
+    team_states = pd.read_csv(team_states_path)
+
+    prices = pd.read_csv(snapshot_dir / "veteran_auction_price_sheet.csv")
+    prices = prices[prices["suggested_auction_price"].notna()].copy()
+    prices = prices.rename(columns={"suggested_auction_price": "base_value"})
+    prices = prices[["player", "position", "base_value"]]
+
+    # Exclude every confirmed veteran keeper AND every college-rights hold
+    # from the auction-eligible pool -- the one eligibility decision this
+    # loader makes, independent of auction_model.auction_eligibility's own
+    # (broader, nflverse/college-holdings-aware) classification, which
+    # governs the real run_valuation.py price sheet instead. Both must
+    # agree that keepers/holds are excluded; this loader enforces it
+    # directly against the confirmed-keeper file as a hard guarantee for
+    # the mock-draft pool specifically.
+    excluded_names = set(confirmed_keepers["player_name"].map(normalize_name))
+    prices["_key"] = prices["player"].map(normalize_name)
+    contaminated = prices[prices["_key"].isin(excluded_names)]
+    prices = prices[~prices["_key"].isin(excluded_names)].drop(columns=["_key"])
+
+    prices = build_tiers(prices)
+    star_cutoff = prices["base_value"].sort_values(ascending=False).head(cfg.GLOBAL_STAR_COUNT).min()
+
+    points_lookup = build_points_lookup()
+    fallback_ratio = compute_fallback_ratio(prices, points_lookup)
+
+    players = {}
+    for _, row in prices.iterrows():
+        pts, is_real = points_for(row["player"], points_lookup, fallback_ratio, row["base_value"])
+        players[row["player"]] = Player(
+            name=row["player"], position=row["position"], base_value=float(row["base_value"]),
+            tier=int(row["tier"]), tier_size=int(row["tier_size"]), tier_rank=int(row["tier_rank"]),
+            is_star_eligible=bool(row["base_value"] >= star_cutoff),
+            projected_points=pts, points_is_real=is_real,
+        )
+
+    teams: dict[str, Team] = {}
+    budget_col = "primary_auction_budget" if budget_scenario == "primary" else "conversions_scenario_auction_budget"
+    for _, state_row in team_states.iterrows():
+        team_name = state_row["team_id"]
+        team_keepers = confirmed_keepers[
+            (confirmed_keepers["team_id"] == team_name) & (confirmed_keepers["counts_as_keeper"].astype(bool))
+        ]
+        roster = []
+        for _, kr in team_keepers.iterrows():
+            pts, _ = points_for(kr["player_name"], points_lookup, fallback_ratio, float(kr["keeper_cost"]))
+            roster.append((kr["player_name"], kr["position"], float(kr["keeper_cost"]), pts))
+        teams[team_name] = Team(
+            name=team_name,
+            budget_remaining=float(state_row[budget_col]),
+            roster=roster,
+        )
+
+    return players, teams, {
+        "excluded_count": len(excluded_names),
+        "contaminated_in_price_sheet_before_filter": contaminated["player"].tolist(),
+        "budget_scenario": budget_scenario,
+    }

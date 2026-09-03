@@ -1,0 +1,40 @@
+{
+  "safe_for_draft_use": false,
+  "safe_for_draft_use_reason": "Phase 2 explicitly does not publish player prices, draft targets, or strategy advice. No strategy has been re-validated under the corrected legal-lineup fitness function (evolution was not run in phase 2), and several teams' keeper state is only PARTIALLY_CONFIRMED (see team_starting_states.csv keeper_state_status). This smoke test proves the pipeline runs and produces legal outcomes -- nothing more.",
+  "n_seeds": 20,
+  "n_teams": 12,
+  "legal_roster_rate": 1.0,
+  "legal_lineup_rate": 0.8875,
+  "avg_qbs_per_team": 1.8625,
+  "max_qbs_on_one_team": 5,
+  "avg_unspent_cash": 9.387624999999998,
+  "max_unspent_cash": 58.68,
+  "n_one_dollar_sales": 609,
+  "n_duplicate_sales": 0,
+  "n_keeper_sales": 0,
+  "n_forced_final_slot_sales": 0,
+  "n_total_sales": 2160,
+  "sam_avg_legal_lineup_points": 1467.306,
+  "sam_avg_bench_option_value": 80.8625,
+  "sam_avg_total_utility": 1548.1685,
+  "teams_by_keeper_state_status": {
+    "Brad": "PARTIALLY_CONFIRMED",
+    "Brandon": "PARTIALLY_CONFIRMED",
+    "CJ": "PARTIALLY_CONFIRMED",
+    "Coby": "PARTIALLY_CONFIRMED",
+    "Evan": "PARTIALLY_CONFIRMED",
+    "James": "PARTIALLY_CONFIRMED",
+    "Jason": "PARTIALLY_CONFIRMED",
+    "Reid": "PARTIALLY_CONFIRMED",
+    "Ryan J": "PARTIALLY_CONFIRMED",
+    "Sam": "CONFIRMED",
+    "Shane": "PARTIALLY_CONFIRMED",
+    "Travis": "PARTIALLY_CONFIRMED"
+  },
+  "outputs": {
+    "smoke_rosters": "/home/user/fantasy-football-klar/outputs/auction_rebuild/phase2/smoke_rosters.csv",
+    "smoke_sales": "/home/user/fantasy-football-klar/outputs/auction_rebuild/phase2/smoke_sales.csv",
+    "smoke_team_results": "/home/user/fantasy-football-klar/outputs/auction_rebuild/phase2/smoke_team_results.csv",
+    "smoke_failures": "/home/user/fantasy-football-klar/outputs/auction_rebuild/phase2/smoke_failures.csv"
+  }
+}

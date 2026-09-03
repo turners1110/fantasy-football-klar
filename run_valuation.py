@@ -24,11 +24,19 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from auction_model import config, data_pipeline, keepers, rookie_board, valuation
+from auction_model import auction_eligibility, config, data_pipeline, keepers, rookie_board, valuation
+from auction_model.confirmed_keeper_pipeline import (
+    compute_identity_issues, compute_team_states, normalize_name, unresolved_duplicate_identities,
+)
 
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 OUTPUT_DIR = BASE_DIR / "output"
+CONFIRMED_KEEPER_REQUIRED_COLUMNS = {
+    "season", "team_id", "team_name", "player_id", "player_name", "position",
+    "prior_salary", "keeper_cost", "franchise_tag", "keeper_status", "counts_as_keeper",
+    "counts_as_active_roster", "auction_eligible", "source", "source_date", "confidence", "notes",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -57,9 +65,21 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--keeper-mode",
-        choices=["authoritative", "fallback_neutral"],
+        choices=["authoritative", "fallback_neutral", "confirmed"],
         default="authoritative",
-        help="authoritative loads --keepers file; fallback_neutral uses single-pass neutral alpha.",
+        help="authoritative loads --keepers file; fallback_neutral uses single-pass neutral alpha; "
+        "confirmed loads --keepers-file + --budget-adjustments-file (the phase-2 tracked, "
+        "commissioner-sourced pipeline) and fails loudly rather than falling back on any gap.",
+    )
+    p.add_argument(
+        "--keepers-file", default=None,
+        help="Confirmed keeper CSV for --keeper-mode confirmed (e.g. data/keepers_2026_confirmed.csv). "
+        "Distinct from --keepers, which is the older authoritative-mode file.",
+    )
+    p.add_argument(
+        "--budget-adjustments-file", default=None,
+        help="Confirmed cash-trade/budget-adjustment CSV for --keeper-mode confirmed "
+        "(e.g. data/team_budget_adjustments_2026.csv).",
     )
     return p.parse_args()
 
@@ -115,6 +135,134 @@ def _load_authoritative_keepers(path: Path, salaries: pd.DataFrame) -> pd.DataFr
             mask = (roster["team"] == tr["team"]) & (roster["player"] == tr["player"])
             roster.loc[mask, "tag_used"] = True
     return roster
+
+
+def _load_confirmed_keepers(
+    keepers_path: Path, adjustments_path: Path, salaries: pd.DataFrame, output_dir: Path,
+) -> tuple[pd.DataFrame, dict, list[dict], pd.DataFrame]:
+    """Confirmed-mode keeper/budget loader -- the one authoritative pipeline
+    per the rebuild spec. Validates the tracked input files, computes team
+    starting states via auction_model.confirmed_keeper_pipeline (the SAME
+    function scripts/build_team_states.py uses), and fails loudly (raises)
+    rather than silently falling back to neutral-alpha on any gap.
+
+    Also writes the same audit-trail CSVs scripts/build_team_states.py
+    writes, so running this CLI alone is a complete, self-contained
+    authoritative pipeline (not dependent on a separate script having
+    already been run).
+
+    Returns (with_keepers, inflation, state_rows, confirmed_keepers).
+    """
+    if not keepers_path.exists():
+        raise FileNotFoundError(f"Confirmed keepers file not found: {keepers_path}")
+    if not adjustments_path.exists():
+        raise FileNotFoundError(f"Confirmed budget adjustments file not found: {adjustments_path}")
+
+    confirmed_keepers = pd.read_csv(keepers_path)
+    missing_cols = CONFIRMED_KEEPER_REQUIRED_COLUMNS - set(confirmed_keepers.columns)
+    if missing_cols:
+        raise ValueError(f"Confirmed keepers file {keepers_path} missing required columns: {sorted(missing_cols)}")
+    adjustments = pd.read_csv(adjustments_path)
+
+    identity_rows = compute_identity_issues(confirmed_keepers)
+    unresolved = unresolved_duplicate_identities(identity_rows)
+    if unresolved:
+        raise ValueError(
+            f"Confirmed mode: unresolved duplicate/ambiguous player identities in {keepers_path}, "
+            f"refusing to proceed (never silently merge conflicting identities): {unresolved}"
+        )
+
+    state_rows, conflict_rows = compute_team_states(confirmed_keepers, adjustments)
+    negative = [r for r in state_rows if r["primary_auction_budget"] < 0 or r["conversions_scenario_auction_budget"] < 0]
+    if negative:
+        raise ValueError(f"Confirmed mode: negative auction budget computed for team(s), refusing to proceed: {negative}")
+
+    audit_dir = BASE_DIR / "outputs" / "auction_rebuild" / "audit"
+    out_data_dir = BASE_DIR / "outputs" / "auction_rebuild" / "data"
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    out_data_dir.mkdir(parents=True, exist_ok=True)
+    if conflict_rows:
+        pd.DataFrame(conflict_rows).to_csv(audit_dir / "keeper_source_conflicts.csv", index=False)
+    else:
+        (audit_dir / "keeper_source_conflicts.csv").write_text(
+            "team,field,winning_source,winning_value,losing_source,losing_value,detail\n"
+        )
+    pd.DataFrame(state_rows).to_csv(out_data_dir / "team_starting_states.csv", index=False)
+
+    veteran_rows = confirmed_keepers[confirmed_keepers["counts_as_keeper"].astype(bool)]
+    with_keepers = salaries.copy()
+    with_keepers["will_keep"] = False
+    with_keepers["tag_used"] = False
+    with_keepers["keeper_price_2026"] = pd.NA
+    with_keepers["keep_source"] = ""
+    salary_norm = with_keepers["player"].map(normalize_name)
+
+    unmatched_synthetic_rows = []
+    for _, kr in veteran_rows.iterrows():
+        mask = salary_norm == normalize_name(kr["player_name"])
+        if not mask.any():
+            # Not found in historical_salaries_2025_raw.csv by normalized name --
+            # either a nickname/full-name mismatch (e.g. "Tet" vs "Tetairoa"
+            # McMillan) or a player genuinely absent from that extraction
+            # (e.g. a 2025 rookie never on a captured roster snapshot). NOT
+            # silently dropped: logged to keeper_identity_issues.csv below,
+            # and a synthetic roster row is built directly from the
+            # confirmed keeper file's own (authoritative) prior_salary /
+            # keeper_cost so this keeper still counts correctly everywhere
+            # downstream (auction exclusion, keepers_2026.csv export).
+            identity_rows.append({
+                "issue_type": "UNMATCHED_TO_HISTORICAL_SALARY", "player_name": kr["player_name"],
+                "normalized": normalize_name(kr["player_name"]), "team": kr["team_name"],
+                "detail": f"No row in historical_salaries_2025_raw.csv matched by normalized name "
+                          f"-- using confirmed file's own prior_salary (${kr['prior_salary']}) / "
+                          f"keeper_cost (${kr['keeper_cost']}) directly instead of silently dropping.",
+            })
+            unmatched_synthetic_rows.append({
+                "team": kr["team_name"], "player": kr["player_name"], "position": kr["position"],
+                "salary_2025": float(kr["prior_salary"]) if pd.notna(kr["prior_salary"]) else pd.NA,
+                "notes": "confirmed-mode synthetic row: not found in historical_salaries_2025_raw.csv",
+                "has_confirmed_salary": True, "is_tagged_2025": bool(kr["franchise_tag"]), "on_ir": False,
+                "games_played_note": "", "paul_rule_eligible": False, "paul_rule_verified": False,
+                "paul_rule_source": "", "salary_origin": "confirmed_keeper_file_prior_salary", "origin_confidence": 0.9,
+                "will_keep": True, "tag_used": bool(kr["franchise_tag"]),
+                "keeper_price_2026": float(kr["keeper_cost"]), "keep_source": "confirmed_unmatched_synthetic",
+            })
+            continue
+        with_keepers.loc[mask, "will_keep"] = True
+        with_keepers.loc[mask, "tag_used"] = bool(kr["franchise_tag"])
+        with_keepers.loc[mask, "keeper_price_2026"] = float(kr["keeper_cost"])
+        with_keepers.loc[mask, "keep_source"] = "confirmed"
+    if unmatched_synthetic_rows:
+        with_keepers = pd.concat([with_keepers, pd.DataFrame(unmatched_synthetic_rows)], ignore_index=True)
+
+    pd.DataFrame(identity_rows).to_csv(audit_dir / "keeper_identity_issues.csv", index=False)
+
+    total_keeper_spend = float(veteran_rows["keeper_cost"].astype(float).sum())
+    historical_value_removed = float(veteran_rows["prior_salary"].astype(float).sum())
+    remaining_budget = float(sum(r["primary_auction_budget"] for r in state_rows))
+    denom = config.TOTAL_LEAGUE_BUDGET - historical_value_removed
+    inflation = {
+        "n_keepers": int(len(veteran_rows)),
+        "total_keeper_spend": round(total_keeper_spend, 2),
+        "remaining_budget": round(remaining_budget, 2),
+        "historical_value_removed": round(historical_value_removed, 2),
+        "historical_value_remaining_in_pool": round(
+            float(salaries.loc[~with_keepers["will_keep"], "salary_2025"].dropna().sum()), 2
+        ),
+        "inflation_multiplier": round(remaining_budget / denom, 4) if denom > 0 else 1.0,
+    }
+    naive_total = total_keeper_spend + remaining_budget
+    if abs(naive_total - config.TOTAL_LEAGUE_BUDGET) > 1.0:
+        print(
+            f"  NOTE (not a stop condition -- per-team real budgets, not the naive league-wide "
+            f"total, are authoritative here): sum of confirmed per-team auction budgets "
+            f"(${remaining_budget:.0f}) + confirmed keeper spend (${total_keeper_spend:.0f}) = "
+            f"${naive_total:.0f}, vs. the naive {config.TOTAL_LEAGUE_BUDGET / 12:.0f}-per-team x 12 "
+            f"total of ${config.TOTAL_LEAGUE_BUDGET:.0f} (gap ${config.TOTAL_LEAGUE_BUDGET - naive_total:+.0f}). "
+            f"Logged, not silently reconciled -- see outputs/auction_rebuild/audit/keeper_source_conflicts.csv."
+        )
+
+    return with_keepers, inflation, state_rows, confirmed_keepers
 
 
 def _reconcile_keeper_budget(roster: pd.DataFrame, inflation: dict) -> None:
@@ -175,8 +323,24 @@ def main() -> None:
 
     keepers_path = Path(args.keepers) if args.keepers else BASE_DIR / config.AUTHORITATIVE_KEEPERS_PATH
     use_authoritative = args.keeper_mode == "authoritative" and keepers_path.exists()
+    use_confirmed = args.keeper_mode == "confirmed"
+    confirmed_keepers_df = None
+    confirmed_state_rows = None
 
-    if use_authoritative:
+    if use_confirmed:
+        if not args.keepers_file or not args.budget_adjustments_file:
+            raise ValueError(
+                "--keeper-mode confirmed requires both --keepers-file and --budget-adjustments-file "
+                "(e.g. --keepers-file data/keepers_2026_confirmed.csv "
+                "--budget-adjustments-file data/team_budget_adjustments_2026.csv)."
+            )
+        print(f"\nLoading confirmed keepers from {args.keepers_file} + {args.budget_adjustments_file}")
+        with_keepers, inflation, confirmed_state_rows, confirmed_keepers_df = _load_confirmed_keepers(
+            Path(args.keepers_file), Path(args.budget_adjustments_file), salaries, args.output_dir,
+        )
+        print(f"  Loaded {int(with_keepers['will_keep'].astype(bool).sum())} confirmed veteran keepers "
+              f"({len(confirmed_keepers_df) - int(with_keepers['will_keep'].astype(bool).sum())} college-rights holds)")
+    elif use_authoritative:
         print(f"\nLoading authoritative keepers from {keepers_path}")
         with_keepers = _load_authoritative_keepers(keepers_path, salaries)
         with_keepers = keepers.apply_keeper_overrides(
@@ -184,6 +348,8 @@ def main() -> None:
         )
         with_keepers = keepers.price_keepers(with_keepers)
         print(f"  Loaded {int(with_keepers['will_keep'].astype(bool).sum())} projected keepers from file")
+        inflation = keepers.inflation_summary(with_keepers)
+        _reconcile_keeper_budget(with_keepers, inflation)
     elif args.keeper_mode == "authoritative":
         raise FileNotFoundError(
             f"Authoritative keeper file not found at {keepers_path}. "
@@ -194,9 +360,8 @@ def main() -> None:
         with_keepers = keepers.apply_keeper_overrides(salaries, overrides, neutral_value=neutral_value)
         with_keepers["will_keep"] = keepers.neutral_alpha_keep_flag(with_keepers, neutral_value)
         with_keepers = keepers.price_keepers(with_keepers)
-
-    inflation = keepers.inflation_summary(with_keepers)
-    _reconcile_keeper_budget(with_keepers, inflation)
+        inflation = keepers.inflation_summary(with_keepers)
+        _reconcile_keeper_budget(with_keepers, inflation)
 
     if use_authoritative:
         file_keepers = pd.read_csv(keepers_path)
@@ -241,7 +406,39 @@ def main() -> None:
         "comparable at all and are flagged 'manual review' in their notes."
     )
 
+    if use_confirmed:
+        # ONE eligibility decision for the veteran price sheet: run the real
+        # auction_model.auction_eligibility classifier (nflverse debut /
+        # college-rights aware) for the general pool, THEN force-exclude
+        # every player named in the confirmed keeper file (both veteran
+        # keepers and college-rights holds) as a hard override -- the
+        # confirmed file is the higher-priority, commissioner-sourced
+        # identity for these specific players regardless of what the
+        # more general classifier concludes about them.
+        eligibility_audit = auction_eligibility.build_eligibility_audit(full_pool, salaries, roster=with_keepers)
+        full_pool = auction_eligibility.filter_veteran_auction_pool(full_pool, eligibility_audit, fail_on_ineligible=False)
+        confirmed_excluded_names = set(confirmed_keepers_df["player_name"].map(normalize_name))
+        full_pool_key = full_pool["player"].map(normalize_name)
+        still_present = full_pool.loc[full_pool_key.isin(confirmed_excluded_names), "player"].tolist()
+        full_pool = full_pool.loc[~full_pool_key.isin(confirmed_excluded_names)].reset_index(drop=True)
+        audit_dir = BASE_DIR / "outputs" / "auction_rebuild" / "audit"
+        eligibility_audit.to_csv(audit_dir / "run_valuation_eligibility_audit.csv", index=False)
+        print(f"\nApplied auction_model.auction_eligibility to the veteran price-sheet pool "
+              f"(wrote {audit_dir / 'run_valuation_eligibility_audit.csv'}); confirmed-file override "
+              f"additionally force-excluded {len(confirmed_excluded_names)} named keepers/holds "
+              f"({len(still_present)} of whom the general classifier alone would NOT have excluded).")
+
     priced, priced_hypothetical = valuation.price_live_and_hypothetical(full_pool, inflation, blend_weight)
+
+    if use_confirmed:
+        priced_key = priced["player"].map(normalize_name)
+        leaked = priced.loc[priced_key.isin(confirmed_excluded_names), "player"].tolist()
+        if leaked:
+            raise ValueError(
+                f"Confirmed mode: {len(leaked)} confirmed keeper(s)/college-rights hold(s) remain in "
+                f"the priced auction pool after eligibility filtering -- refusing to publish a "
+                f"contaminated price sheet: {leaked}"
+            )
 
     report = valuation.run_sanity_checks(priced, inflation["remaining_budget"])
     print("\nSanity checks:")
@@ -265,16 +462,50 @@ def main() -> None:
         priced_out["nfl_team"] = priced_out["nfl_team"].fillna("")
     priced_out = priced_out.rename(columns={"salary_2025": "historical_salary_if_known"})
     auction_cols = [c if c != "salary_2025" else "historical_salary_if_known" for c in auction_cols]
+    priced_out["keeper_mode"] = args.keeper_mode
     auction_out_path = args.output_dir / "veteran_auction_price_sheet.csv"
-    priced_out[auction_cols].sort_values("suggested_auction_price", ascending=False, na_position="last").to_csv(
+    priced_out[auction_cols + ["keeper_mode"]].sort_values("suggested_auction_price", ascending=False, na_position="last").to_csv(
         auction_out_path, index=False
     )
     print(f"\nWrote {auction_out_path}")
 
     keeper_cols = ["team", "player", "position", "salary_2025", "tag_used", "on_ir", "keeper_price_2026", "keep_source"]
+    kept_out = with_keepers[with_keepers["will_keep"]][keeper_cols].copy()
+    kept_out["keeper_mode"] = args.keeper_mode
     kept_out_path = args.output_dir / "keepers_2026.csv"
-    with_keepers[with_keepers["will_keep"]][keeper_cols].to_csv(kept_out_path, index=False)
+    kept_out.to_csv(kept_out_path, index=False)
     print(f"Wrote {kept_out_path}")
+
+    if use_confirmed:
+        manifest = {
+            "keeper_mode": "confirmed",
+            "keepers_file": str(Path(args.keepers_file).resolve()),
+            "budget_adjustments_file": str(Path(args.budget_adjustments_file).resolve()),
+            "salaries_file": str(Path(args.salaries).resolve()),
+            "fantasypros_rankings_file": str(Path(args.fantasypros_rankings).resolve()) if Path(args.fantasypros_rankings).exists() else None,
+            "projections_file": str(Path(args.projections).resolve()) if Path(args.projections).exists() else None,
+            "n_veteran_keepers": int(with_keepers["will_keep"].astype(bool).sum()),
+            "n_college_rights_holds": int(len(confirmed_keepers_df)) - int(with_keepers["will_keep"].astype(bool).sum()),
+            "n_teams": len(confirmed_state_rows),
+            "sum_primary_auction_budget": round(sum(r["primary_auction_budget"] for r in confirmed_state_rows), 2),
+            "sum_confirmed_keeper_spend": inflation["total_keeper_spend"],
+            "outputs": {
+                "veteran_auction_price_sheet": str(auction_out_path.resolve()),
+                "keepers_2026": str(kept_out_path.resolve()),
+                "team_starting_states": str((BASE_DIR / "outputs" / "auction_rebuild" / "data" / "team_starting_states.csv").resolve()),
+                "eligibility_audit": str((BASE_DIR / "outputs" / "auction_rebuild" / "audit" / "run_valuation_eligibility_audit.csv").resolve()),
+            },
+            "rerun_command": (
+                f"python3 run_valuation.py --keeper-mode confirmed "
+                f"--keepers-file {args.keepers_file} --budget-adjustments-file {args.budget_adjustments_file}"
+            ),
+        }
+        manifest_dir = BASE_DIR / "outputs" / "auction_rebuild" / "audit"
+        manifest_dir.mkdir(parents=True, exist_ok=True)
+        manifest_path = manifest_dir / "run_valuation_confirmed_input_manifest.json"
+        import json
+        manifest_path.write_text(json.dumps(manifest, indent=2))
+        print(f"Wrote {manifest_path}")
 
     rookie_pool_df = data_pipeline.load_optional_csv(args.rookie_pool)
     board = rookie_board.build_rookie_board(rookie_pool_df)

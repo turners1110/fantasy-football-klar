@@ -20,6 +20,7 @@ import numpy as np
 from mock_draft.auction import run_single_auction
 from mock_draft.data import load_pool_and_teams
 from mock_draft.evolution import DEFAULT_STATE_PATH, compute_team_baselines, evaluate_generation, run_evolution
+from mock_draft.legal_lineup import build_production_lineup
 
 BASE_DIR = Path(__file__).parent
 
@@ -36,7 +37,8 @@ def benchmark_hand_designed_archetypes(players, teams, team_baselines, rng, n_ma
     for _ in range(n_matches):
         _, final_teams = run_single_auction(players, teams, rng)
         for name, team in final_teams.items():
-            totals.append(team.total_points - team_baselines[name])
+            utility = build_production_lineup(team.roster).total_roster_utility
+            totals.append(utility - team_baselines[name])
     return float(np.mean(totals))
 
 

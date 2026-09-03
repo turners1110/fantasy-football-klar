@@ -1,0 +1,2 @@
+season,team_id,team_name,amount,reason,counterparty,source,source_date,confidence,notes
+2026,Sam,Sam,-15,Traded auction cash for Cam Skattebo,UNKNOWN,user_direct_statement,2026-09-04,HIGH,User-confirmed directly; counterparty team not specified

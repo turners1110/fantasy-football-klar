@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass, field
 
 from . import config_bridge as cfg
@@ -54,6 +55,24 @@ class Team:
 
     @property
     def total_points(self) -> float:
+        """PHASE 2: DEPRECATED as a fitness/strategy-selection signal. This
+        sums every rostered player's points equally, including bench
+        players who can never actually start (see
+        outputs/auction_rebuild/audit/current_architecture.md and
+        mock_draft/legal_lineup.py) -- the exact bug that credited a
+        1-QB-league roster with 4.5 QBs' worth of points. Every strategy-
+        evaluation path (evolution.py, best_response.py) now uses
+        legal_lineup.build_production_lineup(...).total_roster_utility
+        instead. Kept only as a raw diagnostic figure; do not use it to
+        rank or select strategies."""
+        warnings.warn(
+            "Team.total_points is the pre-phase-2 naive all-rostered-points "
+            "metric, deprecated as a fitness/strategy-selection signal -- "
+            "use legal_lineup.build_production_lineup(team.roster)."
+            "total_roster_utility instead. See mock_draft/legal_lineup.py.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return sum(entry[3] for entry in self.roster)
 
     def max_bid_cap(self) -> float:

@@ -1,0 +1,78 @@
+season,team_id,team_name,player_id,player_name,position,prior_salary,keeper_cost,franchise_tag,keeper_status,counts_as_keeper,counts_as_active_roster,auction_eligible,source,source_date,confidence,notes
+2026,Brandon,Brandon,,Jonathan Taylor,RB,41,46,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Brandon,Brandon,,Justin Jefferson,WR,36,46,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Brandon,Brandon,,Nico Collins,WR,26,36,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Brandon,Brandon,,Breece Hall,RB,21,31,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Brandon,Brandon,,Brock Bowers,TE,6,16,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Brandon,Brandon,,Christian McCaffrey,RB,36,46,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Coby,Coby,,Derrick Henry,RB,41,51,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Coby,Coby,,Kyren Williams,RB,21,31,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Coby,Coby,,Brian Thomas Jr,WR,6,16,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Coby,Coby,,Harold Fannin Jr,TE,1,6,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Coby,Coby,,TreVeyon Henderson,RB,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Coby,Coby,,Quinshon Judkins,RB,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Brad,Brad,,Alec Pierce,WR,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Brad,Brad,,Jaxon Smith-Njigba,WR,21,31,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Brad,Brad,,Jaydon Blue,RB,4,14,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Brad,Brad,,Jameson Williams,WR,31,41,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Brad,Brad,,Marvin Harrison Jr,WR,6,16,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Brad,Brad,,Tyler Warren,TE,1,6,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Reid,Reid,,Kyle Pitts Sr,TE,6,11,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Reid,Reid,,Tucker Kraft,TE,11,21,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Reid,Reid,,Drake Maye,QB,20,30,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Reid,Reid,,Chris Olave,WR,31,41,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Reid,Reid,,Jalen Coker,WR,3,13,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Reid,Reid,,Javonte Williams,RB,24,34,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Evan,Evan,,Amon-Ra St Brown,WR,36,41,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Evan,Evan,,Drake London,WR,26,36,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Evan,Evan,,Saquon Barkley,RB,36,46,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Evan,Evan,,George Pickens,WR,31,41,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Evan,Evan,,Puka Nacua,WR,21,31,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Evan,Evan,,Emeka Egbuka,WR,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Sam,Sam,,Garrett Wilson,WR,21,31,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,User-confirmed directly in addition to sheet
+2026,Sam,Sam,,Kenneth Walker III,RB,31,36,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,User-confirmed directly in addition to sheet
+2026,Sam,Sam,,Quentin Johnston,WR,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,User-confirmed directly in addition to sheet
+2026,Sam,Sam,,David Montgomery,RB,35,45,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,User-confirmed directly in addition to sheet
+2026,Sam,Sam,,Cam Skattebo,RB,18,28,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,User-confirmed directly in addition to sheet
+2026,Sam,Sam,,Jaxson Dart,QB,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,User-confirmed directly in addition to sheet
+2026,Sam,Sam,,Isaiah Bond,WR,,,False,COLLEGE_RIGHTS_HOLD,False,False,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,User-confirmed directly in addition to sheet
+2026,Sam,Sam,,Fernando Mendoza,QB,,,False,COLLEGE_RIGHTS_HOLD,False,False,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,User-confirmed directly in addition to sheet
+2026,James,James,,Wan'Dale Robinson,WR,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,James,James,,Trevor Lawrence,QB,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,James,James,,Jordan Addison,WR,21,31,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,James,James,,Zay Flowers,WR,21,31,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,James,James,,Colston Loveland,TE,1,6,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,James,James,,Rico Dowdle,RB,3,13,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Ryan J,Ryan J,,Brock Purdy,QB,5,15,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Ryan J,Ryan J,,Michael Wilson,WR,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Ryan J,Ryan J,,Oronde Gadsden,TE,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Ryan J,Ryan J,,DeVon Achane,RB,16,26,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Ryan J,Ryan J,,Ashton Jeanty,RB,1,6,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Ryan J,Ryan J,,Ladd McConkey,WR,57,67,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Jason,Jason,,CeeDee Lamb,WR,36,46,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Jason,Jason,,Trey McBride,TE,21,31,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Jason,Jason,,AJ Brown,WR,36,46,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Jason,Jason,,Bijan Robinson,RB,16,21,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Jason,Jason,,Jahmyr Gibbs,RB,21,31,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Jason,Jason,,Luther Burden,WR,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Travis,Travis,,Jayden Reed,WR,16,26,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Travis,Travis,,Malik Nabers,WR,6,16,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Travis,Travis,,Woody Marks,RB,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Travis,Travis,,Rhamondre Stevenson,RB,32,42,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Travis,Travis,,Hunter Henry,TE,2,12,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Travis,Travis,,Tetairoa McMillan,WR,1,6,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Travis,Travis,,Denzel Boston,WR,,,False,COLLEGE_RIGHTS_HOLD,False,False,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,"College-rights hold, n/a salary in sheet"
+2026,Travis,Travis,,Ja'Kobi Lane,WR,,,False,COLLEGE_RIGHTS_HOLD,False,False,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,"College-rights hold, n/a salary in sheet"
+2026,CJ,CJ,,Tory Horton,WR,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,CJ,CJ,,Ja'Marr Chase,WR,36,46,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,CJ,CJ,,Chase Brown,RB,21,31,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,CJ,CJ,,Sam LaPorta,TE,21,31,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,CJ,CJ,,Parker Washington,WR,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,CJ,CJ,,Omarion Hampton,RB,1,6,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Shane,Shane,,MarShawn Lloyd,RB,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Shane,Shane,,Rome Odunze,WR,6,16,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Shane,Shane,,Caleb Williams,QB,11,16,True,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Shane,Shane,,Blake Corum,RB,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Shane,Shane,,Kyle Monangai,RB,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Shane,Shane,,Christian Watson,WR,1,11,False,CONFIRMED_KEEPER,True,True,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,Sheet total reconciles exactly; tag inferred from +$5 delta
+2026,Shane,Shane,,Jadarian Price,RB,,,False,COLLEGE_RIGHTS_HOLD,False,False,False,google_sheet:2026_Fancy_Football_League_Rosters,2026-08-31,HIGH,"College-rights hold, n/a salary in sheet"

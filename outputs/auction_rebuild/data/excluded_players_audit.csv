@@ -1,0 +1,78 @@
+player,team,position,exclusion_reason,counts_as_keeper,keeper_cost,source
+Jonathan Taylor,Brandon,RB,CONFIRMED_KEEPER,True,46.0,google_sheet:2026_Fancy_Football_League_Rosters
+Justin Jefferson,Brandon,WR,CONFIRMED_KEEPER,True,46.0,google_sheet:2026_Fancy_Football_League_Rosters
+Nico Collins,Brandon,WR,CONFIRMED_KEEPER,True,36.0,google_sheet:2026_Fancy_Football_League_Rosters
+Breece Hall,Brandon,RB,CONFIRMED_KEEPER,True,31.0,google_sheet:2026_Fancy_Football_League_Rosters
+Brock Bowers,Brandon,TE,CONFIRMED_KEEPER,True,16.0,google_sheet:2026_Fancy_Football_League_Rosters
+Christian McCaffrey,Brandon,RB,CONFIRMED_KEEPER,True,46.0,google_sheet:2026_Fancy_Football_League_Rosters
+Derrick Henry,Coby,RB,CONFIRMED_KEEPER,True,51.0,google_sheet:2026_Fancy_Football_League_Rosters
+Kyren Williams,Coby,RB,CONFIRMED_KEEPER,True,31.0,google_sheet:2026_Fancy_Football_League_Rosters
+Brian Thomas Jr,Coby,WR,CONFIRMED_KEEPER,True,16.0,google_sheet:2026_Fancy_Football_League_Rosters
+Harold Fannin Jr,Coby,TE,CONFIRMED_KEEPER,True,6.0,google_sheet:2026_Fancy_Football_League_Rosters
+TreVeyon Henderson,Coby,RB,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Quinshon Judkins,Coby,RB,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Alec Pierce,Brad,WR,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Jaxon Smith-Njigba,Brad,WR,CONFIRMED_KEEPER,True,31.0,google_sheet:2026_Fancy_Football_League_Rosters
+Jaydon Blue,Brad,RB,CONFIRMED_KEEPER,True,14.0,google_sheet:2026_Fancy_Football_League_Rosters
+Jameson Williams,Brad,WR,CONFIRMED_KEEPER,True,41.0,google_sheet:2026_Fancy_Football_League_Rosters
+Marvin Harrison Jr,Brad,WR,CONFIRMED_KEEPER,True,16.0,google_sheet:2026_Fancy_Football_League_Rosters
+Tyler Warren,Brad,TE,CONFIRMED_KEEPER,True,6.0,google_sheet:2026_Fancy_Football_League_Rosters
+Kyle Pitts Sr,Reid,TE,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Tucker Kraft,Reid,TE,CONFIRMED_KEEPER,True,21.0,google_sheet:2026_Fancy_Football_League_Rosters
+Drake Maye,Reid,QB,CONFIRMED_KEEPER,True,30.0,google_sheet:2026_Fancy_Football_League_Rosters
+Chris Olave,Reid,WR,CONFIRMED_KEEPER,True,41.0,google_sheet:2026_Fancy_Football_League_Rosters
+Jalen Coker,Reid,WR,CONFIRMED_KEEPER,True,13.0,google_sheet:2026_Fancy_Football_League_Rosters
+Javonte Williams,Reid,RB,CONFIRMED_KEEPER,True,34.0,google_sheet:2026_Fancy_Football_League_Rosters
+Amon-Ra St Brown,Evan,WR,CONFIRMED_KEEPER,True,41.0,google_sheet:2026_Fancy_Football_League_Rosters
+Drake London,Evan,WR,CONFIRMED_KEEPER,True,36.0,google_sheet:2026_Fancy_Football_League_Rosters
+Saquon Barkley,Evan,RB,CONFIRMED_KEEPER,True,46.0,google_sheet:2026_Fancy_Football_League_Rosters
+George Pickens,Evan,WR,CONFIRMED_KEEPER,True,41.0,google_sheet:2026_Fancy_Football_League_Rosters
+Puka Nacua,Evan,WR,CONFIRMED_KEEPER,True,31.0,google_sheet:2026_Fancy_Football_League_Rosters
+Emeka Egbuka,Evan,WR,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Garrett Wilson,Sam,WR,CONFIRMED_KEEPER,True,31.0,google_sheet:2026_Fancy_Football_League_Rosters
+Kenneth Walker III,Sam,RB,CONFIRMED_KEEPER,True,36.0,google_sheet:2026_Fancy_Football_League_Rosters
+Quentin Johnston,Sam,WR,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+David Montgomery,Sam,RB,CONFIRMED_KEEPER,True,45.0,google_sheet:2026_Fancy_Football_League_Rosters
+Cam Skattebo,Sam,RB,CONFIRMED_KEEPER,True,28.0,google_sheet:2026_Fancy_Football_League_Rosters
+Jaxson Dart,Sam,QB,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Isaiah Bond,Sam,WR,COLLEGE_RIGHTS_HOLD,False,,google_sheet:2026_Fancy_Football_League_Rosters
+Fernando Mendoza,Sam,QB,COLLEGE_RIGHTS_HOLD,False,,google_sheet:2026_Fancy_Football_League_Rosters
+Wan'Dale Robinson,James,WR,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Trevor Lawrence,James,QB,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Jordan Addison,James,WR,CONFIRMED_KEEPER,True,31.0,google_sheet:2026_Fancy_Football_League_Rosters
+Zay Flowers,James,WR,CONFIRMED_KEEPER,True,31.0,google_sheet:2026_Fancy_Football_League_Rosters
+Colston Loveland,James,TE,CONFIRMED_KEEPER,True,6.0,google_sheet:2026_Fancy_Football_League_Rosters
+Rico Dowdle,James,RB,CONFIRMED_KEEPER,True,13.0,google_sheet:2026_Fancy_Football_League_Rosters
+Brock Purdy,Ryan J,QB,CONFIRMED_KEEPER,True,15.0,google_sheet:2026_Fancy_Football_League_Rosters
+Michael Wilson,Ryan J,WR,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Oronde Gadsden,Ryan J,TE,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+DeVon Achane,Ryan J,RB,CONFIRMED_KEEPER,True,26.0,google_sheet:2026_Fancy_Football_League_Rosters
+Ashton Jeanty,Ryan J,RB,CONFIRMED_KEEPER,True,6.0,google_sheet:2026_Fancy_Football_League_Rosters
+Ladd McConkey,Ryan J,WR,CONFIRMED_KEEPER,True,67.0,google_sheet:2026_Fancy_Football_League_Rosters
+CeeDee Lamb,Jason,WR,CONFIRMED_KEEPER,True,46.0,google_sheet:2026_Fancy_Football_League_Rosters
+Trey McBride,Jason,TE,CONFIRMED_KEEPER,True,31.0,google_sheet:2026_Fancy_Football_League_Rosters
+AJ Brown,Jason,WR,CONFIRMED_KEEPER,True,46.0,google_sheet:2026_Fancy_Football_League_Rosters
+Bijan Robinson,Jason,RB,CONFIRMED_KEEPER,True,21.0,google_sheet:2026_Fancy_Football_League_Rosters
+Jahmyr Gibbs,Jason,RB,CONFIRMED_KEEPER,True,31.0,google_sheet:2026_Fancy_Football_League_Rosters
+Luther Burden,Jason,WR,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Jayden Reed,Travis,WR,CONFIRMED_KEEPER,True,26.0,google_sheet:2026_Fancy_Football_League_Rosters
+Malik Nabers,Travis,WR,CONFIRMED_KEEPER,True,16.0,google_sheet:2026_Fancy_Football_League_Rosters
+Woody Marks,Travis,RB,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Rhamondre Stevenson,Travis,RB,CONFIRMED_KEEPER,True,42.0,google_sheet:2026_Fancy_Football_League_Rosters
+Hunter Henry,Travis,TE,CONFIRMED_KEEPER,True,12.0,google_sheet:2026_Fancy_Football_League_Rosters
+Tetairoa McMillan,Travis,WR,CONFIRMED_KEEPER,True,6.0,google_sheet:2026_Fancy_Football_League_Rosters
+Denzel Boston,Travis,WR,COLLEGE_RIGHTS_HOLD,False,,google_sheet:2026_Fancy_Football_League_Rosters
+Ja'Kobi Lane,Travis,WR,COLLEGE_RIGHTS_HOLD,False,,google_sheet:2026_Fancy_Football_League_Rosters
+Tory Horton,CJ,WR,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Ja'Marr Chase,CJ,WR,CONFIRMED_KEEPER,True,46.0,google_sheet:2026_Fancy_Football_League_Rosters
+Chase Brown,CJ,RB,CONFIRMED_KEEPER,True,31.0,google_sheet:2026_Fancy_Football_League_Rosters
+Sam LaPorta,CJ,TE,CONFIRMED_KEEPER,True,31.0,google_sheet:2026_Fancy_Football_League_Rosters
+Parker Washington,CJ,WR,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Omarion Hampton,CJ,RB,CONFIRMED_KEEPER,True,6.0,google_sheet:2026_Fancy_Football_League_Rosters
+MarShawn Lloyd,Shane,RB,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Rome Odunze,Shane,WR,CONFIRMED_KEEPER,True,16.0,google_sheet:2026_Fancy_Football_League_Rosters
+Caleb Williams,Shane,QB,CONFIRMED_KEEPER,True,16.0,google_sheet:2026_Fancy_Football_League_Rosters
+Blake Corum,Shane,RB,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Kyle Monangai,Shane,RB,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Christian Watson,Shane,WR,CONFIRMED_KEEPER,True,11.0,google_sheet:2026_Fancy_Football_League_Rosters
+Jadarian Price,Shane,RB,COLLEGE_RIGHTS_HOLD,False,,google_sheet:2026_Fancy_Football_League_Rosters

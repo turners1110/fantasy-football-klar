@@ -16,6 +16,7 @@ import numpy as np
 
 from .archetypes import ARCHETYPE_NAMES, Archetype
 from .auction import run_single_auction
+from .legal_lineup import build_production_lineup
 from .models import Player, Team
 
 
@@ -37,7 +38,8 @@ def evaluate_best_response(
         my_team = team_names[i % len(team_names)]
         strategies = {my_team: candidate}
         _, final_teams = run_single_auction(players, teams_template, rng, strategies=strategies)
-        adjusted = final_teams[my_team].total_points - team_baselines[my_team]
+        utility = build_production_lineup(final_teams[my_team].roster).total_roster_utility
+        adjusted = utility - team_baselines[my_team]
         results.append(adjusted)
     arr = np.array(results)
     return {
