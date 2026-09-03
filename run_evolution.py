@@ -19,19 +19,24 @@ import numpy as np
 
 from mock_draft.auction import run_single_auction
 from mock_draft.data import load_pool_and_teams
-from mock_draft.evolution import DEFAULT_STATE_PATH, run_evolution
+from mock_draft.evolution import DEFAULT_STATE_PATH, compute_team_baselines, evaluate_generation, run_evolution
 
 BASE_DIR = Path(__file__).parent
 
 
-def benchmark_hand_designed_archetypes(players, teams, rng, n_matches=40) -> float:
-    """Average roster points achieved by the hand-designed archetypes
-    (random assignment, same as run_mock_draft.py) -- the bar evolution
-    needs to clear to prove it found something genuinely better."""
+def benchmark_hand_designed_archetypes(players, teams, team_baselines, rng, n_matches=40) -> float:
+    """Baseline-adjusted average for the hand-designed archetypes (random
+    assignment, same as run_mock_draft.py). Since team_baselines are
+    DEFINED as the hand-designed archetypes' own average points per team,
+    this should land very close to 0 by construction -- a genuine sanity
+    check, not just a comparison point. If the evolved population's
+    adjusted average is meaningfully above 0, that's real evidence of
+    improvement; if it's also ~0, evolution hasn't found anything better."""
     totals = []
     for _ in range(n_matches):
         _, final_teams = run_single_auction(players, teams, rng)
-        totals.extend(t.total_points for t in final_teams.values())
+        for name, team in final_teams.items():
+            totals.append(team.total_points - team_baselines[name])
     return float(np.mean(totals))
 
 
@@ -68,26 +73,36 @@ def main() -> None:
 
     if len(history) >= 2:
         first, last = history[0], history[-1]
-        print(f"\nLearning curve (mean fitness): gen {first.generation} = {first.mean_fitness:.1f} pts "
-              f"-> gen {last.generation} = {last.mean_fitness:.1f} pts "
+        print(f"\nLearning curve (mean fitness, pts above/below team baseline): "
+              f"gen {first.generation} = {first.mean_fitness:+.1f} "
+              f"-> gen {last.generation} = {last.mean_fitness:+.1f} "
               f"({'+' if last.mean_fitness >= first.mean_fitness else ''}{last.mean_fitness - first.mean_fitness:.1f})")
 
+    print("\nRecomputing team baselines for final evaluation (same method used during training)...")
+    baseline_rng = np.random.default_rng(args.seed + 3)
+    team_baselines = compute_team_baselines(players, teams, args.matches_per_generation, baseline_rng)
+
     rng = np.random.default_rng(args.seed + 1)
-    print("\nRe-evaluating final population to find the current best genome...")
-    from mock_draft.evolution import evaluate_generation
-    fitness = evaluate_generation(population, players, teams, args.matches_per_generation, rng)
+    print("Re-evaluating final population to find the current best genome...")
+    fitness = evaluate_generation(population, players, teams, args.matches_per_generation, rng, team_baselines)
     best_idx = int(np.nanargmax(fitness))
     best = population[best_idx]
-    print(f"Best genome: {best.name} (avg {fitness[best_idx]:.1f} pts)")
+    print(f"Best genome: {best.name} ({fitness[best_idx]:+.1f} pts above/below team baseline)")
     for field in ("max_stars", "star_ceiling_pct", "price_ceiling_pct", "tier_aggression",
                   "strict_value_ceiling", "noise_std", "jump_bid_prob", "position_weight"):
         print(f"  {field}: {getattr(best, field)}")
 
-    print("\nBenchmarking hand-designed archetypes for comparison...")
-    archetype_avg = benchmark_hand_designed_archetypes(players, teams, np.random.default_rng(args.seed + 2), n_matches=args.matches_per_generation)
-    print(f"Hand-designed archetypes (random mix): {archetype_avg:.1f} avg roster points")
-    print(f"Evolved population (this generation):  {float(np.nanmean(fitness)):.1f} avg roster points")
-    print(f"Best evolved genome:                   {fitness[best_idx]:.1f} avg roster points")
+    print("\nSanity-checking against hand-designed archetypes (should land near 0 -- "
+          "team_baselines are DEFINED as their average)...")
+    archetype_avg = benchmark_hand_designed_archetypes(
+        players, teams, team_baselines, np.random.default_rng(args.seed + 2), n_matches=args.matches_per_generation
+    )
+    print(f"Hand-designed archetypes (sanity check, should be ~0): {archetype_avg:+.1f}")
+    print(f"Evolved population (this generation):                  {float(np.nanmean(fitness)):+.1f}")
+    print(f"Best evolved genome:                                   {fitness[best_idx]:+.1f}")
+    print("\n(Positive = genuinely better than a team with that roster would typically do. "
+          "If the evolved population's number isn't clearly above the archetype sanity check, "
+          "evolution hasn't found anything better yet -- see mock_draft/README.md.)")
 
 
 if __name__ == "__main__":

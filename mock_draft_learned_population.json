@@ -1,456 +1,491 @@
 {
   "population": [
     {
-      "name": "gen10_elite0",
+      "name": "gen15_elite0",
       "max_stars": 0,
       "star_ceiling_pct": 0.95,
-      "price_ceiling_pct": 0.05,
-      "tier_aggression": 1.060936835554101,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.2539127809493362,
-      "jump_bid_prob": 0.20141300535747308,
-      "tilt_after_losses": 5,
-      "tilt_boost": 1.0326991791072633,
-      "position_weight": {
-        "QB": 1.5625038271999814,
-        "RB": 1.1107421933629402,
-        "WR": 0.5379621745125615,
-        "TE": 0.6554056298394685
-      }
-    },
-    {
-      "name": "gen10_elite1",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.6350787477487154,
-      "price_ceiling_pct": 0.12480436325832243,
-      "tier_aggression": 1.0293823533223847,
+      "price_ceiling_pct": 0.1054862247304986,
+      "tier_aggression": 1.002405738546444,
       "position_targets": {},
       "strict_value_ceiling": false,
       "noise_std": 0.3,
-      "jump_bid_prob": 0.13807438759650634,
-      "tilt_after_losses": 4,
-      "tilt_boost": 1.187631596197366,
-      "position_weight": {
-        "QB": 1.6,
-        "RB": 0.9469558049531337,
-        "WR": 0.5,
-        "TE": 0.6558500999731469
-      }
-    },
-    {
-      "name": "gen10_elite2",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.6587201698498756,
-      "price_ceiling_pct": 0.07349321456978856,
-      "tier_aggression": 1.0,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.3,
-      "jump_bid_prob": 0.14607155886949078,
+      "jump_bid_prob": 0.0,
       "tilt_after_losses": 5,
-      "tilt_boost": 1.0297763472253814,
+      "tilt_boost": 1.2556335676220216,
       "position_weight": {
-        "QB": 1.3647661012869348,
-        "RB": 1.37296618382744,
-        "WR": 0.6329406355701895,
-        "TE": 0.6452494067801109
-      }
-    },
-    {
-      "name": "gen10_elite3",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.95,
-      "price_ceiling_pct": 0.10649231065008835,
-      "tier_aggression": 1.1593145283471074,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.3,
-      "jump_bid_prob": 0.16782814956201317,
-      "tilt_after_losses": 5,
-      "tilt_boost": 1.0396563745534948,
-      "position_weight": {
-        "QB": 1.6,
-        "RB": 1.2130347693427497,
-        "WR": 0.5,
-        "TE": 0.7038724939532229
-      }
-    },
-    {
-      "name": "gen10_elite4",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.95,
-      "price_ceiling_pct": 0.07561174739401538,
-      "tier_aggression": 1.1782726164919537,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.3,
-      "jump_bid_prob": 0.19409827609306482,
-      "tilt_after_losses": 5,
-      "tilt_boost": 1.0,
-      "position_weight": {
-        "QB": 1.6,
-        "RB": 1.2097670696443334,
-        "WR": 0.5,
-        "TE": 0.7693570980885938
-      }
-    },
-    {
-      "name": "gen10_bred0",
-      "max_stars": 1,
-      "star_ceiling_pct": 0.5655058192649918,
-      "price_ceiling_pct": 0.09088720848880001,
-      "tier_aggression": 1.2746546379201669,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.2753563605826587,
-      "jump_bid_prob": 0.22012368073074617,
-      "tilt_after_losses": 5,
-      "tilt_boost": 1.1969495164377177,
-      "position_weight": {
-        "QB": 1.552603663548649,
-        "RB": 1.4557710327290279,
-        "WR": 0.5300073429897654,
-        "TE": 0.7793063503844204
-      }
-    },
-    {
-      "name": "gen10_bred1",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.7666628983776805,
-      "price_ceiling_pct": 0.19161674074679577,
-      "tier_aggression": 1.2977687686169597,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.25079087416193235,
-      "jump_bid_prob": 0.14056393214973556,
-      "tilt_after_losses": 5,
-      "tilt_boost": 1.191753654469189,
-      "position_weight": {
-        "QB": 1.6,
-        "RB": 0.9772813658163443,
-        "WR": 0.5,
-        "TE": 0.6590976563169537
-      }
-    },
-    {
-      "name": "gen10_bred2",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.95,
-      "price_ceiling_pct": 0.06876345061984182,
-      "tier_aggression": 1.1830896147835221,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.2527822589723819,
-      "jump_bid_prob": 0.11071985148476492,
-      "tilt_after_losses": 5,
-      "tilt_boost": 1.1496168676048995,
-      "position_weight": {
-        "QB": 1.6,
-        "RB": 0.9307543717192368,
-        "WR": 0.5,
-        "TE": 0.6388507429009121
-      }
-    },
-    {
-      "name": "gen10_bred3",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.9069640490053515,
-      "price_ceiling_pct": 0.05,
-      "tier_aggression": 1.1872003247638236,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.3,
-      "jump_bid_prob": 0.17844236165170274,
-      "tilt_after_losses": 5,
-      "tilt_boost": 1.0,
-      "position_weight": {
-        "QB": 1.6,
-        "RB": 1.2061157254757093,
-        "WR": 0.5,
-        "TE": 0.5285811497821173
-      }
-    },
-    {
-      "name": "gen10_bred4",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.7307452280157366,
-      "price_ceiling_pct": 0.19887091165699983,
-      "tier_aggression": 1.0,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.23899209400097696,
-      "jump_bid_prob": 0.15070917414336157,
-      "tilt_after_losses": 4,
-      "tilt_boost": 1.072021454593854,
-      "position_weight": {
-        "QB": 1.6,
-        "RB": 1.0273054651485072,
-        "WR": 0.7276205170018479,
-        "TE": 0.6886802863975894
-      }
-    },
-    {
-      "name": "gen10_bred5",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.8846446178650907,
-      "price_ceiling_pct": 0.1549970157181309,
-      "tier_aggression": 1.1634703377188853,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.2989084834247063,
-      "jump_bid_prob": 0.17149519839432897,
-      "tilt_after_losses": 5,
-      "tilt_boost": 1.0,
-      "position_weight": {
-        "QB": 1.6,
-        "RB": 0.8705990142009052,
-        "WR": 0.5,
-        "TE": 0.760619759871877
-      }
-    },
-    {
-      "name": "gen10_bred6",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.8798773302375504,
-      "price_ceiling_pct": 0.12112609637797193,
-      "tier_aggression": 1.0780052378223042,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.3,
-      "jump_bid_prob": 0.11033950933246006,
-      "tilt_after_losses": 3,
-      "tilt_boost": 1.0,
-      "position_weight": {
-        "QB": 1.6,
-        "RB": 1.3181871689526934,
+        "QB": 1.5617752784031107,
+        "RB": 0.5,
         "WR": 0.5,
         "TE": 0.5
       }
     },
     {
-      "name": "gen10_bred7",
+      "name": "gen15_elite1",
       "max_stars": 0,
-      "star_ceiling_pct": 0.7676528181224107,
-      "price_ceiling_pct": 0.09121000282771406,
-      "tier_aggression": 1.3746731030212,
+      "star_ceiling_pct": 0.7086995341680394,
+      "price_ceiling_pct": 0.12613412927353354,
+      "tier_aggression": 1.0,
       "position_targets": {},
       "strict_value_ceiling": false,
-      "noise_std": 0.2471580873505616,
-      "jump_bid_prob": 0.19079191043099414,
+      "noise_std": 0.2517487613232959,
+      "jump_bid_prob": 0.0,
       "tilt_after_losses": 5,
-      "tilt_boost": 1.0,
+      "tilt_boost": 1.1543968870080268,
       "position_weight": {
-        "QB": 1.570681131565143,
-        "RB": 1.4766843901225664,
+        "QB": 1.6,
+        "RB": 0.5,
+        "WR": 0.5,
+        "TE": 0.5737316782633807
+      }
+    },
+    {
+      "name": "gen15_elite2",
+      "max_stars": 0,
+      "star_ceiling_pct": 0.7111857085069448,
+      "price_ceiling_pct": 0.08860223786556341,
+      "tier_aggression": 1.0141195121854123,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.15431946219128984,
+      "jump_bid_prob": 0.0,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.411438629452294,
+      "position_weight": {
+        "QB": 1.6,
+        "RB": 0.5,
         "WR": 0.5,
         "TE": 0.5
       }
     },
     {
-      "name": "gen10_bred8",
+      "name": "gen15_elite3",
       "max_stars": 0,
       "star_ceiling_pct": 0.95,
-      "price_ceiling_pct": 0.15230480524655188,
-      "tier_aggression": 1.2146017223870065,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.2814102563888845,
-      "jump_bid_prob": 0.167400462207235,
-      "tilt_after_losses": 5,
-      "tilt_boost": 1.0367585694602224,
-      "position_weight": {
-        "QB": 1.6,
-        "RB": 1.1154642372732226,
-        "WR": 0.5,
-        "TE": 0.5735862118638408
-      }
-    },
-    {
-      "name": "gen10_bred9",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.95,
-      "price_ceiling_pct": 0.1323063567024298,
-      "tier_aggression": 1.2877051568727265,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.28069975729483787,
-      "jump_bid_prob": 0.1988449011069883,
-      "tilt_after_losses": 4,
-      "tilt_boost": 1.0,
-      "position_weight": {
-        "QB": 1.43521380092563,
-        "RB": 1.4057439172874353,
-        "WR": 0.6394324700067111,
-        "TE": 0.7674275925339358
-      }
-    },
-    {
-      "name": "gen10_bred10",
-      "max_stars": 1,
-      "star_ceiling_pct": 0.7044568567349339,
-      "price_ceiling_pct": 0.17305490578468766,
-      "tier_aggression": 1.4264658858646768,
-      "position_targets": {},
-      "strict_value_ceiling": false,
-      "noise_std": 0.3,
-      "jump_bid_prob": 0.18452885355890253,
-      "tilt_after_losses": 5,
-      "tilt_boost": 1.0,
-      "position_weight": {
-        "QB": 1.6,
-        "RB": 0.9306219498180931,
-        "WR": 0.5,
-        "TE": 0.5956263105572517
-      }
-    },
-    {
-      "name": "gen10_bred11",
-      "max_stars": 0,
-      "star_ceiling_pct": 0.5389046535205726,
-      "price_ceiling_pct": 0.1378357035984532,
+      "price_ceiling_pct": 0.24095919293948817,
       "tier_aggression": 1.0,
       "position_targets": {},
       "strict_value_ceiling": false,
-      "noise_std": 0.29536047558860073,
-      "jump_bid_prob": 0.24461562472349446,
-      "tilt_after_losses": 4,
-      "tilt_boost": 1.1004623130030462,
+      "noise_std": 0.18490697031093276,
+      "jump_bid_prob": 0.0,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.355841912597105,
       "position_weight": {
-        "QB": 1.3617834231698849,
-        "RB": 1.1532837235241744,
+        "QB": 1.6,
+        "RB": 0.5,
+        "WR": 0.5,
+        "TE": 0.529929099886913
+      }
+    },
+    {
+      "name": "gen15_elite4",
+      "max_stars": 0,
+      "star_ceiling_pct": 0.7954886293236831,
+      "price_ceiling_pct": 0.2648638565298189,
+      "tier_aggression": 1.0,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.18548694385073372,
+      "jump_bid_prob": 0.0,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.3020049852583953,
+      "position_weight": {
+        "QB": 1.6,
+        "RB": 0.5822553668027292,
+        "WR": 0.5377497255818627,
+        "TE": 0.5
+      }
+    },
+    {
+      "name": "gen15_bred0",
+      "max_stars": 0,
+      "star_ceiling_pct": 0.6282254732735976,
+      "price_ceiling_pct": 0.1613183633116902,
+      "tier_aggression": 1.0494412427709046,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.22326418656505936,
+      "jump_bid_prob": 0.07158737087474555,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.3113022669554963,
+      "position_weight": {
+        "QB": 1.4353015807297311,
+        "RB": 0.5,
+        "WR": 0.5,
+        "TE": 0.5065954571036058
+      }
+    },
+    {
+      "name": "gen15_bred1",
+      "max_stars": 0,
+      "star_ceiling_pct": 0.9229019665891978,
+      "price_ceiling_pct": 0.23197853383550077,
+      "tier_aggression": 1.192664520067065,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.1896003222447761,
+      "jump_bid_prob": 0.009049634435583523,
+      "tilt_after_losses": 4,
+      "tilt_boost": 1.1841943423457575,
+      "position_weight": {
+        "QB": 1.547600603818897,
+        "RB": 0.5,
+        "WR": 0.6855733352507514,
+        "TE": 0.5472531567319661
+      }
+    },
+    {
+      "name": "gen15_bred2",
+      "max_stars": 0,
+      "star_ceiling_pct": 0.5446902044948614,
+      "price_ceiling_pct": 0.168838048150304,
+      "tier_aggression": 1.0,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.2503700093193309,
+      "jump_bid_prob": 0.0,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.2292872274932842,
+      "position_weight": {
+        "QB": 1.4298376360361367,
+        "RB": 0.5,
         "WR": 0.5,
         "TE": 0.5
       }
     },
     {
-      "name": "gen10_bred12",
-      "max_stars": 1,
-      "star_ceiling_pct": 0.95,
-      "price_ceiling_pct": 0.06668915455641797,
+      "name": "gen15_bred3",
+      "max_stars": 0,
+      "star_ceiling_pct": 0.8506828269876563,
+      "price_ceiling_pct": 0.09109766863108139,
       "tier_aggression": 1.0,
       "position_targets": {},
       "strict_value_ceiling": false,
-      "noise_std": 0.2770185689454602,
-      "jump_bid_prob": 0.2834427443539758,
+      "noise_std": 0.2416590579802676,
+      "jump_bid_prob": 0.0,
       "tilt_after_losses": 5,
-      "tilt_boost": 1.1028473944751578,
+      "tilt_boost": 1.08935097219774,
       "position_weight": {
         "QB": 1.6,
-        "RB": 1.2508464451805625,
+        "RB": 0.7378299326851562,
+        "WR": 0.5798070471043735,
+        "TE": 0.7101671511514926
+      }
+    },
+    {
+      "name": "gen15_bred4",
+      "max_stars": 2,
+      "star_ceiling_pct": 0.8146130953318367,
+      "price_ceiling_pct": 0.14882728744028037,
+      "tier_aggression": 1.007329608822284,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.18134096238985312,
+      "jump_bid_prob": 0.0,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.3722025220940097,
+      "position_weight": {
+        "QB": 1.4947963623232006,
+        "RB": 0.5,
         "WR": 0.5,
-        "TE": 0.8637879337277434
+        "TE": 0.6386473695152092
       }
     },
     {
-      "name": "gen10_random0",
-      "max_stars": 1,
-      "star_ceiling_pct": 0.6987295849775332,
-      "price_ceiling_pct": 0.11292986536570222,
-      "tier_aggression": 1.728308065317262,
+      "name": "gen15_bred5",
+      "max_stars": 0,
+      "star_ceiling_pct": 0.840187991215769,
+      "price_ceiling_pct": 0.11107598335016476,
+      "tier_aggression": 1.002872925416637,
       "position_targets": {},
       "strict_value_ceiling": false,
-      "noise_std": 0.22979047149019044,
-      "jump_bid_prob": 0.08699970944307742,
+      "noise_std": 0.2001555464973421,
+      "jump_bid_prob": 0.0,
       "tilt_after_losses": 4,
-      "tilt_boost": 1.444601696472635,
+      "tilt_boost": 1.0738698073408302,
       "position_weight": {
-        "QB": 0.5626831339742884,
-        "RB": 1.148684811308533,
-        "WR": 0.7282920363056157,
-        "TE": 1.5186147747268015
+        "QB": 1.472672878254786,
+        "RB": 0.5,
+        "WR": 0.5028929273212402,
+        "TE": 0.5
       }
     },
     {
-      "name": "gen10_random1",
-      "max_stars": 5,
-      "star_ceiling_pct": 0.6802267329364867,
-      "price_ceiling_pct": 0.14730619300594017,
-      "tier_aggression": 1.7216594275625496,
+      "name": "gen15_bred6",
+      "max_stars": 0,
+      "star_ceiling_pct": 0.7926914233067427,
+      "price_ceiling_pct": 0.08110071195252387,
+      "tier_aggression": 1.1040473850058024,
       "position_targets": {},
       "strict_value_ceiling": false,
-      "noise_std": 0.058183609275202566,
-      "jump_bid_prob": 0.0517039577658701,
-      "tilt_after_losses": 1,
-      "tilt_boost": 1.1203928779325905,
+      "noise_std": 0.05,
+      "jump_bid_prob": 0.008211245193351544,
+      "tilt_after_losses": 4,
+      "tilt_boost": 1.4224163840576047,
       "position_weight": {
-        "QB": 0.9861082510779938,
-        "RB": 1.4120400424056945,
-        "WR": 0.9019112507808281,
-        "TE": 0.5031860529362306
+        "QB": 1.6,
+        "RB": 0.5,
+        "WR": 0.5,
+        "TE": 0.5721640898968193
+      }
+    },
+    {
+      "name": "gen15_bred7",
+      "max_stars": 1,
+      "star_ceiling_pct": 0.7280074632885085,
+      "price_ceiling_pct": 0.07051411234756565,
+      "tier_aggression": 1.1653930212960153,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.1560130541033785,
+      "jump_bid_prob": 0.0,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.379540728530789,
+      "position_weight": {
+        "QB": 1.4546933863448885,
+        "RB": 0.5,
+        "WR": 0.5,
+        "TE": 0.5
+      }
+    },
+    {
+      "name": "gen15_bred8",
+      "max_stars": 1,
+      "star_ceiling_pct": 0.7355966141799929,
+      "price_ceiling_pct": 0.07170591054254633,
+      "tier_aggression": 1.0,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.09784773517210126,
+      "jump_bid_prob": 0.008988361726343585,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.339042113089395,
+      "position_weight": {
+        "QB": 1.3073492796613855,
+        "RB": 0.5465275698660225,
+        "WR": 0.5302565441435066,
+        "TE": 0.5
+      }
+    },
+    {
+      "name": "gen15_bred9",
+      "max_stars": 1,
+      "star_ceiling_pct": 0.95,
+      "price_ceiling_pct": 0.2856012107564294,
+      "tier_aggression": 1.046368018011989,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.14212734728484236,
+      "jump_bid_prob": 0.0,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.3328518387030348,
+      "position_weight": {
+        "QB": 1.3922015970854897,
+        "RB": 0.7806095798315066,
+        "WR": 0.5,
+        "TE": 0.5
+      }
+    },
+    {
+      "name": "gen15_bred10",
+      "max_stars": 0,
+      "star_ceiling_pct": 0.8466913281450592,
+      "price_ceiling_pct": 0.3841205057246252,
+      "tier_aggression": 1.0,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.19467239549165197,
+      "jump_bid_prob": 0.03320870025084166,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.2719523105950599,
+      "position_weight": {
+        "QB": 1.5986944169978776,
+        "RB": 0.5,
+        "WR": 0.5,
+        "TE": 0.5387646122172345
+      }
+    },
+    {
+      "name": "gen15_bred11",
+      "max_stars": 0,
+      "star_ceiling_pct": 0.879213458180749,
+      "price_ceiling_pct": 0.2004890009052328,
+      "tier_aggression": 1.0724944236700242,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.2312152197511657,
+      "jump_bid_prob": 0.0,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.267151076738155,
+      "position_weight": {
+        "QB": 1.4783865959286349,
+        "RB": 0.5,
+        "WR": 0.8182645460682659,
+        "TE": 0.5
+      }
+    },
+    {
+      "name": "gen15_bred12",
+      "max_stars": 0,
+      "star_ceiling_pct": 0.8910353133187211,
+      "price_ceiling_pct": 0.24747998538921193,
+      "tier_aggression": 1.0,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.17714681482192085,
+      "jump_bid_prob": 0.05932309554583875,
+      "tilt_after_losses": 4,
+      "tilt_boost": 1.181779652384835,
+      "position_weight": {
+        "QB": 1.6,
+        "RB": 0.5527080524266215,
+        "WR": 0.5,
+        "TE": 0.5429534921285094
+      }
+    },
+    {
+      "name": "gen15_random0",
+      "max_stars": 4,
+      "star_ceiling_pct": 0.21944163160219415,
+      "price_ceiling_pct": 0.09901015436830543,
+      "tier_aggression": 1.6401026365209286,
+      "position_targets": {},
+      "strict_value_ceiling": false,
+      "noise_std": 0.22193948079989534,
+      "jump_bid_prob": 0.20402789022440912,
+      "tilt_after_losses": 5,
+      "tilt_boost": 1.2177342354437632,
+      "position_weight": {
+        "QB": 0.6314225314102264,
+        "RB": 1.2201887445908768,
+        "WR": 0.9234874853379901,
+        "TE": 1.1480541856429678
+      }
+    },
+    {
+      "name": "gen15_random1",
+      "max_stars": 2,
+      "star_ceiling_pct": 0.5206184137576004,
+      "price_ceiling_pct": 0.3013596355488265,
+      "tier_aggression": 1.3831914250426658,
+      "position_targets": {},
+      "strict_value_ceiling": true,
+      "noise_std": 0.062393317326717726,
+      "jump_bid_prob": 0.14427404451371392,
+      "tilt_after_losses": 4,
+      "tilt_boost": 1.1307344934671697,
+      "position_weight": {
+        "QB": 0.6260744761579838,
+        "RB": 0.8771458227890707,
+        "WR": 1.3265415873866946,
+        "TE": 0.7252163455706213
       }
     }
   ],
   "history": [
     {
       "generation": 0,
-      "best_fitness": 2593.0317999999997,
-      "mean_fitness": 2396.522786572871,
-      "worst_fitness": 2168.0047999999997,
-      "best_genome_name": "gen0_seed13"
+      "best_fitness": 327.8722366666667,
+      "mean_fitness": 10.00365913978721,
+      "worst_fitness": -153.51477812500016,
+      "best_genome_name": "gen0_seed12"
     },
     {
       "generation": 1,
-      "best_fitness": 2728.779666666667,
-      "mean_fitness": 2400.5326030483407,
-      "worst_fitness": 2193.55625,
-      "best_genome_name": "gen1_random1"
+      "best_fitness": 547.4601687499999,
+      "mean_fitness": 9.942402188882891,
+      "worst_fitness": -269.7297772727273,
+      "best_genome_name": "gen1_bred4"
     },
     {
       "generation": 2,
-      "best_fitness": 2713.7537142857145,
-      "mean_fitness": 2407.381373975469,
-      "worst_fitness": 2147.699555555556,
-      "best_genome_name": "gen2_elite0"
+      "best_fitness": 601.8013909090906,
+      "mean_fitness": 0.7401611559886845,
+      "worst_fitness": -304.73535000000015,
+      "best_genome_name": "gen2_bred12"
     },
     {
       "generation": 3,
-      "best_fitness": 2855.6397500000003,
-      "mean_fitness": 2408.036865280553,
-      "worst_fitness": 2137.7026666666666,
-      "best_genome_name": "gen3_bred7"
+      "best_fitness": 465.4056499999997,
+      "mean_fitness": 21.81932899182413,
+      "worst_fitness": -462.10672647058846,
+      "best_genome_name": "gen3_elite0"
     },
     {
       "generation": 4,
-      "best_fitness": 2792.6665,
-      "mean_fitness": 2391.2438427056277,
-      "worst_fitness": 2021.0842857142864,
-      "best_genome_name": "gen4_bred8"
+      "best_fitness": 748.9264382352941,
+      "mean_fitness": -8.39653785329692,
+      "worst_fitness": -459.1317964285715,
+      "best_genome_name": "gen4_bred5"
     },
     {
       "generation": 5,
-      "best_fitness": 2945.4049999999997,
-      "mean_fitness": 2398.2568004725827,
-      "worst_fitness": 2029.0964,
-      "best_genome_name": "gen5_bred2"
+      "best_fitness": 593.1881076923073,
+      "mean_fitness": 20.886447086523585,
+      "worst_fitness": -473.64762941176485,
+      "best_genome_name": "gen5_elite0"
     },
     {
       "generation": 6,
-      "best_fitness": 3119.0996666666665,
-      "mean_fitness": 2413.262062814963,
-      "worst_fitness": 2027.226153846154,
-      "best_genome_name": "gen6_bred6"
+      "best_fitness": 432.193172222222,
+      "mean_fitness": 6.292974292181512,
+      "worst_fitness": -390.5149500000004,
+      "best_genome_name": "gen6_bred9"
     },
     {
       "generation": 7,
-      "best_fitness": 2899.9235999999996,
-      "mean_fitness": 2392.3253284487737,
-      "worst_fitness": 2049.937777777778,
+      "best_fitness": 590.6775857142856,
+      "mean_fitness": 8.513393621562752,
+      "worst_fitness": -550.9527277777778,
       "best_genome_name": "gen7_elite0"
     },
     {
       "generation": 8,
-      "best_fitness": 3087.9384,
-      "mean_fitness": 2383.0490398881675,
-      "worst_fitness": 2053.2965714285715,
-      "best_genome_name": "gen8_bred5"
+      "best_fitness": 368.51869117647027,
+      "mean_fitness": 10.730150702176678,
+      "worst_fitness": -561.6278633333335,
+      "best_genome_name": "gen8_bred2"
     },
     {
       "generation": 9,
-      "best_fitness": 2854.9895555555554,
-      "mean_fitness": 2382.2246014640914,
-      "worst_fitness": 1838.4122222222222,
-      "best_genome_name": "gen9_bred0"
+      "best_fitness": 362.8911138888887,
+      "mean_fitness": 2.6627262994672236,
+      "worst_fitness": -439.6545218750001,
+      "best_genome_name": "gen9_elite0"
+    },
+    {
+      "generation": 10,
+      "best_fitness": 346.39273888888874,
+      "mean_fitness": 13.776221781074597,
+      "worst_fitness": -485.77870277777794,
+      "best_genome_name": "gen10_bred3"
+    },
+    {
+      "generation": 11,
+      "best_fitness": 312.86671111111093,
+      "mean_fitness": -5.173256826390849,
+      "worst_fitness": -467.3093500000002,
+      "best_genome_name": "gen11_elite1"
+    },
+    {
+      "generation": 12,
+      "best_fitness": 327.0237281249999,
+      "mean_fitness": 26.562766994392586,
+      "worst_fitness": -403.69578235294125,
+      "best_genome_name": "gen12_elite0"
+    },
+    {
+      "generation": 13,
+      "best_fitness": 298.3186235294119,
+      "mean_fitness": 10.314003100422147,
+      "worst_fitness": -472.1460900000001,
+      "best_genome_name": "gen13_elite1"
+    },
+    {
+      "generation": 14,
+      "best_fitness": 324.1964199999997,
+      "mean_fitness": 14.28356012871796,
+      "worst_fitness": -530.8264352941176,
+      "best_genome_name": "gen14_bred10"
     }
   ]
 }

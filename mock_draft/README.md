@@ -144,6 +144,67 @@ depending on position) -- not just the mock-draft points objective, but
 `run_valuation.py`'s own `projected_points` for the same 158 players. Now
 fixed at the source.
 
+### The confounded-fitness bug this framework hit, and how it was found
+
+First two evolution runs (22 total generations) showed population mean
+fitness completely flat and statistically identical to the hand-designed
+archetype baseline -- an honest "no learning detected" result. Root cause:
+a real team's identity (i.e. whose keepers it inherited) has a **~495
+point fixed-effect spread** across the 12 real teams, dwarfing any
+strategy-driven effect. With genomes randomly reassigned to team slots
+every match, each genome's fitness estimate was dominated by *which team
+it happened to land on* that generation, not by whether its bidding was
+any good.
+
+Fix: `evolution.compute_team_baselines()` runs a batch of hand-designed-
+archetype drafts to get each real team's typical points regardless of
+strategy, then every genome's fitness is **points above/below that
+team's baseline** instead of raw points. Sanity check: since baselines
+are *defined* as the hand-designed archetypes' own average, re-running
+the archetypes through the adjusted metric should land within noise of
+0 -- confirmed (-1.7, +15.2 across two checks).
+
+Even after this fix, the **self-play tournament's population mean still
+showed no detectable improvement** over 15 further generations (flat at
+~0, same as the archetype sanity check). That doesn't mean evolution found
+nothing, though -- see `best_response.py` below.
+
+## Best-response testing (best_response.py, run_best_response.py)
+
+The self-play tournament answers "did the population as a whole get
+better," which turned out to be too noisy a question (co-evolving against
+a small, shifting population dilutes the signal). The actually useful
+question is different: **"if I personally adopt strategy X while my 11
+opponents draft like a realistic field, how many points do I get?"**
+That's a much better-powered test -- fixed, realistic opponents instead
+of a co-evolving population -- and it did find a real, statistically
+strong result:
+
+| Strategy | pts above/below baseline |
+|---|---|
+| **best evolved genome** | **+813 ± 46** |
+| price_enforcer | +396 ± 43 |
+| balanced | +262 ± 46 |
+| anchor / value_purist / positional_extremist_wr | ~0, not significant |
+| positional_extremist_rb / tier_controller / stars_and_scrubs / emotional | negative, several significantly so |
+
+(n=40 per strategy; "±" is standard error, so anything past ~2× that is a
+real effect, not noise.) See `STRATEGY.md` for what the winning genome's
+parameters actually mean in plain English and how to act on them at the
+real auction, including the confidence caveats worth reading before
+trusting it with real dollars.
+
+## Per-player price distributions (run_player_price_distributions.py)
+
+Simulates the actual auction implied by the recommended strategy --
+one seat plays it, the other 11 draft like a realistic archetype mix --
+and records every player's price across every draft (from any team, not
+just the recommended seat) into
+`output_mock_draft/player_price_distributions.csv`: mean/median/std plus
+P10/P25/P75/P90. A wide P10-P90 band means that player's price depends
+heavily on who else wants him at the table; a narrow one means the market
+is predictable for him.
+
 ## Known limitations / where to calibrate next
 
 - Tiers are a synthetic value-based proxy, not real scouted tiers.

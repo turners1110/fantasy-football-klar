@@ -46,18 +46,42 @@ def init_population(size: int, rng: np.random.Generator, start_gen: int = 0) -> 
     return [random_genome(rng, name=f"gen{start_gen}_seed{i}") for i in range(size)]
 
 
+def compute_team_baselines(
+    players: dict[str, Player], teams_template: dict[str, Team], n_matches: int, rng: np.random.Generator
+) -> dict[str, float]:
+    """Each real team's typical roster points, averaged over many
+    hand-designed-archetype drafts, regardless of strategy. This exists
+    because team identity (i.e. whose keepers you inherit) turned out to
+    have a ~160-point fixed-effect spread across the 12 teams -- bigger
+    than the entire range the evolved population's fitness has moved
+    across 22 generations. Without subtracting this out, a genome's score
+    is dominated by which team-slot it randomly landed on, not by whether
+    its bidding strategy is actually any good."""
+    totals = {name: [] for name in teams_template}
+    for _ in range(n_matches):
+        _, final_teams = run_single_auction(players, teams_template, rng)
+        for name, team in final_teams.items():
+            totals[name].append(team.total_points)
+    return {name: float(np.mean(vals)) for name, vals in totals.items()}
+
+
 def evaluate_generation(
     population: list[Archetype],
     players: dict[str, Player],
     teams_template: dict[str, Team],
     matches_per_generation: int,
     rng: np.random.Generator,
+    team_baselines: dict[str, float] | None = None,
 ) -> np.ndarray:
-    """Return an array of avg fitness (roster points) per genome index.
-    Every genome appears in multiple, differently-matched auctions per
-    generation so its score reflects robustness, not one lucky pairing."""
+    """Return an array of avg fitness per genome index. Fitness is roster
+    points MINUS that team-slot's baseline (see compute_team_baselines) --
+    without this adjustment, keeper-driven team differences swamp any
+    real strategy signal. Every genome appears in multiple, differently-
+    matched auctions per generation so its score reflects robustness, not
+    one lucky pairing."""
     team_names = list(teams_template.keys())
     n_teams = len(team_names)
+    baselines = team_baselines or {name: 0.0 for name in team_names}
     fitness_sums = np.zeros(len(population))
     fitness_counts = np.zeros(len(population))
 
@@ -71,7 +95,8 @@ def evaluate_generation(
 
         for i, team_name in enumerate(team_names):
             gi = genome_idx[i]
-            fitness_sums[gi] += final_teams[team_name].total_points
+            adjusted_points = final_teams[team_name].total_points - baselines[team_name]
+            fitness_sums[gi] += adjusted_points
             fitness_counts[gi] += 1
 
     # Genomes never sampled this generation (possible with a large
@@ -138,8 +163,18 @@ def run_evolution(
     seed: int = 0,
     state_path: Path = DEFAULT_STATE_PATH,
     verbose: bool = True,
+    baseline_matches: int = 40,
 ) -> tuple[list[Archetype], list[GenerationStats]]:
     rng = np.random.default_rng(seed)
+
+    if verbose:
+        print(f"Computing per-team point baselines ({baseline_matches} hand-designed-archetype drafts)"
+              " so genome fitness isn't dominated by keeper luck...")
+    team_baselines = compute_team_baselines(players, teams_template, baseline_matches, rng)
+    if verbose:
+        spread = max(team_baselines.values()) - min(team_baselines.values())
+        print(f"  Team baseline spread: {spread:.0f} pts "
+              f"(min={min(team_baselines.values()):.0f}, max={max(team_baselines.values()):.0f})")
 
     population, history = load_state(state_path)
     start_gen = history[-1].generation + 1 if history else 0
@@ -160,7 +195,7 @@ def run_evolution(
                 population = population[:population_size]
 
     for gen in range(start_gen, start_gen + generations):
-        fitness = evaluate_generation(population, players, teams_template, matches_per_generation, rng)
+        fitness = evaluate_generation(population, players, teams_template, matches_per_generation, rng, team_baselines)
         valid_fitness = fitness[~np.isnan(fitness)]
         best_i = int(np.nanargmax(fitness))
         stats = GenerationStats(
@@ -172,7 +207,8 @@ def run_evolution(
         )
         history.append(stats)
         if verbose:
-            print(f"  gen {gen:>3}: best={stats.best_fitness:.1f} pts  mean={stats.mean_fitness:.1f}  worst={stats.worst_fitness:.1f}")
+            print(f"  gen {gen:>3}: best={stats.best_fitness:+.1f}  mean={stats.mean_fitness:+.1f}  worst={stats.worst_fitness:+.1f}"
+                  f"  (pts above/below that team's baseline)")
 
         population = evolve_step(population, fitness, rng, gen + 1)
 
