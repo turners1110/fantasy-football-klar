@@ -39,3 +39,15 @@ GLOBAL_STAR_COUNT = 30
 # have ~90%-of-budget star ceilings. 2.5x still allows a real, meaningful
 # "pay up for the stud" premium.
 STAR_MAX_VALUE_MULTIPLE = 2.5
+
+# Real auctions see EARLY picks go for a premium relative to true value --
+# bidders are flush with cash and haven't recalibrated to the shrinking
+# pool -- with discipline (and bargains) showing up late. First 100-sim
+# run instead found organic bidding badly under-competitive throughout,
+# with 62.6% of the ENTIRE league budget ($3,003 of $4,800) getting dumped
+# into the forced-final-slot rule as a result ($250 avg on a $12 player).
+# This decaying multiplier pushes willingness up early and fades to zero
+# by the end of the draft, rather than uniformly loosening every ceiling
+# (which would just re-inflate late picks too, defeating the tuning
+# already done there).
+EARLY_DRAFT_PREMIUM_MAX = 0.6  # up to +60% at draft_progress == 0.0

@@ -34,7 +34,7 @@ def _position_fit_multiplier(team: Team, player: Player, archetype: Archetype) -
     return 1.3 if current_share < target else 0.4
 
 
-def compute_willingness(team: Team, player: Player, rng: np.random.Generator) -> float:
+def compute_willingness(team: Team, player: Player, rng: np.random.Generator, draft_progress: float = 0.0) -> float:
     """Max price this team is willing to raise a bid to, right now, for
     this player -- before the hard roster-slot budget cap is applied."""
     archetype = ARCHETYPES[team.archetype]
@@ -78,6 +78,17 @@ def compute_willingness(team: Team, player: Player, rng: np.random.Generator) ->
     # simulating at a $197+ mean price despite the 2.5x value cap above.
     if is_star_candidate and not archetype.strict_value_ceiling:
         willingness = min(willingness, player.base_value * cfg.STAR_MAX_VALUE_MULTIPLE)
+
+    # Early-draft premium: decaying multiplicative bump, not a floor, so it
+    # scales *relevant* willingness up (a real $50 player bid more
+    # aggressively at pick 5) rather than manufacturing demand for chaff
+    # (a $1 player at 1.6x is still ~$1.60 -- negligible). Skipped for
+    # Value Purist: their whole identity is a preset price immune to market
+    # mood, which is exactly the discipline the OTHER archetypes are
+    # meant to be overpaying against.
+    if not archetype.strict_value_ceiling:
+        premium = 1.0 + cfg.EARLY_DRAFT_PREMIUM_MAX * (1.0 - draft_progress)
+        willingness *= premium
 
     # NOTE: no "spend the rest of my budget" pressure lives here. Two
     # earlier attempts at that (a hard cliff at slots_needed==1, then a

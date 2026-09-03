@@ -20,6 +20,7 @@ W_DRAIN = 1.0
 W_TIER_CLIFF = 0.8
 W_POSITION_RUN = 0.5
 W_SELF_AVOID = 0.6
+W_VALUE = 2.5
 TEMPERATURE = 0.6
 TOP_K = 12
 
@@ -56,6 +57,18 @@ def choose_nomination(
     nominator: str, teams: dict[str, Team], available: dict[str, Player], rng: np.random.Generator
 ) -> str:
     names = list(available.keys())
+    # Root-cause fix from the first 100-sim run: the global top-138 players
+    # by real value sum to ~$3,685, almost exactly the ~$3,700 live-auction
+    # budget -- the real valuation model is already self-consistent. But
+    # the drafted set only overlapped that real top-138 by 20 players,
+    # because every other nomination signal here is RATIO-based (a rival's
+    # private value / the player's own base_value), which scores a $1
+    # player a rival slightly overvalues identically to a $100 star a
+    # rival slightly overvalues. Nothing was pulling genuinely good players
+    # into the auction at all -- matching real strategy notes ("nominate
+    # stars you don't want early"), this adds that missing pull directly.
+    max_value = max((p.base_value for p in available.values()), default=1.0) or 1.0
+
     scores = np.empty(len(names))
     for i, name in enumerate(names):
         candidate = available[name]
@@ -63,6 +76,7 @@ def choose_nomination(
             W_DRAIN * _drain_score(candidate, nominator, teams, rng)
             + W_TIER_CLIFF * _tier_cliff_score(candidate)
             + W_POSITION_RUN * _position_run_score(candidate, teams)
+            + W_VALUE * (candidate.base_value / max_value)
             - W_SELF_AVOID * _self_avoid_score(candidate, nominator, teams, rng)
         )
 

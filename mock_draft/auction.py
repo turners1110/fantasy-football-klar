@@ -20,7 +20,9 @@ from .valuation import compute_willingness
 BID_SAFETY_ROUNDS = 60
 
 
-def resolve_bid(candidate: Player, nominator: str, teams: dict[str, Team], rng: np.random.Generator) -> tuple[str, float]:
+def resolve_bid(
+    candidate: Player, nominator: str, teams: dict[str, Team], rng: np.random.Generator, draft_progress: float
+) -> tuple[str, float]:
     """Open ascending auction starting at $1 with the nominator as the
     default winner if nobody raises."""
     current_bid = float(cfg.MIN_PRICE)
@@ -36,7 +38,7 @@ def resolve_bid(candidate: Player, nominator: str, teams: dict[str, Team], rng: 
             if name == current_leader:
                 continue
             team = teams[name]
-            willingness = compute_willingness(team, candidate, rng)
+            willingness = compute_willingness(team, candidate, rng, draft_progress)
             cap = team.max_bid_cap()
             max_can_pay = min(willingness, cap)
             if max_can_pay <= current_bid:
@@ -69,6 +71,7 @@ def run_single_auction(players: dict[str, Player], teams: dict[str, Team], rng: 
     pick_num = 0
     safety = 0
     max_picks = cfg.NUM_TEAMS * cfg.REQUIRED_ROSTER_SIZE + len(available)
+    total_initial_slots = sum(t.slots_needed for t in teams.values())
 
     while available and any(not t.is_done for t in teams.values()) and safety < max_picks:
         safety += 1
@@ -80,7 +83,10 @@ def run_single_auction(players: dict[str, Player], teams: dict[str, Team], rng: 
         candidate_name = choose_nomination(nominator, teams, available, rng)
         candidate = available[candidate_name]
 
-        winner, price = resolve_bid(candidate, nominator, teams, rng)
+        remaining_slots = sum(t.slots_needed for t in teams.values())
+        draft_progress = 1.0 - (remaining_slots / total_initial_slots if total_initial_slots else 0.0)
+
+        winner, price = resolve_bid(candidate, nominator, teams, rng, draft_progress)
         team = teams[winner]
 
         # Hard rule (explicit, not emergent): the player that completes a
