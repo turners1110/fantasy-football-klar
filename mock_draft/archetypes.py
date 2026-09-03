@@ -43,6 +43,13 @@ class Archetype:
     # position (revenge-bidder / panic-buyer behavior).
     tilt_after_losses: int = 3
     tilt_boost: float = 1.15
+    # Continuous per-position willingness multiplier (default empty ->
+    # 1.0 everywhere, so every hand-designed archetype above is unaffected).
+    # Separate from position_targets (which does a discontinuous share
+    # comparison) -- this exists so the evolutionary optimizer
+    # (evolution.py) has a smooth, mutable per-position knob instead of
+    # positional_extremist's hard-coded target-share logic.
+    position_weight: dict = field(default_factory=dict)
 
 
 ARCHETYPES: dict[str, Archetype] = {

@@ -84,6 +84,66 @@ Key mechanics:
   multiple rivals still need that position (nominate to start a run) —
   while generally avoiding nominating your own top targets.
 
+## Co-evolutionary bidding optimizer (run_evolution.py)
+
+A separate, second objective from everything above. The archetype system
+compares simulated prices to real *dollar* value; this optimizes for
+**total roster projected points** instead -- "given the real budget/keeper
+constraints, what bidding strategy actually builds the best team," with
+teams evolving strategies **against each other**, not against a fixed
+target.
+
+```bash
+python run_evolution.py --generations 20 --population 24 --matches-per-generation 40
+```
+
+How it works:
+- A genome is just an `Archetype` (see `archetypes.py`) with continuous
+  values instead of hand-picked ones -- evolved strategies and the 8
+  hand-designed personalities share the exact same bidding engine
+  (`compute_willingness`), so evolution is searching the same strategy
+  space a human described, not a separate system.
+- Each generation, genomes are randomly assigned to the 12 real teams --
+  a **different random pairing every match** -- and a full mock auction
+  runs. A genome's fitness is its average roster points across every
+  match it played, so it reflects robustness against varied opponents,
+  not one lucky matchup. This is the actual "optimize against each other"
+  part: there's no fixed opponent to beat, so no single strategy can be
+  "solved" in isolation -- a genome that pays up for RBs only wins if
+  enough *other* genomes in the population aren't also doing that.
+- Selection: top ~25% (elites) survive unchanged; the rest are bred by
+  crossover + Gaussian-mutating two elites; ~10% fresh random genomes are
+  injected every generation purely for exploration, so the population
+  doesn't converge prematurely on one local optimum.
+- **Persistence**: population + full generation history save to
+  `mock_draft_learned_population.json` after every run and reload at the
+  start of the next one -- this is the "continuously learning" part.
+  Running the script again doesn't restart cold; it resumes evolving the
+  same population, so intelligence compounds across sessions. Pass
+  `--reset` to discard it and start over.
+- The script benchmarks the final evolved population against a
+  hand-designed-archetype baseline (same random-mix process
+  `run_mock_draft.py` uses) so you can see whether evolution actually
+  found something better, not just different.
+
+Points, not dollars, are the fitness signal here (`mock_draft/points.py`):
+every rostered player -- auction pick or keeper -- gets a real
+`projected_points` figure re-derived from `data/projections_2026.csv`
+directly (falling back to `base_value × a league-wide points-per-dollar
+ratio` only when a player genuinely has no projection at all, flagged via
+`points_is_real=False` on the `Player` object).
+
+**Bug found and fixed while building this**: `auction_model/config.py`'s
+`score_from_stats` only skipped `None` stat values, not NaN -- a pandas
+DataFrame represents a missing column as `float('nan')`, not `None`, so
+any row missing an entire stat category (e.g. a QB row has no
+`reception`/`rec_yd`/`rec_td` at all) silently scored the whole player as
+NaN points. This affected all 158 of the players merged in from the raw
+FantasyPros stat files (every one of them was missing *some* category
+depending on position) -- not just the mock-draft points objective, but
+`run_valuation.py`'s own `projected_points` for the same 158 players. Now
+fixed at the source.
+
 ## Known limitations / where to calibrate next
 
 - Tiers are a synthetic value-based proxy, not real scouted tiers.

@@ -12,7 +12,7 @@ import copy
 import numpy as np
 
 from . import config_bridge as cfg
-from .archetypes import ARCHETYPE_NAMES, ARCHETYPES
+from .archetypes import ARCHETYPE_NAMES, Archetype
 from .models import Player, Team
 from .nomination import choose_nomination
 from .valuation import compute_willingness
@@ -43,7 +43,7 @@ def resolve_bid(
             max_can_pay = min(willingness, cap)
             if max_can_pay <= current_bid:
                 continue
-            archetype = ARCHETYPES[team.archetype]
+            archetype = team.strategy
             increment = 1.0
             if rng.random() < archetype.jump_bid_prob:
                 increment = float(rng.integers(2, 6))
@@ -56,12 +56,22 @@ def resolve_bid(
     return current_leader, current_bid
 
 
-def run_single_auction(players: dict[str, Player], teams: dict[str, Team], rng: np.random.Generator, verbose: bool = False):
+def run_single_auction(
+    players: dict[str, Player], teams: dict[str, Team], rng: np.random.Generator,
+    verbose: bool = False, strategies: dict[str, Archetype] | None = None,
+):
+    """strategies: optional {team_name: Archetype} to drive bidding from an
+    evolved genome instead of a random named archetype -- used by
+    evolution.py. Teams not present in `strategies` fall back to the
+    normal random-archetype assignment."""
     teams = copy.deepcopy(teams)
     available = dict(players)
 
     for team in teams.values():
-        team.archetype = rng.choice(ARCHETYPE_NAMES)
+        if strategies is not None and team.name in strategies:
+            team.custom_strategy = strategies[team.name]
+        elif team.custom_strategy is None:
+            team.archetype = rng.choice(ARCHETYPE_NAMES)
 
     turn_order = list(teams.keys())
     rng.shuffle(turn_order)
@@ -99,7 +109,7 @@ def run_single_auction(players: dict[str, Player], teams: dict[str, Team], rng: 
         if forced_final_slot:
             price = team.budget_remaining
 
-        team.roster.append((candidate.name, candidate.position, price))
+        team.roster.append((candidate.name, candidate.position, price, candidate.projected_points))
         team.budget_remaining = round(team.budget_remaining - price, 2)
         if candidate.is_star_eligible:
             team.stars_bought += 1
@@ -110,7 +120,7 @@ def run_single_auction(players: dict[str, Player], teams: dict[str, Team], rng: 
         draft_log.append({
             "pick": pick_num, "player": candidate.name, "position": candidate.position,
             "tier": candidate.tier, "nominator": nominator, "winner": winner, "price": price,
-            "winner_archetype": team.archetype, "forced_final_slot": forced_final_slot,
+            "winner_archetype": team.strategy.name, "forced_final_slot": forced_final_slot,
         })
         if verbose:
             print(f"#{pick_num:>3} {candidate.name:<24} {candidate.position:<3} "

@@ -18,7 +18,7 @@ def get_private_value(team: Team, player: Player, rng: np.random.Generator) -> f
     is worth,' the Value Purist's preset price among others."""
     if player.name in team.private_value:
         return team.private_value[player.name]
-    archetype = ARCHETYPES[team.archetype]
+    archetype = team.strategy
     noise = float(np.clip(rng.normal(1.0, archetype.noise_std), 0.5, 1.9))
     value = player.base_value * noise
     team.private_value[player.name] = value
@@ -37,7 +37,7 @@ def _position_fit_multiplier(team: Team, player: Player, archetype: Archetype) -
 def compute_willingness(team: Team, player: Player, rng: np.random.Generator, draft_progress: float = 0.0) -> float:
     """Max price this team is willing to raise a bid to, right now, for
     this player -- before the hard roster-slot budget cap is applied."""
-    archetype = ARCHETYPES[team.archetype]
+    archetype = team.strategy
     private_val = get_private_value(team, player, rng)
 
     is_star_candidate = (
@@ -62,6 +62,7 @@ def compute_willingness(team: Team, player: Player, rng: np.random.Generator, dr
         willingness = private_val if archetype.strict_value_ceiling else min(private_val, max(ceiling, cfg.MIN_PRICE))
 
     willingness *= _position_fit_multiplier(team, player, archetype)
+    willingness *= archetype.position_weight.get(player.position, 1.0)
 
     # Tier-cliff panic: last or second-to-last player left in this tier.
     if player.tier_rank >= player.tier_size - 1:

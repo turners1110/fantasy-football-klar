@@ -13,6 +13,7 @@ import pandas as pd
 
 from . import config_bridge as cfg
 from .models import Player, Team
+from .points import build_points_lookup, compute_fallback_ratio, points_for
 
 BASE_DIR = Path(__file__).parent.parent
 
@@ -48,23 +49,28 @@ def load_pool_and_teams(snapshot_dir: str | Path = BASE_DIR / "output_mock_draft
     prices = build_tiers(prices)
     star_cutoff = prices["base_value"].sort_values(ascending=False).head(cfg.GLOBAL_STAR_COUNT).min()
 
-    players = {
-        row["player"]: Player(
+    points_lookup = build_points_lookup()
+    fallback_ratio = compute_fallback_ratio(prices, points_lookup)
+
+    players = {}
+    for _, row in prices.iterrows():
+        pts, is_real = points_for(row["player"], points_lookup, fallback_ratio, row["base_value"])
+        players[row["player"]] = Player(
             name=row["player"], position=row["position"], base_value=float(row["base_value"]),
             tier=int(row["tier"]), tier_size=int(row["tier_size"]), tier_rank=int(row["tier_rank"]),
             is_star_eligible=bool(row["base_value"] >= star_cutoff),
+            projected_points=pts, points_is_real=is_real,
         )
-        for _, row in prices.iterrows()
-    }
 
     keepers = pd.read_csv(snapshot_dir / "keepers_2026.csv")
     teams: dict[str, Team] = {}
     for team_name, group in keepers.groupby("team"):
         spent = float(group["keeper_price_2026"].fillna(0).sum())
-        roster = [
-            (row["player"], row["position"], float(row["keeper_price_2026"]) if pd.notna(row["keeper_price_2026"]) else 0.0)
-            for _, row in group.iterrows()
-        ]
+        roster = []
+        for _, row in group.iterrows():
+            price = float(row["keeper_price_2026"]) if pd.notna(row["keeper_price_2026"]) else 0.0
+            pts, _ = points_for(row["player"], points_lookup, fallback_ratio, row["salary_2025"] if pd.notna(row["salary_2025"]) else 0.0)
+            roster.append((row["player"], row["position"], price, pts))
         teams[team_name] = Team(
             name=team_name,
             budget_remaining=round(cfg.BUDGET_PER_TEAM - spent, 2),

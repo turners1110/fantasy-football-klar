@@ -224,7 +224,16 @@ STAT_COLUMNS = [
 
 
 def score_from_stats(stat_row: dict) -> float:
-    """Score a raw stat line under this league's exact scoring rules."""
+    """Score a raw stat line under this league's exact scoring rules.
+
+    A missing stat category (e.g. a QB row has no reception/rec_yd/rec_td
+    columns at all) must score as 0, not poison the whole total -- a
+    pandas DataFrame represents that as float('nan'), not None, and
+    `value is None` doesn't catch it. Found via the mock-draft points
+    objective: every one of the 158 FantasyPros-merged players (any row
+    with at least one entirely-absent stat category, i.e. all of them)
+    was silently scoring NaN points.
+    """
     points = 0.0
     for stat in STAT_COLUMNS:
         value = stat_row.get(stat)
@@ -233,6 +242,8 @@ def score_from_stats(stat_row: dict) -> float:
         try:
             value = float(value)
         except (TypeError, ValueError):
+            continue
+        if value != value:  # NaN != NaN is the portable isnan check w/o importing math for one line
             continue
         points += value * getattr(SCORING, stat)
     return round(points, 2)
