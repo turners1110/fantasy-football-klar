@@ -1,0 +1,601 @@
+match,seat,genome,player,position,price,projected_points,is_starting
+0,Brad,gen15_elite0,Jaxon Smith-Njigba,WR,31.0,253.78,True
+0,Brad,gen15_elite0,Tyler Warren,TE,11.0,162.68,True
+0,Brad,gen15_elite0,Alec Pierce,WR,11.0,154.64,True
+0,Brad,gen15_elite0,Drake Maye,QB,30.0,296.32,False
+0,Brad,gen15_elite0,Jalen Hurts,QB,22.34185869565217,297.46,False
+0,Brad,gen15_elite0,Bill Croskey-Merritt,RB,20.16702221591906,459.64799999999997,True
+0,Brad,gen15_elite0,Brian Robinson Jr,RB,20.69578161602767,77.14,True
+0,Brad,gen15_elite0,CJ Stroud,QB,22.184205434782605,245.14,False
+0,Brad,gen15_elite0,Josh Allen,QB,19.90693739130435,328.82,True
+0,Brad,gen15_elite0,Garrett Wilson,WR,15.0,163.37,True
+0,Brad,gen15_elite0,Mike Evans,WR,14.343970975277228,164.95,True
+0,Brad,gen15_elite0,Makai Lemon,WR,12.641795174673547,119.03,False
+0,Brad,gen15_elite0,Courtland Sutton,WR,10.779851734336697,137.35,False
+0,Brad,gen15_elite0,AJ Brown,WR,10.932872173913044,194.9,True
+0,Brad,gen15_elite0,Michael Pittman Jr,WR,148.01,137.83,False
+1,Brandon,gen15_elite0,Jonathan Taylor,RB,51.0,256.35,False
+1,Brandon,gen15_elite0,Justin Jefferson,WR,46.0,221.18,False
+1,Brandon,gen15_elite0,Breece Hall,RB,31.0,201.5,False
+1,Brandon,gen15_elite0,Brock Bowers,TE,16.0,177.91,False
+1,Brandon,gen15_elite0,Christian McCaffrey,RB,46.0,265.35,False
+1,Brandon,gen15_elite0,Cam Skattebo,RB,28.0,186.4,False
+1,Brandon,gen15_elite0,Jalen Hurts,QB,30.883985,297.46,False
+1,Brandon,gen15_elite0,Josh Allen,QB,20.060793043478263,328.82,False
+1,Brandon,gen15_elite0,Drake Maye,QB,18.625999999999998,296.32,False
+1,Brandon,gen15_elite0,CJ Stroud,QB,10.148111304347827,245.14,False
+1,Brandon,gen15_elite0,Jayden Daniels,QB,10.001506956521741,293.28,False
+1,Brandon,gen15_elite0,Lamar Jackson,QB,9.624204347826087,289.92,False
+1,Brandon,gen15_elite0,Joe Burrow,QB,8.07304347826087,282.7,False
+1,Brandon,gen15_elite0,Caleb Williams,QB,6.4715275,271.0,False
+1,Brandon,gen15_elite0,AD Mitchell,WR,68.12,120.38399999999999,False
+2,CJ,gen15_elite0,Ja'Marr Chase,WR,46.0,266.33,True
+2,CJ,gen15_elite0,Chase Brown,RB,31.0,227.25,True
+2,CJ,gen15_elite0,Omarion Hampton,RB,11.0,205.65,True
+2,CJ,gen15_elite0,D'Andre Swift,RB,52.0,180.15,True
+2,CJ,gen15_elite0,Parker Washington,WR,11.0,162.09,True
+2,CJ,gen15_elite0,Jalen Hurts,QB,37.18071373913044,297.46,False
+2,CJ,gen15_elite0,Josh Allen,QB,25.951284347826086,328.82,True
+2,CJ,gen15_elite0,CJ Stroud,QB,31.729089130434783,245.14,False
+2,CJ,gen15_elite0,Drake Maye,QB,23.908797826086953,296.32,False
+2,CJ,gen15_elite0,Lamar Jackson,QB,10.797011304347828,289.92,False
+2,CJ,gen15_elite0,Bill Croskey-Merritt,RB,8.627041832961925,459.64799999999997,True
+2,CJ,gen15_elite0,Jayden Reed,WR,7.971968243950488,143.93,False
+2,CJ,gen15_elite0,Amon-Ra St Brown,WR,7.310034851307658,247.22,True
+2,CJ,gen15_elite0,JK Dobbins,RB,6.768473159898876,134.15,False
+2,CJ,gen15_elite0,Mark Andrews,TE,88.75,128.18,True
+3,Coby,gen15_elite0,Derrick Henry,RB,51.0,227.4,True
+3,Coby,gen15_elite0,Kyren Williams,RB,31.0,196.2,True
+3,Coby,gen15_elite0,TreVeyon Henderson,RB,11.0,158.6,True
+3,Coby,gen15_elite0,Quinshon Judkins,RB,11.0,177.8,True
+3,Coby,gen15_elite0,Drake Maye,QB,29.35385026086957,296.32,False
+3,Coby,gen15_elite0,Josh Allen,QB,21.126085652173913,328.82,True
+3,Coby,gen15_elite0,Jordan Mason,RB,18.579701533966446,137.2,False
+3,Coby,gen15_elite0,Riley Leonard,QB,1.0,11.86,False
+3,Coby,gen15_elite0,CJ Stroud,QB,20.79949456521739,245.14,False
+3,Coby,gen15_elite0,TJ Hockenson,TE,15.241695438594547,103.35,True
+3,Coby,gen15_elite0,Bill Croskey-Merritt,RB,13.0,459.64799999999997,True
+3,Coby,gen15_elite0,Mike Evans,WR,12.748717391304346,164.95,True
+3,Coby,gen15_elite0,JK Dobbins,RB,11.782111882863154,134.15,False
+3,Coby,gen15_elite0,Lamar Jackson,QB,11.424584782608697,289.92,False
+3,Coby,gen15_elite0,Michael Pittman Jr,WR,140.95,137.83,True
+4,Evan,gen15_elite0,Drake London,WR,36.0,221.3,True
+4,Evan,gen15_elite0,Saquon Barkley,RB,46.0,222.8,True
+4,Evan,gen15_elite0,George Pickens,WR,41.0,209.94,True
+4,Evan,gen15_elite0,Puka Nacua,WR,31.0,256.87,True
+4,Evan,gen15_elite0,Emeka Egbuka,WR,11.0,166.25,True
+4,Evan,gen15_elite0,Jordan Mason,RB,13.93295304347826,137.2,True
+4,Evan,gen15_elite0,Rachaad White,RB,13.739999999999998,127.05,False
+4,Evan,gen15_elite0,Deebo Samuel,WR,16.15635205101984,102.68,False
+4,Evan,gen15_elite0,Davante Adams,WR,13.739999999999998,161.35,False
+4,Evan,gen15_elite0,Josh Allen,QB,13.739999999999998,328.82,True
+4,Evan,gen15_elite0,Jalen Hurts,QB,10.87128347826087,297.46,False
+4,Evan,gen15_elite0,Romeo Doubs,WR,10.412629614131049,122.25,False
+4,Evan,gen15_elite0,TJ Hockenson,TE,9.15151304347826,103.35,True
+4,Evan,gen15_elite0,Matthew Golden,WR,10.016800487818807,127.74,False
+4,Evan,gen15_elite0,Garrett Wilson,WR,123.24,163.37,True
+5,James,gen15_elite0,Zay Flowers,WR,31.0,205.23,True
+5,James,gen15_elite0,Colston Loveland,TE,11.0,157.08,True
+5,James,gen15_elite0,Wan'Dale Robinson,WR,11.0,133.19,False
+5,James,gen15_elite0,Rico Dowdle,RB,13.0,157.15,True
+5,James,gen15_elite0,Rashee Rice,WR,25.0,197.11,True
+5,James,gen15_elite0,Jalen Hurts,QB,30.67157982608696,297.46,False
+5,James,gen15_elite0,Aaron Jones Sr,RB,20.53707408695652,131.55,False
+5,James,gen15_elite0,Josh Allen,QB,20.458770434782608,328.82,True
+5,James,gen15_elite0,Davante Adams,WR,16.61565217391304,161.35,True
+5,James,gen15_elite0,Mike Evans,WR,16.35526086956522,164.95,True
+5,James,gen15_elite0,Drake Maye,QB,16.213520000000003,296.32,False
+5,James,gen15_elite0,CJ Stroud,QB,16.166273043478263,245.14,False
+5,James,gen15_elite0,JK Dobbins,RB,12.437630434782607,134.15,True
+5,James,gen15_elite0,Matthew Golden,WR,10.517808695652175,127.74,False
+5,James,gen15_elite0,Amon-Ra St Brown,WR,149.01,247.22,True
+6,Jason,gen15_elite0,CeeDee Lamb,WR,46.0,224.28,True
+6,Jason,gen15_elite0,Bijan Robinson,RB,26.0,295.2,True
+6,Jason,gen15_elite0,Jahmyr Gibbs,RB,31.0,296.35,True
+6,Jason,gen15_elite0,Bhayshul Tuten,RB,21.0,160.4,True
+6,Jason,gen15_elite0,Jordan Mason,RB,21.0,137.2,False
+6,Jason,gen15_elite0,Rachaad White,RB,20.174240479707855,127.05,False
+6,Jason,gen15_elite0,Jaylen Waddle,WR,14.82,177.9,True
+6,Jason,gen15_elite0,Carnell Tate,WR,15.360865391304351,140.03,True
+6,Jason,gen15_elite0,Kenny Gainwell,RB,14.88033739130435,136.45,False
+6,Jason,gen15_elite0,Mike Evans,WR,14.66544941785862,164.95,True
+6,Jason,gen15_elite0,Drake Maye,QB,15.233778086956526,296.32,False
+6,Jason,gen15_elite0,TJ Hockenson,TE,11.480662608695653,103.35,True
+6,Jason,gen15_elite0,Jordan Addison,WR,11.18819277205853,131.03,False
+6,Jason,gen15_elite0,Josh Allen,QB,9.57308695652174,328.82,True
+6,Jason,gen15_elite0,Jalen Hurts,QB,127.63,297.46,False
+7,Reid,gen15_elite0,Chris Olave,WR,41.0,194.65,False
+7,Reid,gen15_elite0,Javonte Williams,RB,34.0,196.9,False
+7,Reid,gen15_elite0,Tony Pollard,RB,23.09857391304348,143.2,False
+7,Reid,gen15_elite0,Garrett Wilson,WR,22.619999999999997,163.37,False
+7,Reid,gen15_elite0,Josh Allen,QB,18.739107826086958,328.82,False
+7,Reid,gen15_elite0,Bill Croskey-Merritt,RB,18.685189565217392,459.64799999999997,False
+7,Reid,gen15_elite0,Jordan Addison,WR,18.120953043478263,131.03,False
+7,Reid,gen15_elite0,CJ Stroud,QB,18.068434782608698,245.14,False
+7,Reid,gen15_elite0,Drake Maye,QB,16.49064347826087,296.32,False
+7,Reid,gen15_elite0,JK Dobbins,RB,13.838240202594838,134.15,False
+7,Reid,gen15_elite0,Nick Chubb,RB,11.0,372.09599999999995,False
+7,Reid,gen15_elite0,Jayden Reed,WR,11.86118187909922,143.93,False
+7,Reid,gen15_elite0,Amon-Ra St Brown,WR,10.943762404996313,247.22,False
+7,Reid,gen15_elite0,Lamar Jackson,QB,10.62,289.92,False
+7,Reid,gen15_elite0,Jalen Hurts,QB,130.91,297.46,False
+8,Ryan J,gen15_elite0,Ashton Jeanty,RB,11.0,199.4,False
+8,Ryan J,gen15_elite0,Michael Wilson,WR,11.0,132.1,False
+8,Ryan J,gen15_elite0,Nico Collins,WR,28.87874173913044,214.51,False
+8,Ryan J,gen15_elite0,Josh Allen,QB,25.0,328.82,False
+8,Ryan J,gen15_elite0,Garrett Wilson,WR,21.920025217391306,163.37,False
+8,Ryan J,gen15_elite0,Rachaad White,RB,22.0,127.05,False
+8,Ryan J,gen15_elite0,Tee Higgins,WR,18.496688695652175,181.9,False
+8,Ryan J,gen15_elite0,Jordan Mason,RB,19.0,137.2,False
+8,Ryan J,gen15_elite0,Stefon Diggs,WR,18.39128695652174,130.42,False
+8,Ryan J,gen15_elite0,Zach Charbonnet,RB,16.83067826086957,107.61,False
+8,Ryan J,gen15_elite0,Jameson Williams,WR,14.604435652173915,156.45,False
+8,Ryan J,gen15_elite0,CJ Stroud,QB,16.79714782608696,245.14,False
+8,Ryan J,gen15_elite0,Davante Adams,WR,13.042188407666133,161.35,False
+8,Ryan J,gen15_elite0,Nick Chubb,RB,11.501078260869566,372.09599999999995,False
+8,Ryan J,gen15_elite0,JK Dobbins,RB,151.54,134.15,False
+9,Sam,gen15_elite0,David Montgomery,RB,45.0,176.5,True
+9,Sam,gen15_elite0,Tyjae Spears,RB,13.0,113.45,False
+9,Sam,gen15_elite0,Drake Maye,QB,33.53113119603144,296.32,False
+9,Sam,gen15_elite0,Josh Allen,QB,23.25369391304348,328.82,True
+9,Sam,gen15_elite0,TJ Hockenson,TE,21.649401123557524,103.35,True
+9,Sam,gen15_elite0,Amon-Ra St Brown,WR,18.78648887463254,247.22,True
+9,Sam,gen15_elite0,Jameson Williams,WR,17.522434782608695,156.45,True
+9,Sam,gen15_elite0,Jalen Hurts,QB,20.113182608695656,297.46,False
+9,Sam,gen15_elite0,Nick Chubb,RB,14.0,372.09599999999995,True
+9,Sam,gen15_elite0,CJ Stroud,QB,15.0,245.14,False
+9,Sam,gen15_elite0,Lamar Jackson,QB,13.972466956521743,289.92,False
+9,Sam,gen15_elite0,Courtland Sutton,WR,11.671316949214155,137.35,True
+9,Sam,gen15_elite0,Jayden Reed,WR,10.832738577335633,143.93,True
+9,Sam,gen15_elite0,Joe Burrow,QB,9.517198260869565,282.7,False
+9,Sam,gen15_elite0,Michael Pittman Jr,WR,132.16,137.83,True
+10,Shane,gen15_elite0,Rome Odunze,WR,16.0,159.72,False
+10,Shane,gen15_elite0,Kyle Monangai,RB,11.0,144.3,False
+10,Shane,gen15_elite0,Blake Corum,RB,11.0,134.1,False
+10,Shane,gen15_elite0,Christian Watson,WR,11.0,161.94,False
+10,Shane,gen15_elite0,Cam Ward,QB,1.0,221.28,False
+10,Shane,gen15_elite0,Jordan Mason,RB,23.933267826086958,137.2,False
+10,Shane,gen15_elite0,Drake Maye,QB,23.95826643478261,296.32,False
+10,Shane,gen15_elite0,Josh Allen,QB,24.582543478260874,328.82,False
+10,Shane,gen15_elite0,Tee Higgins,WR,19.56420695652174,181.9,False
+10,Shane,gen15_elite0,Garrett Wilson,WR,19.0,163.37,False
+10,Shane,gen15_elite0,Bill Croskey-Merritt,RB,16.043078260869564,459.64799999999997,False
+10,Shane,gen15_elite0,Davante Adams,WR,15.831015652173912,161.35,False
+10,Shane,gen15_elite0,Mike Evans,WR,15.43481319793051,164.95,False
+10,Shane,gen15_elite0,CJ Stroud,QB,16.0,245.14,False
+10,Shane,gen15_elite0,Nick Chubb,RB,175.67,372.09599999999995,False
+11,Travis,gen15_elite0,Malik Nabers,WR,16.0,183.51,False
+11,Travis,gen15_elite0,Woody Marks,RB,11.0,104.75,False
+11,Travis,gen15_elite0,Jaylen Waddle,WR,29.409999999999997,177.9,False
+11,Travis,gen15_elite0,Carnell Tate,WR,26.932480652131506,140.03,False
+11,Travis,gen15_elite0,Tee Higgins,WR,22.38642826086956,181.9,False
+11,Travis,gen15_elite0,James Cook,RB,22.326291304347823,234.4,False
+11,Travis,gen15_elite0,Rashee Rice,WR,20.953196626693828,197.11,False
+11,Travis,gen15_elite0,Drake Maye,QB,24.114362499999995,296.32,False
+11,Travis,gen15_elite0,Josh Allen,QB,17.32669652173913,328.82,False
+11,Travis,gen15_elite0,CJ Stroud,QB,17.479936000000002,245.14,False
+11,Travis,gen15_elite0,Jalen Hurts,QB,14.28684595652174,297.46,False
+11,Travis,gen15_elite0,Garrett Wilson,WR,12.0,163.37,False
+11,Travis,gen15_elite0,Romeo Doubs,WR,10.998099999999997,122.25,False
+11,Travis,gen15_elite0,Alvin Kamara,RB,10.96636,68.7,False
+11,Travis,gen15_elite0,Amon-Ra St Brown,WR,143.81,247.22,False
+12,Brad,gen15_elite0,Jaxon Smith-Njigba,WR,31.0,253.78,True
+12,Brad,gen15_elite0,Tyler Warren,TE,11.0,162.68,True
+12,Brad,gen15_elite0,Alec Pierce,WR,11.0,154.64,True
+12,Brad,gen15_elite0,James Cook,RB,25.065902608695655,234.4,True
+12,Brad,gen15_elite0,Jordan Mason,RB,24.804966500079225,137.2,True
+12,Brad,gen15_elite0,Josh Allen,QB,24.923078260869566,328.82,True
+12,Brad,gen15_elite0,Jalen Hurts,QB,20.99811334782609,297.46,False
+12,Brad,gen15_elite0,Davante Adams,WR,18.9526847723619,161.35,True
+12,Brad,gen15_elite0,Nick Chubb,RB,16.259554782608696,372.09599999999995,True
+12,Brad,gen15_elite0,Makai Lemon,WR,15.938235722844924,119.03,False
+12,Brad,gen15_elite0,Drake Maye,QB,16.600417391304347,296.32,False
+12,Brad,gen15_elite0,CJ Stroud,QB,16.502914782608695,245.14,False
+12,Brad,gen15_elite0,Lamar Jackson,QB,12.772837391304348,289.92,False
+12,Brad,gen15_elite0,Jameson Williams,WR,10.172941304347825,156.45,True
+12,Brad,gen15_elite0,AD Mitchell,WR,144.02,120.38399999999999,False
+13,Brandon,gen15_elite0,Jonathan Taylor,RB,51.0,256.35,False
+13,Brandon,gen15_elite0,Justin Jefferson,WR,46.0,221.18,False
+13,Brandon,gen15_elite0,Breece Hall,RB,31.0,201.5,False
+13,Brandon,gen15_elite0,Brock Bowers,TE,16.0,177.91,False
+13,Brandon,gen15_elite0,Christian McCaffrey,RB,46.0,265.35,False
+13,Brandon,gen15_elite0,Cam Skattebo,RB,28.0,186.4,False
+13,Brandon,gen15_elite0,Jalen Hurts,QB,35.0,297.46,False
+13,Brandon,gen15_elite0,Tua Tagovailoa,QB,1.0,103.67,False
+13,Brandon,gen15_elite0,Josh Allen,QB,28.879194347826086,328.82,False
+13,Brandon,gen15_elite0,Drake Maye,QB,23.748293565217395,296.32,False
+13,Brandon,gen15_elite0,CJ Stroud,QB,13.122949565217393,245.14,False
+13,Brandon,gen15_elite0,Lamar Jackson,QB,10.900349565217391,289.92,False
+13,Brandon,gen15_elite0,Caleb Williams,QB,9.338831260869567,271.0,False
+13,Brandon,gen15_elite0,Joe Burrow,QB,5.7924173913043475,282.7,False
+13,Brandon,gen15_elite0,Isiah Pacheco,RB,54.22,73.93,False
+14,CJ,gen15_elite0,Ja'Marr Chase,WR,46.0,266.33,False
+14,CJ,gen15_elite0,Chase Brown,RB,31.0,227.25,False
+14,CJ,gen15_elite0,Omarion Hampton,RB,11.0,205.65,False
+14,CJ,gen15_elite0,D'Andre Swift,RB,52.0,180.15,False
+14,CJ,gen15_elite0,Parker Washington,WR,11.0,162.09,False
+14,CJ,gen15_elite0,Drake Maye,QB,26.35300338831442,296.32,False
+14,CJ,gen15_elite0,Jalen Hurts,QB,21.839000000000002,297.46,False
+14,CJ,gen15_elite0,Lamar Jackson,QB,18.030440000000002,289.92,False
+14,CJ,gen15_elite0,Josh Allen,QB,17.899408695652173,328.82,False
+14,CJ,gen15_elite0,Nick Chubb,RB,11.712733043478261,372.09599999999995,False
+14,CJ,gen15_elite0,Courtland Sutton,WR,10.853507473845381,137.35,False
+14,CJ,gen15_elite0,Caleb Williams,QB,11.3,271.0,False
+14,CJ,gen15_elite0,Kenneth Walker,RB,9.163794728430277,217.65,False
+14,CJ,gen15_elite0,Quentin Johnston,WR,8.439292405193227,125.4,False
+14,CJ,gen15_elite0,Joe Burrow,QB,113.42,282.7,False
+15,Coby,gen15_elite0,Derrick Henry,RB,51.0,227.4,False
+15,Coby,gen15_elite0,Kyren Williams,RB,31.0,196.2,False
+15,Coby,gen15_elite0,TreVeyon Henderson,RB,11.0,158.6,False
+15,Coby,gen15_elite0,Quinshon Judkins,RB,11.0,177.8,False
+15,Coby,gen15_elite0,Tony Pollard,RB,23.010673335559023,143.2,False
+15,Coby,gen15_elite0,Josh Allen,QB,18.567108695652177,328.82,False
+15,Coby,gen15_elite0,Davante Adams,WR,18.0,161.35,False
+15,Coby,gen15_elite0,Jalen Hurts,QB,19.0,297.46,False
+15,Coby,gen15_elite0,CJ Stroud,QB,18.757552132816738,245.14,False
+15,Coby,gen15_elite0,Drake Maye,QB,19.0,296.32,False
+15,Coby,gen15_elite0,Bill Croskey-Merritt,RB,12.800695652173914,459.64799999999997,False
+15,Coby,gen15_elite0,TJ Hockenson,TE,12.145591304347827,103.35,False
+15,Coby,gen15_elite0,Lamar Jackson,QB,11.665686956521741,289.92,False
+15,Coby,gen15_elite0,Nick Chubb,RB,10.299711673546659,372.09599999999995,False
+15,Coby,gen15_elite0,Joe Burrow,QB,132.74,282.7,False
+16,Evan,gen15_elite0,Drake London,WR,36.0,221.3,True
+16,Evan,gen15_elite0,Saquon Barkley,RB,46.0,222.8,True
+16,Evan,gen15_elite0,George Pickens,WR,41.0,209.94,True
+16,Evan,gen15_elite0,Puka Nacua,WR,31.0,256.87,True
+16,Evan,gen15_elite0,Emeka Egbuka,WR,11.0,166.25,False
+16,Evan,gen15_elite0,Drake Maye,QB,33.599167391304356,296.32,False
+16,Evan,gen15_elite0,Tee Higgins,WR,15.42566341452454,181.9,True
+16,Evan,gen15_elite0,Jalen Hurts,QB,19.21164347826087,297.46,False
+16,Evan,gen15_elite0,Tucker Kraft,TE,12.688238759170934,143.34,True
+16,Evan,gen15_elite0,Matthew Golden,WR,11.61644895472106,127.74,False
+16,Evan,gen15_elite0,Garrett Wilson,WR,10.435573913043479,163.37,False
+16,Evan,gen15_elite0,Bill Croskey-Merritt,RB,9.838482328627748,459.64799999999997,True
+16,Evan,gen15_elite0,Josh Allen,QB,11.95904,328.82,True
+16,Evan,gen15_elite0,Josh Downs,WR,8.056187852871336,145.07,False
+16,Evan,gen15_elite0,AJ Brown,WR,102.15,194.9,True
+17,James,gen15_elite0,Zay Flowers,WR,31.0,205.23,False
+17,James,gen15_elite0,Colston Loveland,TE,11.0,157.08,False
+17,James,gen15_elite0,Wan'Dale Robinson,WR,11.0,133.19,False
+17,James,gen15_elite0,Rico Dowdle,RB,13.0,157.15,False
+17,James,gen15_elite0,Jalen Hurts,QB,39.093250000000005,297.46,False
+17,James,gen15_elite0,Josh Allen,QB,22.471151304347828,328.82,False
+17,James,gen15_elite0,Chris Godwin Jr,WR,19.105439130434785,134.26,False
+17,James,gen15_elite0,TJ Hockenson,TE,19.051393043478264,103.35,False
+17,James,gen15_elite0,Drake Maye,QB,24.527158260869562,296.32,False
+17,James,gen15_elite0,Rashee Rice,WR,15.219556521739133,197.11,False
+17,James,gen15_elite0,Sam LaPorta,TE,14.66702028403899,139.7,False
+17,James,gen15_elite0,CJ Stroud,QB,24.35160347826087,245.14,False
+17,James,gen15_elite0,Lamar Jackson,QB,19.72226086956522,289.92,False
+17,James,gen15_elite0,Jameson Williams,WR,9.0,156.45,False
+17,James,gen15_elite0,Mike Evans,WR,126.79,164.95,False
+18,Jason,gen15_elite0,CeeDee Lamb,WR,46.0,224.28,True
+18,Jason,gen15_elite0,Bijan Robinson,RB,26.0,295.2,True
+18,Jason,gen15_elite0,Jahmyr Gibbs,RB,31.0,296.35,True
+18,Jason,gen15_elite0,Kenny Gainwell,RB,22.265558695652174,136.45,False
+18,Jason,gen15_elite0,Jalen Hurts,QB,24.321013913043483,297.46,False
+18,Jason,gen15_elite0,CJ Stroud,QB,22.87569873493644,245.14,False
+18,Jason,gen15_elite0,Josh Allen,QB,21.831652173913046,328.82,True
+18,Jason,gen15_elite0,AJ Brown,WR,14.885237826086957,194.9,True
+18,Jason,gen15_elite0,Tucker Kraft,TE,12.423724304347827,143.34,True
+18,Jason,gen15_elite0,Austin Ekeler,RB,12.544400000000001,339.26399999999995,True
+18,Jason,gen15_elite0,Lamar Jackson,QB,12.50716,289.92,False
+18,Jason,gen15_elite0,Mike Evans,WR,10.79522633468178,164.95,True
+18,Jason,gen15_elite0,Tyler Allgeier,RB,9.993510104130122,86.65,False
+18,Jason,gen15_elite0,Cam Ward,QB,1.0,221.28,False
+18,Jason,gen15_elite0,Michael Pittman Jr,WR,131.55,137.83,True
+19,Reid,gen15_elite0,Chris Olave,WR,41.0,194.65,True
+19,Reid,gen15_elite0,Javonte Williams,RB,34.0,196.9,True
+19,Reid,gen15_elite0,Rashee Rice,WR,25.427565217391308,197.11,True
+19,Reid,gen15_elite0,Kenny Gainwell,RB,23.0,136.45,False
+19,Reid,gen15_elite0,Mike Evans,WR,19.973,164.95,True
+19,Reid,gen15_elite0,Drake Maye,QB,22.800279347826084,296.32,False
+19,Reid,gen15_elite0,Bill Croskey-Merritt,RB,14.46208,459.64799999999997,True
+19,Reid,gen15_elite0,CJ Stroud,QB,22.0,245.14,False
+19,Reid,gen15_elite0,Josh Allen,QB,18.283104347826086,328.82,True
+19,Reid,gen15_elite0,Jalen Hurts,QB,22.333854608695653,297.46,False
+19,Reid,gen15_elite0,TJ Hockenson,TE,11.608940192716451,103.35,True
+19,Reid,gen15_elite0,Matthew Golden,WR,10.674774515284437,127.74,False
+19,Reid,gen15_elite0,Nick Chubb,RB,9.446565217391305,372.09599999999995,True
+19,Reid,gen15_elite0,JK Dobbins,RB,9.115385723994171,134.15,False
+19,Reid,gen15_elite0,Amon-Ra St Brown,WR,115.88,247.22,True
+20,Ryan J,gen15_elite0,Ashton Jeanty,RB,11.0,199.4,False
+20,Ryan J,gen15_elite0,Michael Wilson,WR,11.0,132.1,False
+20,Ryan J,gen15_elite0,Fernando Mendoza,QB,1.0,171.1,False
+20,Ryan J,gen15_elite0,Chris Godwin Jr,WR,22.999304347826087,134.26,False
+20,Ryan J,gen15_elite0,Jacory Croskey-Merritt,RB,22.59741739130435,127.0,False
+20,Ryan J,gen15_elite0,Deebo Samuel,WR,22.8679652173913,102.68,False
+20,Ryan J,gen15_elite0,Brian Robinson Jr,RB,22.53994782608696,77.14,False
+20,Ryan J,gen15_elite0,Jaylen Waddle,WR,19.46,177.9,False
+20,Ryan J,gen15_elite0,Davante Adams,WR,19.46,161.35,False
+20,Ryan J,gen15_elite0,Kenny Gainwell,RB,15.467901739130436,136.45,False
+20,Ryan J,gen15_elite0,Jalen Hurts,QB,31.44450217391305,297.46,False
+20,Ryan J,gen15_elite0,James Cook,RB,14.917586719931291,234.4,False
+20,Ryan J,gen15_elite0,Zach Charbonnet,RB,13.668512894906451,107.61,False
+20,Ryan J,gen15_elite0,Josh Allen,QB,24.51304347826087,328.82,False
+20,Ryan J,gen15_elite0,JK Dobbins,RB,147.06,134.15,False
+21,Sam,gen15_elite0,David Montgomery,RB,45.0,176.5,True
+21,Sam,gen15_elite0,Tyjae Spears,RB,13.0,113.45,False
+21,Sam,gen15_elite0,Trey McBride,TE,26.66508306883125,188.05,True
+21,Sam,gen15_elite0,Jaylen Waddle,WR,24.441052783831793,177.9,True
+21,Sam,gen15_elite0,Mike Evans,WR,22.437145217391304,164.95,True
+21,Sam,gen15_elite0,Bill Croskey-Merritt,RB,20.19,459.64799999999997,True
+21,Sam,gen15_elite0,Jalen Hurts,QB,18.793521565217393,297.46,False
+21,Sam,gen15_elite0,Josh Allen,QB,16.15721739130435,328.82,True
+21,Sam,gen15_elite0,Jameson Williams,WR,13.513029565217392,156.45,True
+21,Sam,gen15_elite0,Drake Maye,QB,14.24620191304348,296.32,False
+21,Sam,gen15_elite0,Matthew Golden,WR,13.691387214693869,127.74,False
+21,Sam,gen15_elite0,JK Dobbins,RB,12.611382665866776,134.15,True
+21,Sam,gen15_elite0,Caleb Williams,QB,12.803739898004402,271.0,False
+21,Sam,gen15_elite0,Alvin Kamara,RB,10.604285015105445,68.7,False
+21,Sam,gen15_elite0,Amon-Ra St Brown,WR,135.85,247.22,True
+22,Shane,gen15_elite0,Rome Odunze,WR,16.0,159.72,False
+22,Shane,gen15_elite0,Kyle Monangai,RB,11.0,144.3,False
+22,Shane,gen15_elite0,Blake Corum,RB,11.0,134.1,False
+22,Shane,gen15_elite0,Christian Watson,WR,11.0,161.94,False
+22,Shane,gen15_elite0,Drake Maye,QB,33.9987700228311,296.32,False
+22,Shane,gen15_elite0,Jalen Hurts,QB,27.78745657533095,297.46,False
+22,Shane,gen15_elite0,Mike Evans,WR,19.679652173913045,164.95,False
+22,Shane,gen15_elite0,JK Dobbins,RB,19.621278260869566,134.15,False
+22,Shane,gen15_elite0,Lamar Jackson,QB,19.504530434782613,289.92,False
+22,Shane,gen15_elite0,Josh Allen,QB,18.389780434782608,328.82,False
+22,Shane,gen15_elite0,Caleb Williams,QB,14.46528695652174,271.0,False
+22,Shane,gen15_elite0,Amon-Ra St Brown,WR,13.681127643573955,247.22,False
+22,Shane,gen15_elite0,Nick Chubb,RB,12.35425082037099,372.09599999999995,False
+22,Shane,gen15_elite0,Jameson Williams,WR,11.406454797988662,156.45,False
+22,Shane,gen15_elite0,Joe Burrow,QB,160.11,282.7,False
+23,Travis,gen15_elite0,Malik Nabers,WR,16.0,183.51,True
+23,Travis,gen15_elite0,Woody Marks,RB,11.0,104.75,True
+23,Travis,gen15_elite0,Davante Adams,WR,25.45,161.35,False
+23,Travis,gen15_elite0,Drake Maye,QB,28.22246956521739,296.32,False
+23,Travis,gen15_elite0,Jalen Hurts,QB,25.861729391304348,297.46,False
+23,Travis,gen15_elite0,Tee Higgins,WR,22.34290884215419,181.9,True
+23,Travis,gen15_elite0,Jayden Reed,WR,19.060535652173915,143.93,False
+23,Travis,gen15_elite0,Jordan Addison,WR,18.889489610625812,131.03,False
+23,Travis,gen15_elite0,Josh Allen,QB,18.895347826086958,328.82,True
+23,Travis,gen15_elite0,TJ Hockenson,TE,15.359304347826088,103.35,True
+23,Travis,gen15_elite0,Mike Evans,WR,14.597092051054455,164.95,True
+23,Travis,gen15_elite0,Garrett Wilson,WR,12.592410869565215,163.37,True
+23,Travis,gen15_elite0,AJ Brown,WR,12.324612173913042,194.9,True
+23,Travis,gen15_elite0,Dylan Sampson,RB,11.396130476173683,79.3,True
+23,Travis,gen15_elite0,Joe Burrow,QB,148.01,282.7,False
+24,Brad,gen15_elite0,Jaxon Smith-Njigba,WR,31.0,253.78,True
+24,Brad,gen15_elite0,Tyler Warren,TE,11.0,162.68,True
+24,Brad,gen15_elite0,Alec Pierce,WR,11.0,154.64,True
+24,Brad,gen15_elite0,Daniel Jones,QB,1.0,223.84,False
+24,Brad,gen15_elite0,Jordan Mason,RB,27.0,137.2,True
+24,Brad,gen15_elite0,James Cook,RB,24.379130434782606,234.4,True
+24,Brad,gen15_elite0,Garrett Wilson,WR,21.0,163.37,True
+24,Brad,gen15_elite0,Jaylen Waddle,WR,21.0,177.9,True
+24,Brad,gen15_elite0,Jalen Hurts,QB,21.836521739130433,297.46,False
+24,Brad,gen15_elite0,Zach Charbonnet,RB,17.612366524160986,107.61,False
+24,Brad,gen15_elite0,Josh Allen,QB,15.64,328.82,True
+24,Brad,gen15_elite0,Drake Maye,QB,16.436638608695652,296.32,False
+24,Brad,gen15_elite0,Lamar Jackson,QB,15.763260869565217,289.92,False
+24,Brad,gen15_elite0,Bill Croskey-Merritt,RB,12.170113149209914,459.64799999999997,True
+24,Brad,gen15_elite0,Matthew Golden,WR,153.16,127.74,False
+25,Brandon,gen15_elite0,Jonathan Taylor,RB,51.0,256.35,True
+25,Brandon,gen15_elite0,Justin Jefferson,WR,46.0,221.18,True
+25,Brandon,gen15_elite0,Breece Hall,RB,31.0,201.5,True
+25,Brandon,gen15_elite0,Brock Bowers,TE,16.0,177.91,True
+25,Brandon,gen15_elite0,Christian McCaffrey,RB,46.0,265.35,True
+25,Brandon,gen15_elite0,Cam Skattebo,RB,28.0,186.4,True
+25,Brandon,gen15_elite0,Rashee Rice,WR,13.0,197.11,True
+25,Brandon,gen15_elite0,Drake Maye,QB,18.230652173913043,296.32,False
+25,Brandon,gen15_elite0,Mike Evans,WR,11.409504725790653,164.95,False
+25,Brandon,gen15_elite0,Josh Allen,QB,11.378633043478262,328.82,True
+25,Brandon,gen15_elite0,Tucker Kraft,TE,9.443404665785618,143.34,False
+25,Brandon,gen15_elite0,Davante Adams,WR,8.197356521739131,161.35,False
+25,Brandon,gen15_elite0,JK Dobbins,RB,8.071636221146663,134.15,False
+25,Brandon,gen15_elite0,Bill Croskey-Merritt,RB,7.4343916443709235,459.64799999999997,True
+25,Brandon,gen15_elite0,Lamar Jackson,QB,94.84,289.92,False
+26,CJ,gen15_elite0,Ja'Marr Chase,WR,46.0,266.33,True
+26,CJ,gen15_elite0,Chase Brown,RB,31.0,227.25,True
+26,CJ,gen15_elite0,Omarion Hampton,RB,11.0,205.65,True
+26,CJ,gen15_elite0,D'Andre Swift,RB,52.0,180.15,True
+26,CJ,gen15_elite0,Parker Washington,WR,11.0,162.09,False
+26,CJ,gen15_elite0,Tee Higgins,WR,18.95725049134969,181.9,True
+26,CJ,gen15_elite0,Brian Robinson Jr,RB,16.738228441529756,77.14,False
+26,CJ,gen15_elite0,Josh Allen,QB,16.659078695652177,328.82,True
+26,CJ,gen15_elite0,Jalen Hurts,QB,16.0,297.46,False
+26,CJ,gen15_elite0,CJ Stroud,QB,15.40898382608696,245.14,False
+26,CJ,gen15_elite0,Drake Maye,QB,15.750974652173918,296.32,False
+26,CJ,gen15_elite0,Garrett Wilson,WR,10.528775652173914,163.37,False
+26,CJ,gen15_elite0,TJ Hockenson,TE,10.037071612576902,103.35,True
+26,CJ,gen15_elite0,Nick Chubb,RB,9.252708149984095,372.09599999999995,True
+26,CJ,gen15_elite0,Amon-Ra St Brown,WR,119.66,247.22,True
+27,Coby,gen15_elite0,Derrick Henry,RB,51.0,227.4,False
+27,Coby,gen15_elite0,Kyren Williams,RB,31.0,196.2,False
+27,Coby,gen15_elite0,TreVeyon Henderson,RB,11.0,158.6,False
+27,Coby,gen15_elite0,Quinshon Judkins,RB,11.0,177.8,False
+27,Coby,gen15_elite0,Drake Maye,QB,39.63076540658534,296.32,False
+27,Coby,gen15_elite0,Jalen Hurts,QB,32.0,297.46,False
+27,Coby,gen15_elite0,Josh Allen,QB,17.703394782608697,328.82,False
+27,Coby,gen15_elite0,Nick Chubb,RB,13.171659130434783,372.09599999999995,False
+27,Coby,gen15_elite0,JK Dobbins,RB,13.161460869565218,134.15,False
+27,Coby,gen15_elite0,Lamar Jackson,QB,13.375440000000003,289.92,False
+27,Coby,gen15_elite0,CJ Stroud,QB,10.571695304347827,245.14,False
+27,Coby,gen15_elite0,Jayden Daniels,QB,10.07,293.28,False
+27,Coby,gen15_elite0,Kenneth Walker,RB,10.0,217.65,False
+27,Coby,gen15_elite0,Quentin Johnston,WR,8.851717391304348,125.4,False
+27,Coby,gen15_elite0,Joe Burrow,QB,127.47,282.7,False
+28,Evan,gen15_elite0,Drake London,WR,36.0,221.3,True
+28,Evan,gen15_elite0,Saquon Barkley,RB,46.0,222.8,True
+28,Evan,gen15_elite0,George Pickens,WR,41.0,209.94,True
+28,Evan,gen15_elite0,Puka Nacua,WR,31.0,256.87,True
+28,Evan,gen15_elite0,Emeka Egbuka,WR,11.0,166.25,True
+28,Evan,gen15_elite0,Drake Maye,QB,35.69314198944504,296.32,False
+28,Evan,gen15_elite0,Josh Allen,QB,17.64243260869565,328.82,True
+28,Evan,gen15_elite0,Jameson Williams,WR,12.78960347826087,156.45,False
+28,Evan,gen15_elite0,TJ Hockenson,TE,10.857008695652175,103.35,True
+28,Evan,gen15_elite0,Mike Evans,WR,11.248753913043478,164.95,False
+28,Evan,gen15_elite0,Bill Croskey-Merritt,RB,10.837549242586695,459.64799999999997,True
+28,Evan,gen15_elite0,Lamar Jackson,QB,9.462747826086957,289.92,False
+28,Evan,gen15_elite0,AJ Brown,WR,9.251584492372835,194.9,True
+28,Evan,gen15_elite0,JK Dobbins,RB,8.44777391304348,134.15,False
+28,Evan,gen15_elite0,Jalen Hurts,QB,108.77,297.46,False
+29,James,gen15_elite0,Zay Flowers,WR,31.0,205.23,True
+29,James,gen15_elite0,Colston Loveland,TE,11.0,157.08,True
+29,James,gen15_elite0,Wan'Dale Robinson,WR,11.0,133.19,False
+29,James,gen15_elite0,Rico Dowdle,RB,13.0,157.15,True
+29,James,gen15_elite0,Josh Allen,QB,23.789565217391306,328.82,True
+29,James,gen15_elite0,Jalen Hurts,QB,29.40217391304348,297.46,False
+29,James,gen15_elite0,Drake Maye,QB,28.414596873719244,296.32,False
+29,James,gen15_elite0,TJ Hockenson,TE,16.732173913043475,103.35,False
+29,James,gen15_elite0,Garrett Wilson,WR,17.0,163.37,True
+29,James,gen15_elite0,James Cook,RB,16.347250696418932,234.4,True
+29,James,gen15_elite0,Carnell Tate,WR,14.975321336183326,140.03,True
+29,James,gen15_elite0,Stefon Diggs,WR,13.737340438175954,130.42,False
+29,James,gen15_elite0,Jameson Williams,WR,12.370652173913044,156.45,True
+29,James,gen15_elite0,AJ Brown,WR,11.52,194.9,True
+29,James,gen15_elite0,Caleb Williams,QB,149.71,271.0,False
+30,Jason,gen15_elite0,CeeDee Lamb,WR,46.0,224.28,True
+30,Jason,gen15_elite0,Bijan Robinson,RB,26.0,295.2,True
+30,Jason,gen15_elite0,Jahmyr Gibbs,RB,31.0,296.35,True
+30,Jason,gen15_elite0,Theo Johnson,TE,1.0,56.7,True
+30,Jason,gen15_elite0,Jaylen Waddle,WR,21.73965739130435,177.9,True
+30,Jason,gen15_elite0,Tony Pollard,RB,19.700813043478263,143.2,False
+30,Jason,gen15_elite0,Rachaad White,RB,19.0,127.05,False
+30,Jason,gen15_elite0,Tee Higgins,WR,15.079999999999998,181.9,True
+30,Jason,gen15_elite0,Davante Adams,WR,14.55648,161.35,False
+30,Jason,gen15_elite0,Garrett Wilson,WR,14.383885652173912,163.37,False
+30,Jason,gen15_elite0,Josh Allen,QB,14.388076521739132,328.82,True
+30,Jason,gen15_elite0,Nick Chubb,RB,11.074894782608697,372.09599999999995,True
+30,Jason,gen15_elite0,JK Dobbins,RB,11.068375652173913,134.15,False
+30,Jason,gen15_elite0,Drake Maye,QB,11.941207391304347,296.32,False
+30,Jason,gen15_elite0,Bill Croskey-Merritt,RB,143.07,459.64799999999997,True
+31,Reid,gen15_elite0,Chris Olave,WR,41.0,194.65,True
+31,Reid,gen15_elite0,Javonte Williams,RB,34.0,196.9,True
+31,Reid,gen15_elite0,Jaylen Waddle,WR,14.526399999999999,177.9,True
+31,Reid,gen15_elite0,Rashee Rice,WR,14.48719304347826,197.11,True
+31,Reid,gen15_elite0,Aaron Jones Sr,RB,23.336619651724078,131.55,False
+31,Reid,gen15_elite0,Kenny Gainwell,RB,18.680848695652173,136.45,True
+31,Reid,gen15_elite0,Jordan Mason,RB,18.634998260869565,137.2,True
+31,Reid,gen15_elite0,Rachaad White,RB,16.20922608695652,127.05,False
+31,Reid,gen15_elite0,Garrett Wilson,WR,15.167186956521737,163.37,True
+31,Reid,gen15_elite0,Jalen Hurts,QB,17.195574999999995,297.46,False
+31,Reid,gen15_elite0,TJ Hockenson,TE,14.303588096635837,103.35,True
+31,Reid,gen15_elite0,CJ Stroud,QB,17.098884999999996,245.14,False
+31,Reid,gen15_elite0,Josh Allen,QB,14.260000000000002,328.82,True
+31,Reid,gen15_elite0,Drake Maye,QB,13.542767391304348,296.32,False
+31,Reid,gen15_elite0,Stefon Diggs,WR,127.55,130.42,False
+32,Ryan J,gen15_elite0,Ashton Jeanty,RB,11.0,199.4,False
+32,Ryan J,gen15_elite0,Michael Wilson,WR,11.0,132.1,False
+32,Ryan J,gen15_elite0,Jalen Hurts,QB,39.734497391304345,297.46,False
+32,Ryan J,gen15_elite0,Tony Pollard,RB,25.47188434782609,143.2,False
+32,Ryan J,gen15_elite0,Josh Allen,QB,32.0,328.82,False
+32,Ryan J,gen15_elite0,Jaylen Waddle,WR,21.76465170361199,177.9,False
+32,Ryan J,gen15_elite0,Jordan Mason,RB,18.351798260869565,137.2,False
+32,Ryan J,gen15_elite0,Deebo Samuel,WR,18.313337652583666,102.68,False
+32,Ryan J,gen15_elite0,CJ Stroud,QB,17.183349999999997,245.14,False
+32,Ryan J,gen15_elite0,Chris Godwin Jr,WR,14.960582565217393,134.26,False
+32,Ryan J,gen15_elite0,Mike Evans,WR,14.178265875298408,164.95,False
+32,Ryan J,gen15_elite0,Garrett Wilson,WR,11.0,163.37,False
+32,Ryan J,gen15_elite0,Drake Maye,QB,15.72185,296.32,False
+32,Ryan J,gen15_elite0,Jameson Williams,WR,10.890333632170318,156.45,False
+32,Ryan J,gen15_elite0,Lamar Jackson,QB,138.45,289.92,False
+33,Sam,gen15_elite0,David Montgomery,RB,45.0,176.5,True
+33,Sam,gen15_elite0,Tyjae Spears,RB,13.0,113.45,False
+33,Sam,gen15_elite0,Davante Adams,WR,23.937880000000003,161.35,True
+33,Sam,gen15_elite0,Jalen Hurts,QB,27.868160000000003,297.46,False
+33,Sam,gen15_elite0,Josh Allen,QB,22.679760869565218,328.82,True
+33,Sam,gen15_elite0,Travis Etienne,RB,19.45217391304348,190.4,True
+33,Sam,gen15_elite0,Jameson Williams,WR,18.21,156.45,True
+33,Sam,gen15_elite0,Amon-Ra St Brown,WR,15.624278260869566,247.22,True
+33,Sam,gen15_elite0,TJ Hockenson,TE,15.255139130434781,103.35,True
+33,Sam,gen15_elite0,Nick Chubb,RB,14.41825162291789,372.09599999999995,True
+33,Sam,gen15_elite0,Lamar Jackson,QB,21.74586347826087,289.92,False
+33,Sam,gen15_elite0,Michael Pittman Jr,WR,11.461215907696584,137.83,False
+33,Sam,gen15_elite0,Courtland Sutton,WR,9.215108695652173,137.35,False
+33,Sam,gen15_elite0,CJ Stroud,QB,10.416399999999998,245.14,False
+33,Sam,gen15_elite0,Kenneth Walker,RB,131.7,217.65,True
+34,Shane,gen15_elite0,Rome Odunze,WR,16.0,159.72,False
+34,Shane,gen15_elite0,Kyle Monangai,RB,11.0,144.3,False
+34,Shane,gen15_elite0,Blake Corum,RB,11.0,134.1,False
+34,Shane,gen15_elite0,Christian Watson,WR,11.0,161.94,False
+34,Shane,gen15_elite0,CJ Stroud,QB,25.677042352144195,245.14,False
+34,Shane,gen15_elite0,Drake Maye,QB,25.208835130434785,296.32,False
+34,Shane,gen15_elite0,Rashee Rice,WR,22.249619130434784,197.11,False
+34,Shane,gen15_elite0,Jalen Hurts,QB,22.0420717826087,297.46,False
+34,Shane,gen15_elite0,Jameson Williams,WR,18.409365217391304,156.45,False
+34,Shane,gen15_elite0,Josh Allen,QB,17.53956956521739,328.82,False
+34,Shane,gen15_elite0,Davante Adams,WR,14.793883478260872,161.35,False
+34,Shane,gen15_elite0,Garrett Wilson,WR,14.719923880216726,163.37,False
+34,Shane,gen15_elite0,Stefon Diggs,WR,13.564970450880287,130.42,False
+34,Shane,gen15_elite0,Courtland Sutton,WR,12.527910957601772,137.35,False
+34,Shane,gen15_elite0,Lamar Jackson,QB,164.27,289.92,False
+35,Travis,gen15_elite0,Malik Nabers,WR,16.0,183.51,False
+35,Travis,gen15_elite0,Woody Marks,RB,11.0,104.75,False
+35,Travis,gen15_elite0,Jaylen Waddle,WR,25.78,177.9,False
+35,Travis,gen15_elite0,Jordan Mason,RB,25.90824608695652,137.2,False
+35,Travis,gen15_elite0,Tee Higgins,WR,24.904559255297603,181.9,False
+35,Travis,gen15_elite0,Rachaad White,RB,21.78,127.05,False
+35,Travis,gen15_elite0,Bill Croskey-Merritt,RB,20.908553021844842,459.64799999999997,False
+35,Travis,gen15_elite0,Jalen Hurts,QB,19.234290217391305,297.46,False
+35,Travis,gen15_elite0,Amon-Ra St Brown,WR,16.112891304347826,247.22,False
+35,Travis,gen15_elite0,Davante Adams,WR,16.0,161.35,False
+35,Travis,gen15_elite0,Drake Maye,QB,17.662016,296.32,False
+35,Travis,gen15_elite0,Josh Allen,QB,12.886265217391305,328.82,False
+35,Travis,gen15_elite0,JK Dobbins,RB,12.412162757748034,134.15,False
+35,Travis,gen15_elite0,Lamar Jackson,QB,11.761517391304347,289.92,False
+35,Travis,gen15_elite0,Nick Chubb,RB,147.66,372.09599999999995,False
+36,Brad,gen15_elite0,Jaxon Smith-Njigba,WR,31.0,253.78,True
+36,Brad,gen15_elite0,Tyler Warren,TE,11.0,162.68,True
+36,Brad,gen15_elite0,Alec Pierce,WR,11.0,154.64,True
+36,Brad,gen15_elite0,Cam Ward,QB,1.0,221.28,False
+36,Brad,gen15_elite0,James Cook,RB,27.373675317564384,234.4,True
+36,Brad,gen15_elite0,Drake Maye,QB,27.947344434782615,296.32,False
+36,Brad,gen15_elite0,Bhayshul Tuten,RB,22.047113043478266,160.4,True
+36,Brad,gen15_elite0,Jordan Mason,RB,20.557885217391306,137.2,False
+36,Brad,gen15_elite0,Josh Downs,WR,19.10449808695652,145.07,False
+36,Brad,gen15_elite0,Rachaad White,RB,17.410921739130437,127.05,False
+36,Brad,gen15_elite0,Jaylen Waddle,WR,15.600000000000001,177.9,True
+36,Brad,gen15_elite0,Tee Higgins,WR,14.874190604348685,181.9,True
+36,Brad,gen15_elite0,Jameson Williams,WR,13.23,156.45,True
+36,Brad,gen15_elite0,Jalen Hurts,QB,14.0,297.46,False
+36,Brad,gen15_elite0,Josh Allen,QB,153.86,328.82,True
+37,Brandon,gen15_elite0,Jonathan Taylor,RB,51.0,256.35,True
+37,Brandon,gen15_elite0,Justin Jefferson,WR,46.0,221.18,True
+37,Brandon,gen15_elite0,Breece Hall,RB,31.0,201.5,True
+37,Brandon,gen15_elite0,Brock Bowers,TE,16.0,177.91,True
+37,Brandon,gen15_elite0,Christian McCaffrey,RB,46.0,265.35,True
+37,Brandon,gen15_elite0,Cam Skattebo,RB,28.0,186.4,True
+37,Brandon,gen15_elite0,CJ Stroud,QB,24.000249999999998,245.14,False
+37,Brandon,gen15_elite0,Josh Allen,QB,12.839891304347827,328.82,True
+37,Brandon,gen15_elite0,TJ Hockenson,TE,10.685378483876555,103.35,False
+37,Brandon,gen15_elite0,Jalen Hurts,QB,10.991012499999998,297.46,False
+37,Brandon,gen15_elite0,Michael Pittman Jr,WR,8.834645602767942,137.83,True
+37,Brandon,gen15_elite0,Courtland Sutton,WR,8.176592721574712,137.35,True
+37,Brandon,gen15_elite0,Lamar Jackson,QB,7.729398260869565,289.92,False
+37,Brandon,gen15_elite0,Joe Burrow,QB,7.0,282.7,False
+37,Brandon,gen15_elite0,Drake Maye,QB,91.74,296.32,False
+38,CJ,gen15_elite0,Ja'Marr Chase,WR,46.0,266.33,True
+38,CJ,gen15_elite0,Chase Brown,RB,31.0,227.25,True
+38,CJ,gen15_elite0,Omarion Hampton,RB,11.0,205.65,True
+38,CJ,gen15_elite0,D'Andre Swift,RB,52.0,180.15,True
+38,CJ,gen15_elite0,Parker Washington,WR,11.0,162.09,True
+38,CJ,gen15_elite0,Drake Maye,QB,32.38612057121195,296.32,False
+38,CJ,gen15_elite0,CJ Stroud,QB,26.192897826086956,245.14,False
+38,CJ,gen15_elite0,Oronde Gadsden,TE,1.0,72.1,True
+38,CJ,gen15_elite0,Josh Allen,QB,16.65948347826087,328.82,True
+38,CJ,gen15_elite0,Jalen Hurts,QB,18.365297499999997,297.46,False
+38,CJ,gen15_elite0,Mike Evans,WR,10.851367826086957,164.95,True
+38,CJ,gen15_elite0,Jameson Williams,WR,10.236965715262398,156.45,False
+38,CJ,gen15_elite0,Amon-Ra St Brown,WR,9.0,247.22,True
+38,CJ,gen15_elite0,Caleb Williams,QB,9.785477431541848,271.0,False
+38,CJ,gen15_elite0,Jajuan Jennings,WR,114.51,120.38399999999999,False
+39,Coby,gen15_elite0,Derrick Henry,RB,51.0,227.4,True
+39,Coby,gen15_elite0,Kyren Williams,RB,31.0,196.2,True
+39,Coby,gen15_elite0,TreVeyon Henderson,RB,11.0,158.6,True
+39,Coby,gen15_elite0,Quinshon Judkins,RB,11.0,177.8,True
+39,Coby,gen15_elite0,Jayden Reed,WR,19.23428881041596,143.93,False
+39,Coby,gen15_elite0,Rashee Rice,WR,21.0,197.11,True
+39,Coby,gen15_elite0,Jalen Hurts,QB,33.22115895652174,297.46,False
+39,Coby,gen15_elite0,TJ Hockenson,TE,15.146622608695655,103.35,True
+39,Coby,gen15_elite0,Josh Allen,QB,30.40097391304348,328.82,True
+39,Coby,gen15_elite0,Mike Evans,WR,12.072657391304348,164.95,True
+39,Coby,gen15_elite0,Drake Maye,QB,36.90526260869565,296.32,False
+39,Coby,gen15_elite0,Jordan Addison,WR,9.505211992732061,131.03,False
+39,Coby,gen15_elite0,Jameson Williams,WR,6.457913043478261,156.45,False
+39,Coby,gen15_elite0,Kenneth Walker,RB,4.810434782608696,217.65,True
+39,Coby,gen15_elite0,JK Dobbins,RB,107.24,134.15,False
