@@ -1,0 +1,127 @@
+{
+  "sam_base_roster": [
+    {
+      "player": "Garrett Wilson",
+      "position": "WR",
+      "keeper_price": 31.0,
+      "points": 163.37
+    },
+    {
+      "player": "Kenneth Walker III",
+      "position": "RB",
+      "keeper_price": 36.0,
+      "points": 217.65
+    },
+    {
+      "player": "Quentin Johnston",
+      "position": "WR",
+      "keeper_price": 11.0,
+      "points": 125.4
+    },
+    {
+      "player": "David Montgomery",
+      "position": "RB",
+      "keeper_price": 45.0,
+      "points": 176.5
+    },
+    {
+      "player": "Cam Skattebo",
+      "position": "RB",
+      "keeper_price": 28.0,
+      "points": 186.4
+    },
+    {
+      "player": "Jaxson Dart",
+      "position": "QB",
+      "keeper_price": 11.0,
+      "points": 273.12
+    }
+  ],
+  "sam_starting_budget": 223.0,
+  "sam_base_partial_lineup_value": 1142.44,
+  "sam_base_lineup_is_legal": false,
+  "sam_base_lineup_failure_reason": "MISSING_TE",
+  "sam_marginal_dollar_value": 0.2456,
+  "scenarios": [
+    {
+      "scenario": "no_2nd_qb_baseline",
+      "price_spent": 0.0,
+      "marginal_utility": 0.0,
+      "opportunity_cost_of_spending": 0.0,
+      "net_of_opportunity_cost": 0.0,
+      "lineup_is_legal_after": false,
+      "lineup_failure_reason_after": "MISSING_TE",
+      "explanation": "Reference point: Dart is Sam's only rostered QB and already fills the single starting slot. Not buying a 2nd QB spends $0 and forgoes zero legal-lineup points (there is no 2nd QB slot to fill)."
+    },
+    {
+      "scenario": "cheap_backup_qb",
+      "price_spent": 1.0,
+      "marginal_utility": 13.32,
+      "opportunity_cost_of_spending": 0.25,
+      "net_of_opportunity_cost": 13.07,
+      "lineup_is_legal_after": false,
+      "lineup_failure_reason_after": "MISSING_TE",
+      "explanation": "A $1 backup QB never starts over Dart (273.1 pts) unless Dart is injured; scores only the backup_qb bench-tier weight (0.075) on its own points -- small, cheap emergency-bye-week value."
+    },
+    {
+      "scenario": "mid_tier_backup_qb",
+      "price_spent": 7.0,
+      "marginal_utility": 25.9,
+      "opportunity_cost_of_spending": 1.72,
+      "net_of_opportunity_cost": 24.18,
+      "lineup_is_legal_after": false,
+      "lineup_failure_reason_after": "MISSING_TE",
+      "explanation": "Similar to the cheap backup case -- still doesn't start over Dart, so still only earns the backup_qb bench weight on its own points, just at a higher (worse economics) price."
+    },
+    {
+      "scenario": "expensive_qb",
+      "price_spent": 40.0,
+      "marginal_utility": 76.18,
+      "opportunity_cost_of_spending": 9.82,
+      "net_of_opportunity_cost": 66.36,
+      "lineup_is_legal_after": false,
+      "lineup_failure_reason_after": "MISSING_TE",
+      "explanation": "Josh Allen (328.8 pts) DOES exceed Dart (273.1 pts) and would become Sam's starting QB, displacing Dart to bench -- a real starter upgrade, not just bench depth. Compare its marginal_utility net of opportunity cost against premium_wr/premium_te below at similar cost: item 14 predicts this should lose to a TE/WR upgrade UNLESS the QB swap margin is large, which the raw points gap (328.8 vs 273.1 = +55.7) suggests it may not, once bench-discounted Dart is credited."
+    },
+    {
+      "scenario": "premium_wr",
+      "price_spent": 72.0,
+      "marginal_utility": 197.11,
+      "opportunity_cost_of_spending": 17.68,
+      "net_of_opportunity_cost": 179.43,
+      "lineup_is_legal_after": false,
+      "lineup_failure_reason_after": "MISSING_TE",
+      "explanation": "Rashee Rice (197.1 pts) exceeds both of Sam's current WRs. With only 7 total players on this roster, everyone still fits in a starting or FLEX slot at full value (bench discounting hasn't kicked in yet -- that only bites once her real 9-starter group is actually full), so Rice's marginal utility here equals his full raw point total: a genuine starting-lineup-points gain, not diluted by any bench tier."
+    },
+    {
+      "scenario": "premium_te",
+      "price_spent": 43.0,
+      "marginal_utility": 103.35,
+      "opportunity_cost_of_spending": 10.56,
+      "net_of_opportunity_cost": 92.79,
+      "lineup_is_legal_after": false,
+      "lineup_failure_reason_after": "MISSING_FLEX_DEPTH",
+      "explanation": "Sam holds ZERO tight ends -- without one, her lineup is structurally illegal (MISSING_TE) no matter what else she does. This is the one scenario that fixes a hard legal-lineup requirement, not just an incremental upgrade, so it should show the largest marginal utility of any single scenario here."
+    },
+    {
+      "scenario": "another_premium_rb",
+      "price_spent": 126.0,
+      "marginal_utility": 189.35,
+      "opportunity_cost_of_spending": 30.94,
+      "net_of_opportunity_cost": 158.41,
+      "lineup_is_legal_after": false,
+      "lineup_failure_reason_after": "MISSING_TE",
+      "explanation": "Sam already rosters 3 RBs against a 2-RB starting requirement (Walker 217.7, Montgomery 176.5, Skattebo 186.4 pts) -- a 4th RB fills no open requirement (unlike the TE scenario). At this sparse roster size it still lands as a full-value FLEX starter rather than a discounted bench player, so compare its cost-adjusted (net_of_opportunity_cost / price) return against premium_te and premium_wr: expect the WORST per-dollar return of the three, since RB is Sam's one position with real existing depth, not a need."
+    },
+    {
+      "scenario": "two_strong_flex_additions",
+      "price_spent": 159.0,
+      "marginal_utility": 349.73,
+      "opportunity_cost_of_spending": 39.05,
+      "net_of_opportunity_cost": 310.68,
+      "lineup_is_legal_after": false,
+      "lineup_failure_reason_after": "MISSING_TE",
+      "explanation": "Two strong FLEX-eligible adds (McLaurin WR 173.9 pts, Irving RB 175.8 pts) compete for Sam's 3 FLEX slots alongside her existing depth (Johnston 125.4, Skattebo 186.4) -- real lineup value if either displaces a current FLEX occupant, tested jointly here rather than one at a time."
+    }
+  ]
+}

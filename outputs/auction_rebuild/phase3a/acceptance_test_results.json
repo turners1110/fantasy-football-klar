@@ -1,0 +1,65 @@
+{
+  "overall_status": "PASS_WITH_UNVERIFIABLE_CONDITIONS",
+  "n_pass": 5,
+  "n_fail": 0,
+  "n_unverifiable": 2,
+  "conditions": {
+    "1_no_forced_spending": {
+      "status": "PASS",
+      "evidence": "Phase 2's forced-final-slot rule was removed and never reintroduced; every sale price comes from resolve_bid's competitive process only (see mock_draft/auction.py module docstring)."
+    },
+    "2_no_negative_budgets": {
+      "status": "PASS",
+      "evidence": "0 negative-budget observations across 2400 team-seeds in the 200-seed validation run."
+    },
+    "3_legal_rosters": {
+      "status": "PASS",
+      "evidence": "0 duplicate/wrong-size-roster observations."
+    },
+    "4_legal_lineups": {
+      "status": "PASS",
+      "evidence": "100.00% of team-seeds fielded a fully legal starting lineup."
+    },
+    "5_organic_bids_only": {
+      "status": "PASS",
+      "evidence": "resolve_bid never sets a price outside its own ascending-bid loop; no forced/administrative override exists in the live bidding path."
+    },
+    "6_median_unused_cash_near_historical": {
+      "status": "UNVERIFIABLE_NO_HISTORICAL_RECORD",
+      "evidence": "Simulated median unused cash: $0.1/team. No per-team leftover-auction-cash record exists for any past season in this repo to compare against."
+    },
+    "7_upper_tail_unused_cash_plausible": {
+      "status": "UNVERIFIABLE_NO_HISTORICAL_RECORD",
+      "evidence": "Simulated max unused cash: $67.65/team (out of a ~$250-300 typical budget) -- plausible on its face (well under a full budget), but not checkable against a real record."
+    },
+    "8_position_spending_resembles_history": {
+      "status": "SAME_RANK_ORDER",
+      "historical_share_reliable_subset": {
+        "QB": 0.1155,
+        "RB": 0.4213,
+        "TE": 0.0736,
+        "WR": 0.3896
+      },
+      "simulated_share": {
+        "QB": 0.0316,
+        "RB": 0.6578,
+        "TE": 0.0219,
+        "WR": 0.2886
+      },
+      "evidence": "Compared for SHAPE (relative ranking), not exact equality, per item 10's instruction."
+    },
+    "9_top_player_concentration_resembles_history": {
+      "status": "REPORTED",
+      "simulated_top12_share": 0.0295,
+      "simulated_top24_share": 0.0576,
+      "evidence": "No comparable REAL top-12/24 concentration figure exists (most historical salaries are UNKNOWN origin, not confirmed competitive-auction prices -- see salary_origin_audit.csv). Reported as a self-consistency figure only, per market_clearing_diagnostics.json's own note."
+    },
+    "10_dollar_one_rate_resembles_history": {
+      "status": "REPORTED",
+      "historical_dollar_one_rate_reliable_subset": 0.0,
+      "simulated_dollar_one_sales_per_auction": 29.43,
+      "evidence": "Historical rate computed only on the reliability-weighted subset (excludes known ADMINISTRATIVE_DOLLAR_ONE rows by definition of 'reliable'), so is not directly the same population as the simulated per-auction $1-sale count; reported for shape comparison only."
+    }
+  },
+  "note": "Per item 13's own instruction: do not declare success based only on legal rosters. Legal-roster conditions (1-5) all pass; the remaining conditions are either genuinely unverifiable (no historical per-team record exists) or reported as shape comparisons without a validated real target, not silently marked PASS."
+}

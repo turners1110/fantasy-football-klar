@@ -98,9 +98,12 @@ def main() -> None:
           f"acquisition-method record, so 'bought via competitive auction' cannot be directly answered "
           f"for any row except the {n_confirmed_keeper} confirmed KEEPER row(s) (which are explicitly NOT "
           f"auction purchases).")
-    print(f"4. Did anyone competitively buy four? NOT CONFIRMED by any record in this repo -- Coby has 4 QB "
-          f"roster spots in 2025 (2 with no salary on record, 1 non-$1, 1 keeper-adjacent), but nothing "
-          f"establishes any of them as a competitive-auction win specifically.")
+    print(f"4. Did anyone competitively buy four? NOT CONFIRMED by any record in this repo. After "
+          f"deduplicating a known duplicate salary row (data_pipeline.load_historical_salaries -- see phase "
+          f"2B's historical_roster_position_counts.py bug, which had inflated one team's QB count to 4), the "
+          f"real 2025 maximum is {n_per_team.max() if len(n_per_team) else 0} QB roster spots on a single team, "
+          f"and even that top count has no acquisition-method evidence establishing any spot as a "
+          f"competitive-auction win specifically.")
     print(f"5. Prices paid for QB2/QB3/QB4 (by team, sorted): see the CSV -- no acquisition-method tag "
           f"exists to isolate 'the auction price for QB2' as a distinct, confirmed figure.")
     print(f"6. Present before/after the auction? UNKNOWN for all non-keeper rows -- no draft-day timestamp "
@@ -116,7 +119,10 @@ def main() -> None:
         "\nCONCLUSION: no row in this repo proves a team COMPETITIVELY PURCHASED a 2nd, 3rd, or 4th QB at "
         "auction. Per the phase-3A instruction 'do not use four as the primary default without proof of "
         "four auction-acquired quarterbacks,' the QB cap defaults are corrected: "
-        "primary=2, stress-test=3, historical-observed=4 (phase 2B's primary=4 default is retracted)."
+        f"primary=2, stress-test=3, historical-observed={n_per_team.max() if len(n_per_team) else 3} "
+        "(phase 2B's primary=4 default was itself based on a duplicate-row data bug -- the real historical "
+        "max, after deduplication, is 3, not 4 -- see mock_draft/feasibility.py's PRIMARY_QB_CAP/"
+        "STRESS_TEST_QB_CAP/HISTORICAL_OBSERVED_QB_CAP constants)."
     )
 
 

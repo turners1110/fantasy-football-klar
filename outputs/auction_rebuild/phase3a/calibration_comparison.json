@@ -1,0 +1,57 @@
+{
+  "n_evaluated": 96,
+  "note": "SAME-LEAGUE HISTORICAL CALIBRATION ONLY -- one league, one season, most salaries UNKNOWN origin (see salary_origin_audit.csv); not a validated external model.",
+  "existing_neutral_value": {
+    "sample_count": 96,
+    "mean_absolute_error": 14.4,
+    "median_absolute_error": 5.5,
+    "weighted_mean_absolute_error": 14.33,
+    "spearman_correlation": 0.697,
+    "spend_shape_of_predictions": {
+      "top12_spend_share": 0.3616,
+      "top24_spend_share": 0.5999,
+      "dollar_one_rate": 0.0417
+    },
+    "mae_95pct_confidence_interval": [
+      11.0,
+      17.8
+    ]
+  },
+  "public_value_scaled": {
+    "sample_count": 96,
+    "mean_absolute_error": 15.57,
+    "median_absolute_error": 8.0,
+    "weighted_mean_absolute_error": 15.64,
+    "spearman_correlation": 0.6869,
+    "spend_shape_of_predictions": {
+      "top12_spend_share": 0.3272,
+      "top24_spend_share": 0.559,
+      "dollar_one_rate": 0.0417
+    },
+    "mae_95pct_confidence_interval": [
+      11.92,
+      19.23
+    ]
+  },
+  "public_rank_tier": {
+    "sample_count": 96,
+    "mean_absolute_error": 13.44,
+    "median_absolute_error": 11.12,
+    "weighted_mean_absolute_error": 13.38,
+    "spearman_correlation": 0.7141,
+    "spend_shape_of_predictions": {
+      "top12_spend_share": 0.2383,
+      "top24_spend_share": 0.4333,
+      "dollar_one_rate": 0.0
+    },
+    "mae_95pct_confidence_interval": [
+      11.2,
+      15.69
+    ]
+  },
+  "actual_historical_spend_shape": {
+    "top12_spend_share": 0.2905,
+    "top24_spend_share": 0.5169,
+    "dollar_one_rate": 0.0
+  }
+}

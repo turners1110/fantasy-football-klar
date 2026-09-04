@@ -1,0 +1,199 @@
+{
+  "development_20_seeds": {
+    "n_seeds": 20,
+    "seed_range": [
+      90000,
+      90019
+    ],
+    "team_states_path": "outputs/auction_rebuild/data/team_starting_states.csv",
+    "budget_scenario": "primary",
+    "position_max": {
+      "QB": 2,
+      "TE": 3
+    },
+    "temperature": 0.6,
+    "n_team_seed_observations": 240,
+    "n_negative_budget": 0,
+    "n_illegal_final_lineup": 0,
+    "n_duplicate_or_wrong_size_roster": 0,
+    "n_accounting_leaks": 0,
+    "pct_legal_lineup": 1.0,
+    "mean_unused_cash": 9.27,
+    "median_unused_cash": 1.35,
+    "max_unused_cash": 55.09,
+    "qb_count_distribution": {
+      "1": 55,
+      "2": 185
+    },
+    "max_qb_count_observed": 2
+  },
+  "validation_200_seeds_primary_config": {
+    "n_seeds": 200,
+    "seed_range": [
+      0,
+      199
+    ],
+    "team_states_path": "outputs/auction_rebuild/data/team_starting_states.csv",
+    "budget_scenario": "primary",
+    "position_max": {
+      "QB": 2,
+      "TE": 3
+    },
+    "temperature": 0.6,
+    "n_team_seed_observations": 2400,
+    "n_negative_budget": 0,
+    "n_illegal_final_lineup": 0,
+    "n_duplicate_or_wrong_size_roster": 0,
+    "n_accounting_leaks": 0,
+    "pct_legal_lineup": 1.0,
+    "mean_unused_cash": 8.52,
+    "median_unused_cash": 0.1,
+    "max_unused_cash": 67.65,
+    "qb_count_distribution": {
+      "1": 525,
+      "2": 1875
+    },
+    "max_qb_count_observed": 2
+  },
+  "sam_conversions_scenario": {
+    "n_seeds": 50,
+    "seed_range": [
+      300000,
+      300049
+    ],
+    "team_states_path": "outputs/auction_rebuild/data/team_starting_states.csv",
+    "budget_scenario": "conversions",
+    "position_max": {
+      "QB": 2,
+      "TE": 3
+    },
+    "temperature": 0.6,
+    "n_team_seed_observations": 600,
+    "n_negative_budget": 0,
+    "n_illegal_final_lineup": 0,
+    "n_duplicate_or_wrong_size_roster": 0,
+    "n_accounting_leaks": 0,
+    "pct_legal_lineup": 1.0,
+    "mean_unused_cash": 8.78,
+    "median_unused_cash": 1.12,
+    "max_unused_cash": 69.24,
+    "qb_count_distribution": {
+      "1": 116,
+      "2": 484
+    },
+    "max_qb_count_observed": 2
+  },
+  "league_formula_reconciled_scenario": {
+    "n_seeds": 50,
+    "seed_range": [
+      300000,
+      300049
+    ],
+    "team_states_path": "outputs/auction_rebuild/phase3a/team_starting_states_formula_reconciled.csv",
+    "budget_scenario": "primary",
+    "position_max": {
+      "QB": 2,
+      "TE": 3
+    },
+    "temperature": 0.6,
+    "n_team_seed_observations": 600,
+    "n_negative_budget": 0,
+    "n_illegal_final_lineup": 0,
+    "n_duplicate_or_wrong_size_roster": 0,
+    "n_accounting_leaks": 0,
+    "pct_legal_lineup": 1.0,
+    "mean_unused_cash": 8.76,
+    "median_unused_cash": 0.88,
+    "max_unused_cash": 66.49,
+    "qb_count_distribution": {
+      "1": 130,
+      "2": 470
+    },
+    "max_qb_count_observed": 2
+  },
+  "qb_cap_stress_test_3": {
+    "n_seeds": 50,
+    "seed_range": [
+      300000,
+      300049
+    ],
+    "team_states_path": "outputs/auction_rebuild/data/team_starting_states.csv",
+    "budget_scenario": "primary",
+    "position_max": {
+      "QB": 3,
+      "TE": 3
+    },
+    "temperature": 0.6,
+    "n_team_seed_observations": 600,
+    "n_negative_budget": 0,
+    "n_illegal_final_lineup": 0,
+    "n_duplicate_or_wrong_size_roster": 0,
+    "n_accounting_leaks": 0,
+    "pct_legal_lineup": 1.0,
+    "mean_unused_cash": 8.73,
+    "median_unused_cash": 0.55,
+    "max_unused_cash": 88.19,
+    "qb_count_distribution": {
+      "1": 183,
+      "2": 220,
+      "3": 197
+    },
+    "max_qb_count_observed": 3
+  },
+  "nomination_mixture_sharper": {
+    "n_seeds": 50,
+    "seed_range": [
+      300000,
+      300049
+    ],
+    "team_states_path": "outputs/auction_rebuild/data/team_starting_states.csv",
+    "budget_scenario": "primary",
+    "position_max": {
+      "QB": 2,
+      "TE": 3
+    },
+    "temperature": 0.3,
+    "n_team_seed_observations": 600,
+    "n_negative_budget": 0,
+    "n_illegal_final_lineup": 0,
+    "n_duplicate_or_wrong_size_roster": 0,
+    "n_accounting_leaks": 0,
+    "pct_legal_lineup": 1.0,
+    "mean_unused_cash": 7.75,
+    "median_unused_cash": 0.12,
+    "max_unused_cash": 57.65,
+    "qb_count_distribution": {
+      "1": 189,
+      "2": 411
+    },
+    "max_qb_count_observed": 2
+  },
+  "nomination_mixture_flatter": {
+    "n_seeds": 50,
+    "seed_range": [
+      300000,
+      300049
+    ],
+    "team_states_path": "outputs/auction_rebuild/data/team_starting_states.csv",
+    "budget_scenario": "primary",
+    "position_max": {
+      "QB": 2,
+      "TE": 3
+    },
+    "temperature": 1.2,
+    "n_team_seed_observations": 600,
+    "n_negative_budget": 0,
+    "n_illegal_final_lineup": 0,
+    "n_duplicate_or_wrong_size_roster": 0,
+    "n_accounting_leaks": 0,
+    "pct_legal_lineup": 1.0,
+    "mean_unused_cash": 9.79,
+    "median_unused_cash": 1.65,
+    "max_unused_cash": 68.19,
+    "qb_count_distribution": {
+      "1": 89,
+      "2": 511
+    },
+    "max_qb_count_observed": 2
+  }
+}
