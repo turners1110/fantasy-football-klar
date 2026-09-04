@@ -155,6 +155,54 @@ REPLACEMENT_METHOD = EXACT_LEAGUEWIDE_ALLOCATION
 
 
 # ---------------------------------------------------------------------------
+# Phase 3D item 5: bounded additive willingness model.
+#
+# Replaces mock_draft.config_bridge.STAR_MAX_VALUE_MULTIPLE (a 2.5x
+# multiplicative cap that was found in phase 3C to still let a stacked
+# early-draft premium defeat it before the ordering fix, and that this
+# item removes ENTIRELY rather than patching again) with a fully additive,
+# dollar-denominated model:
+#
+#   willingness = base_market_anchor + team_adjustment + behavior_adjustment
+#
+# base_market_anchor = a weighted blend (BASE_ANCHOR_WEIGHT_* below) of
+#   PUBLIC_AUCTION_ANCHOR, HISTORICAL_LEAGUE_PRICE, and the projection-based
+#   internal neutral value (player.base_value) -- renormalized over
+#   whichever of the three actually have coverage for a given player (see
+#   mock_draft.valuation.compute_base_market_anchor).
+# team_adjustment = roster_fit + scarcity + tier + budget_state +
+#   future_alternatives, each independently bounded by its own MAX_* below.
+# behavior_adjustment = archetype + noise, each independently bounded.
+#
+# The whole willingness figure is then clipped to
+# [base_market_anchor - MAX_TOTAL_DISCOUNT_BELOW_ANCHOR,
+#  base_market_anchor + MAX_TOTAL_PREMIUM_OVER_ANCHOR] -- a single overall
+# bound, not a per-player-type special case like the old star-ceiling
+# branch was.
+#
+# PRE-CALIBRATION DEFAULTS: every value below is a starting point only,
+# marked as such per the phase-3D spec's own instruction ("values to be
+# set via calibration, not manually") -- auction_model.calibration (item
+# 9-11) is the authority that actually tunes them against real targets.
+# These defaults exist so the model runs (and its own tests pass) before
+# that harness has been run, not as a substitute for calibration.
+# ---------------------------------------------------------------------------
+BASE_ANCHOR_WEIGHT_PUBLIC = 0.35
+BASE_ANCHOR_WEIGHT_HISTORICAL = 0.25
+BASE_ANCHOR_WEIGHT_PROJECTION_NEUTRAL = 0.40
+
+MAX_ROSTER_FIT_ADJUSTMENT = 15.0
+MAX_SCARCITY_ADJUSTMENT = 15.0
+MAX_TIER_ADJUSTMENT = 15.0
+MAX_BUDGET_STATE_ADJUSTMENT = 10.0
+MAX_FUTURE_ALTERNATIVES_ADJUSTMENT = 10.0
+MAX_ARCHETYPE_ADJUSTMENT = 20.0
+MAX_NOISE_ADJUSTMENT = 10.0
+MAX_TOTAL_PREMIUM_OVER_ANCHOR = 60.0
+MAX_TOTAL_DISCOUNT_BELOW_ANCHOR = 40.0
+
+
+# ---------------------------------------------------------------------------
 # College / rookie draft (separate from veteran auction)
 # ---------------------------------------------------------------------------
 

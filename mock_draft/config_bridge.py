@@ -33,12 +33,30 @@ TIER_SIZE = 4  # players per tier, per position -- drives "tier cliff" nominatio
 # price). ~2.5 genuine stars per team, league-wide.
 GLOBAL_STAR_COUNT = 30
 
-# Even for a genuine star, cap willingness at this multiple of the
-# player's own (noisy) private value -- prevents two star-hunting
-# archetypes from bidding a real $57 player up to $290+ just because both
-# have ~90%-of-budget star ceilings. 2.5x still allows a real, meaningful
-# "pay up for the stud" premium.
+# RETIRED (phase 3D item 5): this 2.5x multiplicative star-ceiling cap is
+# no longer used by mock_draft.valuation.compute_willingness, which now
+# builds willingness additively from a bounded base_market_anchor +
+# team_adjustment + behavior_adjustment (see auction_model/config.py's
+# MAX_TOTAL_PREMIUM_OVER_ANCHOR / MAX_TOTAL_DISCOUNT_BELOW_ANCHOR for the
+# replacement bound). Kept, unchanged, only because phase 3C's own
+# regression tests and this file's own history reference the number it
+# used to enforce -- do not reintroduce it into compute_willingness.
 STAR_MAX_VALUE_MULTIPLE = 2.5
+
+# Phase 3D item 5: bounded additive willingness model -- bridged straight
+# from auction_model.config (see that module for the full design comment).
+BASE_ANCHOR_WEIGHT_PUBLIC = _cfg.BASE_ANCHOR_WEIGHT_PUBLIC
+BASE_ANCHOR_WEIGHT_HISTORICAL = _cfg.BASE_ANCHOR_WEIGHT_HISTORICAL
+BASE_ANCHOR_WEIGHT_PROJECTION_NEUTRAL = _cfg.BASE_ANCHOR_WEIGHT_PROJECTION_NEUTRAL
+MAX_ROSTER_FIT_ADJUSTMENT = _cfg.MAX_ROSTER_FIT_ADJUSTMENT
+MAX_SCARCITY_ADJUSTMENT = _cfg.MAX_SCARCITY_ADJUSTMENT
+MAX_TIER_ADJUSTMENT = _cfg.MAX_TIER_ADJUSTMENT
+MAX_BUDGET_STATE_ADJUSTMENT = _cfg.MAX_BUDGET_STATE_ADJUSTMENT
+MAX_FUTURE_ALTERNATIVES_ADJUSTMENT = _cfg.MAX_FUTURE_ALTERNATIVES_ADJUSTMENT
+MAX_ARCHETYPE_ADJUSTMENT = _cfg.MAX_ARCHETYPE_ADJUSTMENT
+MAX_NOISE_ADJUSTMENT = _cfg.MAX_NOISE_ADJUSTMENT
+MAX_TOTAL_PREMIUM_OVER_ANCHOR = _cfg.MAX_TOTAL_PREMIUM_OVER_ANCHOR
+MAX_TOTAL_DISCOUNT_BELOW_ANCHOR = _cfg.MAX_TOTAL_DISCOUNT_BELOW_ANCHOR
 
 # Real auctions see EARLY picks go for a premium relative to true value --
 # bidders are flush with cash and haven't recalibrated to the shrinking

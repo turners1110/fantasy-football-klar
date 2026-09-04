@@ -223,6 +223,25 @@ def load_confirmed_pool_and_teams(
             projected_points=pts, points_is_real=is_real,
         )
 
+    # Phase 3D item 5/7/8: attach the public-anchor hierarchy and
+    # keeper-removal-normalized historical anchor to every pool player, for
+    # compute_willingness's base_market_anchor blend. Both are best-effort
+    # lookups (see auction_model.public_anchor / historical_anchor's own
+    # docstrings for exactly which players each source covers) -- a
+    # missing value stays None, never a fabricated fallback number.
+    from auction_model.public_anchor import build_public_anchor_hierarchy
+    from auction_model.anchor_normalization import normalize_anchors_after_keeper_removal
+    from auction_model.historical_anchor import build_historical_league_anchor
+
+    anchor_df = normalize_anchors_after_keeper_removal(build_public_anchor_hierarchy(players)).set_index("player")
+    live_budget_total = float(team_states["primary_auction_budget"].sum())
+    hist_df = build_historical_league_anchor(players, live_budget_total).set_index("player")
+    for name, player in players.items():
+        if name in anchor_df.index and anchor_df.loc[name, "source"] != "NO_PUBLIC_ANCHOR_INTERNAL_NEUTRAL_VALUE":
+            player.public_anchor_value = float(anchor_df.loc[name, "keeper_removed_anchor_primary"])
+        if name in hist_df.index and bool(hist_df.loc[name, "matched"]):
+            player.historical_anchor_value = float(hist_df.loc[name, "historical_anchor_value"])
+
     teams: dict[str, Team] = {}
     budget_col = "primary_auction_budget" if budget_scenario == "primary" else "conversions_scenario_auction_budget"
     for _, state_row in team_states.iterrows():

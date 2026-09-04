@@ -20,6 +20,13 @@ class Player:
     is_star_eligible: bool = False  # global top-N by real dollar value -- see data.py
     projected_points: float = 0.0   # the optimization objective -- see points.py
     points_is_real: bool = True     # False = imputed from base_value, no real projection found
+    # Phase 3D item 5/7: precomputed anchor inputs for compute_willingness's
+    # base_market_anchor blend. None when a source has no coverage for this
+    # player (e.g. bare Player(...) instances built directly in tests) --
+    # compute_willingness renormalizes its blend over whichever of these are
+    # actually populated rather than treating a missing one as zero.
+    public_anchor_value: float | None = None       # auction_model.public_anchor / anchor_normalization
+    historical_anchor_value: float | None = None   # auction_model.historical_anchor
 
 
 @dataclass
@@ -37,6 +44,11 @@ class Team:
     tilt: int = 0                 # decays each pick; >0 boosts willingness
     consecutive_losses: dict = field(default_factory=dict)  # position -> loss streak
     private_value: dict = field(default_factory=dict)  # player_name -> float, set once per run
+    # Phase 3D item 5: separate cache for compute_willingness's own bounded
+    # dollar noise term (see mock_draft.valuation.get_noise_adjustment) --
+    # kept independent of `private_value` above, which nomination.py still
+    # reads as a multiplicative ratio and must not change meaning.
+    noise_adjustment_cache: dict = field(default_factory=dict)
 
     @property
     def strategy(self) -> Archetype:

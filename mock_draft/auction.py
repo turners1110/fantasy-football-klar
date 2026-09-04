@@ -153,7 +153,7 @@ def resolve_bid(
                 continue
             team = teams[name]
             diag = {} if bid_diagnostics_log is not None else None
-            willingness = compute_willingness(team, candidate, rng, draft_progress, diagnostics=diag)
+            willingness = compute_willingness(team, candidate, rng, draft_progress, diagnostics=diag, available=available)
             if diag is not None:
                 team_diagnostics[name] = diag
             cap = team.max_bid_cap()

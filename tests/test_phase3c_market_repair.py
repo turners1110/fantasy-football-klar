@@ -133,9 +133,12 @@ def test_06_concentration_experiments_reconcile():
 # ---------------------------------------------------------------------------
 
 def test_07_bid_components_reconcile_to_final_willingness():
-    """The recorded diagnostics breakdown must actually multiply out to
-    the returned final_willingness -- otherwise the audit trail is lying
-    about how the number was constructed."""
+    """UPDATED in phase 3D item 5 (compute_willingness rewritten from a
+    multiplicative model to a fully additive one -- see mock_draft/
+    valuation.py's module docstring): the recorded diagnostics breakdown
+    must actually ADD UP to the returned final_willingness (subject to the
+    anchor-relative bound), otherwise the audit trail is lying about how
+    the number was constructed."""
     team = Team(name="T", budget_remaining=200.0, roster=[], archetype="balanced")
     player = Player(name="P", position="WR", base_value=50.0, tier=1, tier_size=10,
                      tier_rank=1, is_star_eligible=False, projected_points=150.0)
@@ -143,19 +146,21 @@ def test_07_bid_components_reconcile_to_final_willingness():
     diag = {}
     willingness = compute_willingness(team, player, rng, draft_progress=0.5, diagnostics=diag)
     assert willingness == pytest.approx(diag["final_willingness"], abs=0.01)
-    reconstructed = (
-        diag["willingness_after_star_or_ceiling"] * diag["position_fit_multiplier"]
-        * diag["position_weight_multiplier"] * diag["tier_aggression_applied"]
-        * diag["tilt_boost_applied"] * diag["early_draft_premium_multiplier"]
-    )
-    # Reconstructed may be clamped by the star re-clamp -- final is <= reconstructed.
-    assert diag["final_willingness"] <= reconstructed + 0.01
+    reconstructed = diag["base_market_anchor"] + diag["team_adjustment"] + diag["behavior_adjustment"]
+    assert reconstructed == pytest.approx(diag["raw_willingness_before_bound"], abs=0.01)
+    # final_willingness may be clamped to [lower_bound, upper_bound] -- it
+    # can differ from the raw reconstructed sum, but never outside those bounds.
+    assert diag["lower_bound"] - 0.01 <= diag["final_willingness"] <= diag["upper_bound"] + 0.01
 
 
-def test_08_premium_bounds_hold_star_reclamp():
-    """PHASE 3C FIX regression test: no star-eligible candidate's final
-    willingness may exceed STAR_MAX_VALUE_MULTIPLE x base_value, even
-    with early-draft premium, tier-aggression, and tilt all stacking."""
+def test_08_premium_bounds_hold_relative_to_anchor():
+    """UPDATED in phase 3D item 5: the old star-ceiling override
+    (STAR_MAX_VALUE_MULTIPLE, a multiple of base_value) was removed from
+    compute_willingness entirely, replaced by a single bound relative to
+    base_market_anchor (MAX_TOTAL_PREMIUM_OVER_ANCHOR /
+    MAX_TOTAL_DISCOUNT_BELOW_ANCHOR) that applies to EVERY player alike,
+    not just star candidates. This regression test now verifies THAT
+    bound holds for every sale in a real auction, with no special case."""
     players, teams, _ = load_confirmed_pool_and_teams(budget_scenario="primary")
     violations = []
     for seed in range(3):
@@ -164,9 +169,10 @@ def test_08_premium_bounds_hold_star_reclamp():
         run_single_auction(players, teams, rng, bid_diagnostics_log=diag_log)
         for d in diag_log:
             wd = d.get("winner_diagnostics") or {}
-            if wd.get("is_star_candidate") and wd.get("total_multiplier_vs_base_value"):
-                if wd["total_multiplier_vs_base_value"] > auction_cfg.__dict__.get("STAR_MAX_VALUE_MULTIPLE", 2.5) + 0.01:
-                    violations.append(d)
+            if wd.get("final_willingness") is None:
+                continue
+            if not (wd["lower_bound"] - 0.01 <= wd["final_willingness"] <= wd["upper_bound"] + 0.01):
+                violations.append(d)
     assert len(violations) == 0, violations
 
 

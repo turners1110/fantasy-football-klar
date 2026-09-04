@@ -11,6 +11,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -128,3 +129,127 @@ def test_07_exact_allocation_does_not_use_auction_price_in_objective():
     import inspect
     src = inspect.getsource(solve_exact_leaguewide_allocation)
     assert "price" not in src.lower()
+
+
+# ---------------------------------------------------------------------------
+# item 4: FLEX demand from the exact allocation + player-specific sensitivity
+# ---------------------------------------------------------------------------
+
+def test_08_flex_sensitivity_output_exists_and_sums_to_100pct():
+    path = PHASE3D_OUT / "flex_allocation_sensitivity.csv"
+    _skip_if_missing(path)
+    df = pd.read_csv(path)
+    assert set(df["position"]) == {"RB", "WR", "TE"}
+    assert df["baseline_flex_share_pct"].sum() == pytest.approx(100.0, abs=0.5)
+    for _, row in df.iterrows():
+        assert row["sensitivity_p10_pct"] <= row["sensitivity_p50_pct"] <= row["sensitivity_p90_pct"] + 1e-6
+
+
+def test_09_flex_sensitivity_uses_position_specific_not_uniform_bounds():
+    from auction_model.flex_sensitivity import PROJECTION_UNCERTAINTY
+    ranges = set(PROJECTION_UNCERTAINTY.values())
+    # NOT a uniform scalar: at least two positions must have DIFFERENT
+    # [low, high] bounds, or this would just be one global scalar in disguise.
+    assert len(ranges) > 1
+
+
+# ---------------------------------------------------------------------------
+# items 7-8: public anchor hierarchy + keeper-removal normalization
+# ---------------------------------------------------------------------------
+
+def test_10_anchor_hierarchy_covers_every_player_with_a_disclosed_source():
+    path = PHASE3D_OUT / "public_anchor_hierarchy.csv"
+    _skip_if_missing(path)
+    df = pd.read_csv(path)
+    valid_sources = {"PARTIAL_WEBSEARCH_VALUES", "FANTASYPROS_RANK_TIER_CONVERSION",
+                      "NO_PUBLIC_ANCHOR_INTERNAL_NEUTRAL_VALUE"}
+    assert set(df["source"]).issubset(valid_sources)
+    assert df["normalized_value"].notna().all()
+
+
+def test_11_anchor_normalization_matches_reported_budget_within_clip_tolerance():
+    path = PHASE3D_OUT / "anchor_normalization.csv"
+    _skip_if_missing(path)
+    df = pd.read_csv(path)
+    primary_total = df["keeper_removed_anchor_primary"].sum()
+    reported_total = pd.read_csv(
+        BASE_DIR / "outputs" / "auction_rebuild" / "data" / "team_starting_states.csv"
+    )["primary_auction_budget"].sum()
+    # The post-clip total can drift slightly above the target (the $1
+    # floor can only push values up), never wildly off.
+    assert primary_total >= reported_total - 1.0
+    assert primary_total <= reported_total * 1.05
+
+
+def test_12_websearch_anchor_bug_is_fixed_not_absurd():
+    """Regression test for the phase-3D-discovered bug: phase 3C's
+    normalized_open_market_value column rescaled its 6-7-player WebSearch
+    sample as if it alone should absorb the entire pool's discretionary
+    cash (Rashee Rice: $711.83, >3x this league's own per-team budget).
+    auction_model.public_anchor must not reproduce that inflation."""
+    from auction_model.config import BUDGET_PER_TEAM
+    from auction_model.public_anchor import build_public_anchor_hierarchy
+    players, _teams, _ = load_confirmed_pool_and_teams(budget_scenario="primary")
+    df = build_public_anchor_hierarchy(players)
+    websearch = df[df["source"] == "PARTIAL_WEBSEARCH_VALUES"]
+    if len(websearch):
+        assert (websearch["normalized_value"] < BUDGET_PER_TEAM).all()
+
+
+# ---------------------------------------------------------------------------
+# item 5: bounded additive willingness (star-ceiling override removed)
+# ---------------------------------------------------------------------------
+
+def test_13_star_max_value_multiple_not_used_in_compute_willingness():
+    import inspect
+    from mock_draft import valuation
+    src = inspect.getsource(valuation.compute_willingness)
+    assert "STAR_MAX_VALUE_MULTIPLE" not in src
+    assert "is_star_candidate" not in src
+
+
+def test_14_all_required_bounded_adjustment_config_fields_exist():
+    required = [
+        "MAX_ROSTER_FIT_ADJUSTMENT", "MAX_SCARCITY_ADJUSTMENT", "MAX_TIER_ADJUSTMENT",
+        "MAX_ARCHETYPE_ADJUSTMENT", "MAX_NOISE_ADJUSTMENT",
+        "MAX_TOTAL_PREMIUM_OVER_ANCHOR", "MAX_TOTAL_DISCOUNT_BELOW_ANCHOR",
+    ]
+    for field_name in required:
+        assert hasattr(auction_cfg, field_name), field_name
+        assert isinstance(getattr(auction_cfg, field_name), (int, float))
+
+
+def test_15_willingness_is_additive_and_bounded_relative_to_anchor():
+    from mock_draft.models import Player, Team
+    from mock_draft.valuation import compute_willingness
+    team = Team(name="T", budget_remaining=200.0, roster=[], archetype="stars_and_scrubs")
+    player = Player(name="P", position="RB", base_value=80.0, tier=1, tier_size=4,
+                     tier_rank=4, is_star_eligible=True, projected_points=200.0)
+    rng = np.random.default_rng(2)
+    diag = {}
+    w = compute_willingness(team, player, rng, draft_progress=0.0, diagnostics=diag)
+    assert diag["lower_bound"] == pytest.approx(diag["base_market_anchor"] - auction_cfg.MAX_TOTAL_DISCOUNT_BELOW_ANCHOR)
+    assert diag["upper_bound"] == pytest.approx(diag["base_market_anchor"] + auction_cfg.MAX_TOTAL_PREMIUM_OVER_ANCHOR)
+    assert diag["lower_bound"] - 0.01 <= w <= diag["upper_bound"] + 0.01
+
+
+def test_16_value_purist_never_exceeds_own_anchor():
+    from mock_draft.models import Player, Team
+    from mock_draft.valuation import compute_willingness
+    team = Team(name="T", budget_remaining=200.0, roster=[], archetype="value_purist")
+    player = Player(name="P", position="RB", base_value=40.0, tier=1, tier_size=4,
+                     tier_rank=1, is_star_eligible=True, projected_points=200.0)
+    for seed in range(5):
+        rng = np.random.default_rng(seed)
+        diag = {}
+        w = compute_willingness(team, player, rng, draft_progress=0.0, diagnostics=diag)
+        assert w <= diag["base_market_anchor"] + 0.01
+
+
+def test_17_base_market_anchor_falls_back_gracefully_with_no_external_coverage():
+    from mock_draft.valuation import compute_base_market_anchor
+    from mock_draft.models import Player
+    player = Player(name="Nobody", position="WR", base_value=25.0, tier=2, tier_size=4, tier_rank=1)
+    assert player.public_anchor_value is None
+    assert player.historical_anchor_value is None
+    assert compute_base_market_anchor(player) == pytest.approx(25.0)
