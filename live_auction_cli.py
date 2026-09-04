@@ -28,6 +28,9 @@ from auction_engine.live_values import compute_live_sam_values
 from auction_engine.live_roster_paths import compute_live_roster_paths
 from auction_engine.market_adjustments import MarketAdjustmentState, live_expected_price
 from auction_engine.live_recommendations import compute_recommended_bid
+from auction_engine.live_target_scoring import compute_target_score
+from auction_model import exact_roster_solver
+import pandas as pd
 from mock_draft.data import load_confirmed_pool_and_teams
 
 LIVE_MVP_DIR = BASE_DIR / "outputs" / "auction_rebuild" / "live_mvp"
@@ -42,7 +45,9 @@ COMMANDS = {
     "status": "Show Sam's budget, open slots, position needs, reserve, legal max bid, roster.",
     "sale <player> <team> <price>": "Record a sale through the real event engine.",
     "check <player>": "Show live expected/conservative price, ceiling, recommended stop, and why.",
-    "targets": "Show top live-recommended targets with current recommended stop for each.",
+    "targets": "Show top live-recommended targets by multi-factor decision score (not raw value).",
+    "exact <player> [price]": "Run a FRESH HiGHS purchase-vs-pass solve from current state (not fast/approximate).",
+    "ladder <player>": "Show exact surplus at a short price ladder around the expected price.",
     "paths": "Show the 5 complete roster paths (spend, points, feasibility).",
     "undo": "Undo the last recorded sale.",
     "save <name>": "Save a named snapshot of the current auction state.",
@@ -68,6 +73,11 @@ class AuctionCLI:
                 self.log_path.unlink()  # fresh session log each launch
         self.store = AuctionStateStore(self.initial_state, log_path=self.log_path)
         self.market_state = MarketAdjustmentState()
+        # exact-solve cache: keyed by (state_sequence_number, player, test_price) -- see
+        # cmd_exact / _invalidate_exact_cache. Never shown as current if the state
+        # has moved on (Stage 2 STALE_EXACT_RESULT requirement).
+        self._exact_cache: dict = {}
+        self._exact_cache_sequence: int = self.store.state.sequence_number
         if self.log_path is not None:
             DEFAULT_INITIAL_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
             DEFAULT_INITIAL_STATE_PATH.write_text(json.dumps(self.initial_state.to_dict()))
@@ -151,6 +161,8 @@ class AuctionCLI:
         except IllegalEventError as e:
             return f"REFUSED: {e}"
 
+        self._invalidate_exact_cache()
+
         # feed the market-adjustment signal with this real observation
         pre_draft_price = max(1.0, self.players[player].base_value) if player in self.players else price_f
         self.market_state.add_observation(pos or "UNKNOWN", "t1", price_f, pre_draft_price)
@@ -220,23 +232,51 @@ class AuctionCLI:
         return "\n".join(lines)
 
     def cmd_targets(self, n: int = 10) -> str:
+        """Stage 1 hardened ranking: a multi-factor decision score
+        (auction_engine.live_target_scoring), not raw marginal value.
+        Position need is capped so it cannot alone outrank a stronger,
+        cheaper player -- see live_target_scoring.py's docstring."""
         pool = self._remaining_pool()
         if not pool:
             return "No remaining players in the pool."
         rows = compute_live_sam_values(self._sam().roster, pool)
-        rows_sorted = sorted(rows, key=lambda r: -r.marginal_value)[:n]
         sam = self._sam()
-        lines = [f"Top {len(rows_sorted)} live targets by Sam marginal value:"]
-        for r in rows_sorted:
-            info = pool[[k for k, v in pool.items() if v["display_name"] == r.player][0]] if any(
-                v["display_name"] == r.player for v in pool.values()) else None
+        needs = sam.legal_starting_needs()
+
+        # remaining alternatives per position (for scarcity / tier-cliff detection)
+        pos_supply = {}
+        for v in pool.values():
+            pos_supply[v["position"]] = pos_supply.get(v["position"], 0) + 1
+
+        scored = []
+        for r in rows:
+            info = next((v for v in pool.values() if v["display_name"] == r.player), None)
             pre_draft_price = max(1.0, info.get("base_value", 1.0)) if info else 1.0
-            rec = compute_recommended_bid(
-                player=r.player, safety_adjusted_ceiling=max(1.0, r.marginal_value), legal_max_bid=sam.legal_max_bid,
-                portfolio_feasibility_limit=None, confidence=6, live_expected_price=pre_draft_price,
+            remaining_alts = max(0, pos_supply.get(r.position, 1) - 1)
+            is_last = pos_supply.get(r.position, 0) <= 1 and needs.get(r.position, 0) > 0
+            raw_need = min(1.0, needs.get(r.position, 0) / 2.0) if r.position in ("RB", "WR") else min(1.0, needs.get(r.position, 0))
+            score = compute_target_score(
+                player=r.player, position=r.position, marginal_value=r.marginal_value, expected_role=r.expected_role,
+                live_expected_price=pre_draft_price, exact_or_approx_ceiling=max(1.0, r.marginal_value),
+                hard_max=None, remaining_alternatives_count=remaining_alts, is_last_legal_alternative=is_last,
+                price_confidence=0.5, position_need_score=raw_need, portfolio_paths_broken_if_missed=0,
             )
-            lines.append(f"  {r.player:22s} {r.position:3s} marginal=${r.marginal_value:6.2f} "
-                        f"role={r.expected_role:16s} stop=${rec.recommended_final_bid:.0f} [{rec.recommendation_type}]")
+            scored.append(score)
+
+        scored_sorted = sorted(scored, key=lambda s: -s.total_score)[:n]
+        lines = [f"Top {len(scored_sorted)} live targets by decision score (not raw marginal value):"]
+        for s in scored_sorted:
+            rec = compute_recommended_bid(
+                player=s.player, safety_adjusted_ceiling=max(1.0, s.team_specific_value), legal_max_bid=sam.legal_max_bid,
+                portfolio_feasibility_limit=None, confidence=6, live_expected_price=s.team_specific_value - s.expected_surplus_at_price,
+            )
+            lines.append(f"  {s.player:20s} {s.position:3s} score={s.total_score:.3f} [{s.recommendation_class}] stop=${rec.recommended_final_bid:.0f}")
+            lines.append(f"      surplus=${s.expected_surplus_at_price:.2f} start_gain=${s.starting_lineup_gain:.2f} "
+                        f"team_value=${s.team_specific_value:.2f} role_prob={s.role_probability_score} "
+                        f"scarcity={s.scarcity_score} tier_cliff_bonus={s.tier_cliff_bonus} "
+                        f"alts_left={s.remaining_alternatives_count} price_conf={s.price_confidence} "
+                        f"need_contrib={s.position_need_score} price_evid={s.price_evidence_score} "
+                        f"bench_prob={s.bench_probability}")
         return "\n".join(lines)
 
     def cmd_paths(self) -> str:
@@ -263,7 +303,143 @@ class AuctionCLI:
             self.store.undo_last()
         except ValueError as e:
             return f"Nothing to undo: {e}"
+        self._invalidate_exact_cache()
         return "Undo complete.\n\n" + self.cmd_status()
+
+    def _invalidate_exact_cache(self):
+        self._exact_cache = {}
+        self._exact_cache_sequence = self.store.state.sequence_number
+
+    # ---- Stage 2: exact on-demand checks ----
+
+    def _keepers_df_for_sam(self):
+        return pd.DataFrame([
+            {"player": p["player_id"], "position": p["position"], "projected_points": p.get("projected_points", 0.0),
+             "keeper_price_2026": p["price"]}
+            for p in self._sam().roster
+        ])
+
+    def _pool_df_excluding(self, exclude: set):
+        rows = []
+        for pid, info in self.store.state.available_pool.items():
+            if pid in exclude:
+                continue
+            price = max(1.0, info.get("base_value", 1.0))
+            rows.append({"player": pid, "position": info["position"], "projected_points": info["projected_points"],
+                         "suggested_auction_price": price})
+        return pd.DataFrame(rows)
+
+    def _run_exact_purchase_vs_pass(self, player: str, test_price: float):
+        """Real, fresh HiGHS purchase-vs-pass solve from the CURRENT
+        auction state. Cached by (sequence_number, player, test_price) --
+        invalidated on every sale/undo/correction via _invalidate_exact_cache."""
+        cache_key = (self.store.state.sequence_number, player, round(test_price, 2))
+        if cache_key in self._exact_cache:
+            return self._exact_cache[cache_key], True  # (result_tuple, was_cached)
+
+        info = self.store.state.available_pool.get(player)
+        if info is None:
+            return None, False
+        sam = self._sam()
+        n_auction_spots = max(0, 15 - len(sam.roster))
+
+        pool_minus = self._pool_df_excluding(set())
+        roster_with = sam.roster + [{"player_id": player, "position": info["position"], "price": test_price,
+                                      "projected_points": info["projected_points"]}]
+        keepers_with = pd.concat([self._keepers_df_for_sam(), pd.DataFrame([
+            {"player": player, "position": info["position"], "projected_points": info["projected_points"],
+             "keeper_price_2026": test_price}])], ignore_index=True)
+        t0 = time.time()
+        result_purchase = exact_roster_solver.solve_exact_roster(
+            pool_minus[pool_minus["player"] != player], budget=max(0.0, sam.budget_remaining - test_price),
+            n_auction_spots=max(0, n_auction_spots - 1), keepers=keepers_with,
+        )
+        pool_pass = self._pool_df_excluding({player})
+        result_pass = exact_roster_solver.solve_exact_roster(
+            pool_pass, budget=sam.budget_remaining, n_auction_spots=n_auction_spots, keepers=self._keepers_df_for_sam(),
+        )
+        runtime = time.time() - t0
+        payload = (result_purchase, result_pass, runtime, self.store.state.sequence_number)
+        self._exact_cache[cache_key] = payload
+        return payload, False
+
+    def cmd_exact(self, player: str, test_price: float | None = None) -> str:
+        info = self.store.state.available_pool.get(player)
+        if info is None:
+            return f"ERROR: unknown or unavailable player {player!r}."
+        if test_price is None:
+            test_price = max(1.0, info.get("base_value", 1.0))
+        try:
+            payload, was_cached = self._run_exact_purchase_vs_pass(player, test_price)
+        except Exception as e:
+            self._log_error("exact", e)
+            return f"SOLVER_FAILURE -- falling back to the fast `check` command's approximate value. ({e})"
+        if payload is None:
+            return f"ERROR: unknown or unavailable player {player!r}."
+        result_purchase, result_pass, runtime, solved_at_sequence = payload
+
+        stale = solved_at_sequence != self.store.state.sequence_number
+        stale_label = " [STALE_EXACT_RESULT -- state has moved on since this was solved]" if stale else ""
+
+        both_optimal = result_purchase.status in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL") and \
+                       result_pass.status in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL")
+        if not both_optimal:
+            return (f"{player}: solver did not return OPTIMAL "
+                   f"(purchase={result_purchase.status}, pass={result_pass.status}) -- "
+                   f"SOLVER_FAILURE, falling back to the fast `check` command instead.")
+
+        purchase_names = set(result_purchase.selected["player"]) if not result_purchase.selected.empty else set()
+        pass_names = set(result_pass.selected["player"]) if not result_pass.selected.empty else set()
+        assert player in purchase_names, "exact-check invariant violated: candidate absent from purchase roster"
+        assert player not in pass_names, "exact-check invariant violated: candidate present in pass roster"
+        displaced = sorted(pass_names - purchase_names - {player})
+        surplus = round(result_purchase.starting_points - result_pass.starting_points, 2)
+        bench_change = round(result_purchase.bench_points - result_pass.bench_points, 2)
+        sam = self._sam()
+
+        rec = compute_recommended_bid(
+            player=player, safety_adjusted_ceiling=max(1.0, surplus + test_price if surplus > 0 else test_price * 0.7),
+            legal_max_bid=sam.legal_max_bid, portfolio_feasibility_limit=None, confidence=8,
+            live_expected_price=max(1.0, info.get("base_value", 1.0)),
+        )
+
+        lines = [
+            f"{player} -- EXACT purchase-vs-pass at test price ${test_price:.0f}{stale_label}",
+            f"  Purchase roster size: {len(result_purchase.selected)}  Pass roster size: {len(result_pass.selected)}",
+            f"  Starting-lineup change: {surplus:+.2f}  Bench change: {bench_change:+.2f}",
+            f"  Displaced player(s): {', '.join(displaced) if displaced else 'none'}",
+            f"  Exact surplus at ${test_price:.0f}: {surplus:+.2f}",
+            f"  Legal max bid: ${sam.legal_max_bid:.2f}",
+            f"  RECOMMENDED STOP: ${rec.recommended_final_bid:.0f}  [{rec.recommendation_type}]",
+            f"  Solver status: purchase={result_purchase.status} pass={result_pass.status}  "
+            f"Runtime: {runtime:.2f}s  State sequence: {solved_at_sequence}  (cached={was_cached})",
+        ]
+        return "\n".join(lines)
+
+    def cmd_ladder(self, player: str) -> str:
+        info = self.store.state.available_pool.get(player)
+        if info is None:
+            return f"ERROR: unknown or unavailable player {player!r}."
+        base = max(1.0, info.get("base_value", 1.0))
+        prices = sorted(set(max(1, round(base * m)) for m in (0.7, 0.85, 1.0, 1.15, 1.3)))
+        lines = [f"Ladder for {player} around expected price ${base:.0f}:"]
+        for p in prices:
+            try:
+                payload, _ = self._run_exact_purchase_vs_pass(player, float(p))
+            except Exception as e:
+                self._log_error("ladder", e)
+                lines.append(f"  ${p}: SOLVER_FAILURE")
+                continue
+            if payload is None:
+                continue
+            result_purchase, result_pass, runtime, seq = payload
+            if result_purchase.status in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL") and \
+               result_pass.status in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL"):
+                surplus = round(result_purchase.starting_points - result_pass.starting_points, 2)
+                lines.append(f"  ${p}: surplus {surplus:+.2f}")
+            else:
+                lines.append(f"  ${p}: SOLVER_FAILURE")
+        return "\n".join(lines)
 
     def cmd_save(self, name: str) -> str:
         SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
@@ -284,6 +460,7 @@ class AuctionCLI:
         self.initial_state = initial_state
         self.store = AuctionStateStore.recover(initial_state, target_log)
         self.store.log_path = self.log_path  # continue logging new events to the live session log
+        self._invalidate_exact_cache()
         return f"Loaded snapshot '{name}'.\n\n" + self.cmd_status()
 
     def cmd_emergency(self) -> str:
@@ -332,6 +509,17 @@ class AuctionCLI:
                 return self.cmd_check(" ".join(args).replace("_", " "))
             if cmd == "targets":
                 return self.cmd_targets()
+            if cmd == "exact":
+                if len(args) < 1:
+                    return "Usage: exact <player> [price]"
+                if len(args) >= 2 and args[-1].replace(".", "", 1).isdigit():
+                    player = " ".join(args[:-1]).replace("_", " ")
+                    return self.cmd_exact(player, float(args[-1]))
+                return self.cmd_exact(" ".join(args).replace("_", " "))
+            if cmd == "ladder":
+                if len(args) < 1:
+                    return "Usage: ladder <player>"
+                return self.cmd_ladder(" ".join(args).replace("_", " "))
             if cmd == "paths":
                 return self.cmd_paths()
             if cmd == "undo":

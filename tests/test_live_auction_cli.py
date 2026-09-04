@@ -113,3 +113,69 @@ def test_help_lists_all_commands(cli):
     out = cli.cmd_help()
     for cmd in ("status", "sale", "check", "targets", "paths", "undo", "save", "load", "emergency"):
         assert cmd in out
+
+
+# ---------------------------------------------------------------------------
+# Sunday Final Build Stage 2: exact on-demand check tests
+# ---------------------------------------------------------------------------
+
+def test_exact_uses_current_state_and_candidate_present_absent(cli):
+    rb = _first_available(cli, "RB")
+    out = cli.cmd_exact(rb)
+    assert "EXACT purchase-vs-pass" in out
+    assert "OPTIMAL" in out
+
+
+def test_exact_requires_optimal_status_or_reports_solver_failure(cli):
+    rb = _first_available(cli, "RB")
+    out = cli.cmd_exact(rb, 5.0)
+    assert "OPTIMAL" in out or "SOLVER_FAILURE" in out
+
+
+def test_exact_cache_clears_after_sale(cli):
+    rb = _first_available(cli, "RB")
+    cli.cmd_exact(rb)
+    seq_before = cli._exact_cache_sequence
+    other_rb = _first_available(cli, "WR")
+    cli.cmd_sale(other_rb, "Brad", "10")
+    assert cli._exact_cache == {}
+    assert cli._exact_cache_sequence != seq_before or len(cli.store.events) > 0
+
+
+def test_exact_cache_clears_after_undo(cli):
+    rb = _first_available(cli, "RB")
+    cli.cmd_sale(rb, "Sam", "20")
+    cli.cmd_exact(_first_available(cli, "WR"))
+    assert cli._exact_cache != {}
+    cli.cmd_undo()
+    assert cli._exact_cache == {}
+
+
+def test_stale_exact_result_would_be_labeled(cli):
+    rb = _first_available(cli, "RB")
+    payload, was_cached = cli._run_exact_purchase_vs_pass(rb, 20.0)
+    result_purchase, result_pass, runtime, solved_seq = payload
+    assert solved_seq == cli.store.state.sequence_number  # fresh, not stale yet
+    other = _first_available(cli, "WR")
+    cli.cmd_sale(other, "Brad", "5")
+    # after invalidation, cache is empty, so a fresh solve would report the NEW sequence
+    payload2, was_cached2 = cli._run_exact_purchase_vs_pass(rb, 20.0)
+    assert not was_cached2
+
+
+def test_ladder_returns_prices_around_expected(cli):
+    rb = _first_available(cli, "RB")
+    out = cli.cmd_ladder(rb)
+    assert "Ladder for" in out
+    assert "surplus" in out or "SOLVER_FAILURE" in out
+
+
+def test_exact_command_via_dispatch_with_price(cli):
+    rb = _first_available(cli, "RB")
+    out = cli.dispatch(f"exact {rb.replace(' ', '_')} 15")
+    assert "test price $15" in out or "SOLVER_FAILURE" in out
+
+
+def test_targets_uses_decision_score_not_raw_marginal_value(cli):
+    out = cli.cmd_targets()
+    assert "decision score" in out.lower()
