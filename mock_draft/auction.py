@@ -42,7 +42,7 @@ from . import config_bridge as cfg
 from . import feasibility as feas_mod
 from .archetypes import ARCHETYPE_NAMES, Archetype
 from .feasibility import check_roster_completion_feasibility
-from .legal_lineup import build_production_lineup
+from .legal_lineup import partial_lineup_value
 from .models import Player, Team
 from .nomination import choose_nomination
 from .valuation import compute_willingness
@@ -51,14 +51,28 @@ BID_SAFETY_ROUNDS = 60
 
 
 def _incremental_utility(team: Team, candidate: Player, price: float) -> float:
-    """total_roster_utility with vs. without the candidate on this team's
+    """Partial-lineup value with vs. without the candidate on this team's
     roster right now. <= 0 means the legal-lineup scorer gives this player
     no credit at all -- typically a 3rd+ QB, or a bench slot that would be
-    filled by a strictly-worse player than what's already rostered."""
-    before = build_production_lineup(team.roster).total_roster_utility
-    after = build_production_lineup(
+    filled by a strictly-worse player than what's already rostered.
+
+    PHASE 3A FIX: this used to call build_production_lineup, whose
+    total_roster_utility is hard-zeroed to 0 for ANY illegal (incomplete)
+    roster. Since most teams don't hold a full legal lineup for most of a
+    live auction, that meant before=0 and after=0 -- and therefore a
+    reported $0 of marginal value -- for perfectly good players who simply
+    hadn't yet completed the team's lineup by themselves (e.g. a 200-point
+    RB added to a QB-only roster). See legal_lineup.partial_lineup_value's
+    docstring for the full diagnosis; this was the dominant driver of the
+    "zero incremental utility" bid-gate over-blocking phase 3A's own
+    diagnostics found (outputs/auction_rebuild/phase3a/
+    unspent_cash_decomposition.csv), not the bench-weight tuning that was
+    tried first. build_production_lineup itself is untouched and remains
+    correct for FINAL-roster fitness (evolution.py, best_response.py)."""
+    before = partial_lineup_value(team.roster)
+    after = partial_lineup_value(
         team.roster + [(candidate.name, candidate.position, price, candidate.projected_points)]
-    ).total_roster_utility
+    )
     return after - before
 
 
@@ -77,6 +91,7 @@ def resolve_bid(
     candidate: Player, nominator: str, teams: dict[str, Team], rng: np.random.Generator,
     draft_progress: float, available: dict[str, Player],
     position_max: dict | None = None,
+    bid_stats: dict | None = None,
 ) -> dict:
     """Open ascending auction starting at $1 with the nominator as the
     default winner if nobody raises. Returns a dict with winner, price,
@@ -87,7 +102,20 @@ def resolve_bid(
     `winner` is None if NO team (nominator included) can legally take this
     candidate at any price -- callers must handle that by not completing a
     sale (see run_single_auction's NO_LEGAL_BUYER handling) rather than
-    forcing an illegal purchase."""
+    forcing an illegal purchase.
+
+    bid_stats: optional {team_name: {bids, wins, blocked_zero_utility,
+    blocked_feasibility, blocked_budget, blocked_roster_cap}} dict,
+    mutated in place if given -- phase 3A diagnostic instrumentation for
+    outputs/auction_rebuild/phase3a/unspent_cash_decomposition.csv. Never
+    required; every existing caller is unaffected."""
+    def _stat(name: str, field: str) -> None:
+        if bid_stats is not None:
+            bid_stats.setdefault(name, {
+                "bids": 0, "wins": 0, "blocked_zero_utility": 0,
+                "blocked_feasibility": 0, "blocked_budget": 0, "blocked_roster_cap": 0,
+            })[field] += 1
+
     eligible = [name for name, t in teams.items() if not t.is_done]
     legally_biddable = [name for name in eligible if _team_can_ever_take(teams[name], candidate, available, position_max)]
 
@@ -114,17 +142,21 @@ def resolve_bid(
             team = teams[name]
             willingness = compute_willingness(team, candidate, rng, draft_progress)
             cap = team.max_bid_cap()
-            max_can_pay = min(willingness, cap)
+            max_can_pay_pre_utility = min(willingness, cap)
 
             # Zero/negative incremental-utility gate: a limited phase-2B
             # safety check (not the full team-specific bid-ceiling engine)
             # -- if the legal-lineup scorer credits this player with no
             # marginal value to THIS team's roster right now, they may
             # still pick it up uncontested for $1, but never bid above it.
-            if _incremental_utility(team, candidate, max_can_pay) <= 0:
-                max_can_pay = min(max_can_pay, float(cfg.MIN_PRICE))
+            utility_blocked = _incremental_utility(team, candidate, max_can_pay_pre_utility) <= 0
+            max_can_pay = min(max_can_pay_pre_utility, float(cfg.MIN_PRICE)) if utility_blocked else max_can_pay_pre_utility
 
             if max_can_pay <= current_bid:
+                if utility_blocked and max_can_pay_pre_utility > current_bid:
+                    _stat(name, "blocked_zero_utility")
+                elif cap <= current_bid:
+                    _stat(name, "blocked_budget")
                 continue
 
             # Positional-feasibility gate at the actual price being considered.
@@ -133,6 +165,10 @@ def resolve_bid(
                 candidate_player=candidate, candidate_price=max_can_pay, position_max=position_max,
             )
             if not feas.is_feasible:
+                if feas.failure_reason == "POSITION_CAP_EXCEEDED":
+                    _stat(name, "blocked_roster_cap")
+                else:
+                    _stat(name, "blocked_feasibility")
                 continue
 
             archetype = team.strategy
@@ -142,12 +178,14 @@ def resolve_bid(
             new_bid = min(current_bid + increment, max_can_pay)
             if new_bid > current_bid:
                 bidders.add(name)
+                _stat(name, "bids")
                 # The team being outbid held `current_bid` as their high point.
                 second_highest = max(second_highest, current_bid)
                 current_bid = new_bid
                 current_leader = name
                 changed = True
 
+    _stat(current_leader, "wins")
     return {
         "winner": current_leader,
         "price": current_bid,
@@ -165,6 +203,7 @@ def run_single_auction(
     unsold_log: list | None = None,
     enable_position_max: bool = True,
     position_max: dict | None = None,
+    bid_stats: dict | None = None,
 ):
     """strategies: optional {team_name: Archetype} to drive bidding from an
     evolved genome instead of a random named archetype -- used by
@@ -218,7 +257,7 @@ def run_single_auction(
         remaining_slots = sum(t.slots_needed for t in teams.values())
         draft_progress = 1.0 - (remaining_slots / total_initial_slots if total_initial_slots else 0.0)
 
-        sale = resolve_bid(candidate, nominator, teams, rng, draft_progress, available, active_position_max)
+        sale = resolve_bid(candidate, nominator, teams, rng, draft_progress, available, active_position_max, bid_stats)
         winner = sale["winner"]
 
         if winner is None:

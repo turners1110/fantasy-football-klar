@@ -1,0 +1,11 @@
+{
+  "total_rows": 191,
+  "origin_counts": {
+    "FRANCHISE_TAG": 10,
+    "UNKNOWN": 122,
+    "ADMINISTRATIVE_DOLLAR_ONE": 59
+  },
+  "n_included_in_market_calibration": 113,
+  "n_excluded_from_market_calibration": 78,
+  "note": "No draft-day transaction log exists in this repo, so no row is labeled COMPETITIVE_AUCTION with full confidence. Only unadorned, non-$1, non-keeper/tag/Paul-Rule salaries are included in market calibration, at reliability 0.5 (limited weight) -- consistent with 'only confirmed competitive-auction prices receive full weight; unknown non-$1 prices receive limited weight; unknown $1 prices receive zero weight by default.'"
+}

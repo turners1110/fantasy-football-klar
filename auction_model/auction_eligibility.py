@@ -64,8 +64,72 @@ def _nflverse_debut_keys(nflverse_dir: Path) -> dict[str, dict]:
             "nfl_team": row.get("recent_team", ""),
             "games_played": games,
             "season": int(row.get("season", 0)),
+            "evidence_source": "nflverse/player_stats_reg_2025.csv",
         }
     return out
+
+
+def _active_player_registry_evidence(base_dir: Path, nflverse_dir: Path) -> dict[str, dict]:
+    """PHASE 3A FIX: nflverse (via _nflverse_debut_keys) is not the only
+    active-player registry in this repo -- data/nflverse/player_stats_reg_2025.csv
+    is simply absent in this environment, which is a missing FILE, not
+    missing EVIDENCE. Prior-season statistics measure performance; they
+    do not define eligibility on their own, and this repo has several
+    other real active-player registries. Merged here, in priority order
+    (first match wins, each tagged with the source that actually provided
+    it -- never silently blended):
+      1. nflverse reg-season stats (if the file is ever present)
+      2. data/actuals_2025.csv -- real 2025 season stats with a games column
+      3. data/fantasy_data_last_year_clean.csv -- 2025 stats + roster_status
+      4. data/projections_2026.csv -- current-season projection; presence
+         alone (even with zero prior games, e.g. a real rookie) is
+         evidence a real, currently-relevant NFL player is being tracked
+    This replaces phase 2B's fp_only_fallback_eligible guess (which
+    approximated "probably real" from FantasyPros-rank presence alone,
+    confidence 0.3) with actual roster/production evidence wherever it
+    exists in the repo."""
+    evidence: dict[str, dict] = dict(_nflverse_debut_keys(nflverse_dir))
+
+    actuals_path = base_dir / "data" / "actuals_2025.csv"
+    if actuals_path.exists():
+        actuals = pd.read_csv(actuals_path)
+        for _, row in actuals.iterrows():
+            key = data_pipeline._normalize_name(row["player"])
+            games = row.get("games")
+            if key in evidence or pd.isna(games) or games < 1:
+                continue
+            evidence[key] = {
+                "games_played": int(games), "nfl_team": row.get("nfl_team", ""),
+                "evidence_source": "data/actuals_2025.csv",
+            }
+
+    fdly_path = base_dir / "data" / "fantasy_data_last_year_clean.csv"
+    if fdly_path.exists():
+        fdly = pd.read_csv(fdly_path)
+        for _, row in fdly.iterrows():
+            key = data_pipeline._normalize_name(row["player"])
+            games = row.get("games_played")
+            if key in evidence or pd.isna(games) or games < 1:
+                continue
+            evidence[key] = {
+                "games_played": int(games), "nfl_team": row.get("nfl_team", ""),
+                "evidence_source": "data/fantasy_data_last_year_clean.csv",
+            }
+
+    proj_path = base_dir / "data" / "projections_2026.csv"
+    if proj_path.exists():
+        proj = pd.read_csv(proj_path)
+        for _, row in proj.iterrows():
+            key = data_pipeline._normalize_name(row["player"])
+            if key in evidence:
+                continue
+            evidence[key] = {
+                "games_played": 0, "nfl_team": row.get("nfl_team", ""),
+                "evidence_source": "data/projections_2026.csv (current-season projection; no prior-season "
+                                    "stats required -- covers real rookies and players with no 2025 record)",
+            }
+
+    return evidence
 
 
 def _college_status_from_audit(audit_row: pd.Series | None) -> str | None:
@@ -115,7 +179,12 @@ def classify_player_eligibility(
     this as the one documented, explained divergence between the two
     production paths."""
     canonical = data_pipeline._normalize_name(player)
-    verified_debut = debut_info is not None and int(debut_info.get("games_played", 0)) >= 1
+    # PHASE 3A: any evidence from _active_player_registry_evidence counts,
+    # not just a games_played>=1 debut -- a real rookie with a current
+    # 2026 projection but no 2025 games is still a legitimate active
+    # player, not "unverified." See that function's docstring for the
+    # full evidence-source priority order.
+    verified_active_player = debut_info is not None
 
     college_status = _college_status_from_audit(college_audit)
     if college_status is not None:
@@ -168,14 +237,21 @@ def classify_player_eligibility(
             warning="on_historical_missing_salary",
         )
 
-    if verified_debut:
+    if verified_active_player:
+        games = int(debut_info.get("games_played", 0))
+        reason = (
+            f"verified active player: {games} reg-season games played in 2025"
+            if games >= 1 else
+            "verified active player: current 2026 projection on record (no 2025 games required -- "
+            "covers real rookies and players with no prior-season record)"
+        )
         return _record(
             player, canonical, position, nfl_team, source_roster,
             VETERAN_AUCTION_ELIGIBLE, True,
-            f"nflverse verified debut: {debut_info['games_played']} reg-season games",
-            "nflverse/player_stats_reg_2025.csv",
+            reason,
+            debut_info.get("evidence_source", "unknown_registry"),
             str(debut_info),
-            confidence=0.95,
+            confidence=0.95 if games >= 1 else 0.6,
         )
 
     if fp_only:
@@ -260,11 +336,16 @@ def build_eligibility_audit(
     holdings_path: Path | None = None,
     nflverse_dir: Path | None = None,
     fp_only_fallback_eligible: bool = False,
+    base_dir: Path | None = None,
 ) -> pd.DataFrame:
     """Classify every player in the combined universe. See
-    classify_player_eligibility's docstring for fp_only_fallback_eligible."""
+    classify_player_eligibility's docstring for fp_only_fallback_eligible
+    and _active_player_registry_evidence's docstring for base_dir (the
+    repo root the additional active-player registries are read from --
+    defaults to this file's own repo)."""
     holdings_path = holdings_path or Path("data/college_holdings.csv")
     nflverse_dir = nflverse_dir or Path("data/nflverse")
+    base_dir = base_dir or Path(__file__).parent.parent
 
     _, college_audit = _load_college_index(holdings_path, nflverse_dir)
     college_by_key = {}
@@ -273,7 +354,7 @@ def build_eligibility_audit(
         college_audit["_key"] = college_audit["player"].map(data_pipeline._normalize_name)
         college_by_key = college_audit.set_index("_key").to_dict("index")
 
-    debut_keys = _nflverse_debut_keys(nflverse_dir)
+    debut_keys = _active_player_registry_evidence(base_dir, nflverse_dir)
 
     hist_keys = set(salaries["player"].map(data_pipeline._normalize_name))
     hist_salary = salaries.copy()

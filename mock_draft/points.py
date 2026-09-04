@@ -48,24 +48,61 @@ def build_points_lookup(projections_path: Path = BASE_DIR / "data" / "projection
     return dict(zip(proj["_key"], proj["_points"]))
 
 
-def points_for(name: str, lookup: dict[str, float], fallback_per_dollar: float, base_value: float) -> tuple[float, bool]:
-    """Return (points, is_real). Falls back to base_value * a league-wide
-    points-per-dollar ratio (computed from players where both are known)
-    only when no real projection exists at all -- flagged, never silent."""
+def points_for(
+    name: str, lookup: dict[str, float], fallback_ratio, base_value: float, position: str | None = None,
+) -> tuple[float, bool]:
+    """Return (points, is_real). Falls back to base_value * a points-per-
+    dollar ratio only when no real projection exists at all -- flagged,
+    never silent.
+
+    PHASE 3A FIX: fallback_ratio used to be a single global median
+    (~10.9 pts/$ in this pool) applied to every position -- a real bug
+    caught in testing via the counterfactual bid-ceiling work (item 7):
+    a handful of expensive, real players missing a name-matched
+    projection (Bill Croskey-Merritt $42, Nick Chubb $34, Austin Ekeler
+    $31 -- all real, known RBs, just unmatched to
+    data/projections_2026.csv by name) got IMPUTED at 400-500+ fantasy
+    points, more than any real player in the pool, because RB's true
+    points-per-dollar ratio (~7.6) is far below QB's (~69.6 in this
+    1-QB league, per phase 1's own audit) and the global median sat well
+    above RB's real rate. fallback_ratio is now {position: (ratio, cap)}
+    (see compute_fallback_ratio) with a "_global" entry for positions
+    with too little of their own data, and the imputed value is
+    additionally capped at the highest REAL projected points ever seen
+    at that position -- a hard sanity ceiling, not just a better ratio."""
     key = _normalize_name(name)
     if key in lookup:
         return lookup[key], True
-    return max(0.0, base_value) * fallback_per_dollar, False
+    if isinstance(fallback_ratio, dict):
+        ratio, cap = fallback_ratio.get(position, fallback_ratio.get("_global", (1.0, float("inf"))))
+    else:
+        ratio, cap = fallback_ratio, float("inf")  # backward-compatible: a bare ratio float, no cap
+    imputed = max(0.0, base_value) * ratio
+    return min(imputed, cap), False
 
 
-def compute_fallback_ratio(pool_df: pd.DataFrame, lookup: dict[str, float]) -> float:
-    """Median points-per-dollar among pool players where both a real
-    projection and a real base_value exist."""
+def compute_fallback_ratio(pool_df: pd.DataFrame, lookup: dict[str, float]) -> dict:
+    """{position: (median points-per-dollar, max real points observed)}
+    among pool players where both a real projection and a real base_value
+    exist, computed PER POSITION (see points_for's docstring for why a
+    single global ratio was a real bug) -- plus a "_global" fallback for
+    any position with too little data of its own to compute one."""
     pool_df = pool_df.copy()
     pool_df["_key"] = pool_df["player"].map(_normalize_name)
     pool_df["_points"] = pool_df["_key"].map(lookup)
     known = pool_df.dropna(subset=["_points"])
     known = known[known["base_value"] > 0]
-    if known.empty:
-        return 1.0
-    return float((known["_points"] / known["base_value"]).median())
+
+    global_ratio = float((known["_points"] / known["base_value"]).median()) if not known.empty else 1.0
+    global_cap = float(known["_points"].max()) if not known.empty else 100.0
+
+    result = {"_global": (global_ratio, global_cap)}
+    if "position" not in pool_df.columns:
+        return result
+    for position, group in known.groupby("position"):
+        if len(group) < 3:  # too few real data points at this position -- use the global rate/cap
+            continue
+        ratio = float((group["_points"] / group["base_value"]).median())
+        cap = float(group["_points"].max())
+        result[position] = (ratio, cap)
+    return result

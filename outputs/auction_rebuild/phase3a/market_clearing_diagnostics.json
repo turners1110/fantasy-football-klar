@@ -1,0 +1,41 @@
+{
+  "n_seeds": 40,
+  "league_starting_auction_cash": 3021.0,
+  "league_total_spend_per_auction": 2914.45,
+  "league_unused_cash_per_auction": 106.55,
+  "percentage_cash_spent": 0.9647,
+  "spend_by_position_per_auction": {
+    "QB": 92.23,
+    "RB": 1917.22,
+    "TE": 63.85,
+    "WR": 841.14
+  },
+  "spend_by_price_band_per_auction": {
+    "$1-1": 29.425,
+    "$2-10": 22.2,
+    "$11-25": 13.15,
+    "$26-50": 10.65,
+    "$51-+": 15.825
+  },
+  "number_of_dollar_one_sales_per_auction": 29.43,
+  "number_of_uncontested_sales_per_auction": 29.43,
+  "median_team_unused_cash": 0.12,
+  "maximum_team_unused_cash": 65.13,
+  "per_team_avg_spend": {
+    "Brad": 270.9,
+    "Brandon": 174.85,
+    "CJ": 252.13,
+    "Coby": 265.03,
+    "Evan": 175.62,
+    "James": 286.45,
+    "Jason": 202.97,
+    "Reid": 255.04,
+    "Ryan J": 250.1,
+    "Sam": 216.6,
+    "Shane": 309.12,
+    "Travis": 255.63
+  },
+  "note_on_top_player_concentration": "Top-12/24 spend-share concentration requires a comparable REAL 2025 competitive-auction price list, which this repo does not have (see salary_origin_audit.csv -- most 2025 salaries are UNKNOWN origin, not confirmed auction prices). Computed here for the SIMULATED market only, as a self-consistency figure, not a validated comparison against real history.",
+  "simulated_top12_spend_share": 0.0295,
+  "simulated_top24_spend_share": 0.0576
+}

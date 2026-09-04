@@ -1,6 +1,6 @@
 season,team_id,team_name,n_veteran_keepers,n_college_rights_holds,keeper_spend,cash_adjustments,sheet_reported_remaining_budget,primary_auction_budget,conversions_scenario_auction_budget,budget_source,keeper_state_status,notes
 2026,Brad,Brad,6,0,119.0,0,281,281,281,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
-2026,Brandon,Brandon,6,0,221.0,0,184,184,184,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
+2026,Brandon,Brandon,6,0,221.0,15,184,184,184,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
 2026,CJ,CJ,6,0,136.0,0,264,264,264,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
 2026,Coby,Coby,6,0,126.0,0,274,274,274,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
 2026,Evan,Evan,6,0,206.0,0,184,184,184,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)

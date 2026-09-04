@@ -25,17 +25,38 @@ TOTAL_ROSTER_SIZE = cfg.REQUIRED_ROSTER_SIZE  # 15
 MIN_SKILL_POSITION_TOTAL = REQUIRED_STARTERS["RB"] + REQUIRED_STARTERS["WR"] + REQUIRED_STARTERS["TE"] + FLEX_SLOTS
 
 # Configurable soft roster-position caps -- see
-# outputs/auction_rebuild/audit/historical_roster_position_counts.csv.
-# Real 2025 final rosters ranged QB 1-4 (median 2, p90 ~2.9), TE 1-3
-# (median 2, p90 3, max 3). The phase-2B spec suggested a QB max of 2 as a
-# placeholder default, but that contradicts observed history -- one real
-# team legitimately carried 4 QBs in 2025 -- so history overrides the
-# placeholder per the spec's own "only when supported by league history"
-# rule. TE max=3 matches both the suggested default and the observed
+# outputs/auction_rebuild/audit/historical_roster_position_counts.csv and
+# outputs/auction_rebuild/phase3a/historical_qb_roster_audit.csv.
+#
+# PHASE 3A CORRECTION (retracts phase 2B's QB=4 default): that number came
+# from a raw, non-deduplicated read of historical_salaries_2025_raw.csv,
+# which lists Coby's Kyler Murray twice (a data-entry duplicate, same
+# player, same $16 salary, different notes) -- inflating Coby's real QB
+# count from 3 to 4. The corrected, deduplicated 2025 max is 3 QBs
+# (Coby and Sam), not 4. Separately, and independently of that bug: NO row
+# in this league's history has a confirmed competitive-AUCTION acquisition
+# tag at all (this repo has no draft-day transaction log), so even 3 is a
+# final-ROSTER count, not a proven auction-purchase count -- see the QB
+# audit above for the full evidence review. Per the phase-3A instruction
+# ("do not use four as the primary default without proof of four
+# auction-acquired quarterbacks"), three explicit tiers replace the single
+# guessed default:
+#   PRIMARY_QB_CAP=2   -- the conservative default for the main simulation
+#   STRESS_TEST_QB_CAP=3 -- a looser cap for stress-testing sensitivity
+#   HISTORICAL_OBSERVED_QB_CAP=3 -- the corrected (deduplicated) real max,
+#     NOT 4 as the phase-3A prompt's own suggested fallback assumed;
+#     reported here as the actual data, not silently overridden to match
+#     the suggestion.
+# TE max=3 matches the (unchanged, already-deduplicated-in-3A) observed
 # historical max. Disabled by default: callers opt in via
-# enable_position_max=True (see auction.py), and the smoke-test comparison
-# runs the simulator with this both on and off.
-DEFAULT_POSITION_MAX = {"QB": 4, "TE": 3}
+# enable_position_max=True (see auction.py); the 200-seed comparison runs
+# the simulator with position caps both on and off, and with QB caps of
+# both 2 and 3 (phase 3A simulation gate).
+PRIMARY_QB_CAP = 2
+STRESS_TEST_QB_CAP = 3
+HISTORICAL_OBSERVED_QB_CAP = 3
+DEFAULT_POSITION_MAX = {"QB": PRIMARY_QB_CAP, "TE": 3}
+STRESS_TEST_POSITION_MAX = {"QB": STRESS_TEST_QB_CAP, "TE": 3}
 
 
 @dataclass

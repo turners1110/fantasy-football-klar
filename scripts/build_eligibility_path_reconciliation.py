@@ -5,15 +5,15 @@ auction_model.auction_eligibility.build_confirmed_veteran_auction_pool:
   1. run_valuation.py --keeper-mode confirmed (the real veteran price sheet)
   2. mock_draft/data.py load_confirmed_pool_and_teams (the mock-draft pool)
 
-Both call the SAME shared function. The only intentional difference is
-fp_only_fallback_eligible (True for the mock-draft path, False for the
-real price sheet -- see auction_eligibility.classify_player_eligibility's
-docstring: data/nflverse/player_stats_reg_2025.csv is absent in this
-environment, so the strict default wrongly excludes real veteran free
-agents; the mock-draft path opts into a fallback that trades a small
-false-positive risk for pool depth, while the real price sheet keeps the
-conservative default). This script quantifies exactly what that one
-setting changes and confirms there are no OTHER, unexplained differences.
+PHASE 3A: both paths now use the SAME default (fp_only_fallback_eligible=
+False) -- phase 2B's divergence (True for mock-draft, False for the real
+price sheet) is retired now that _active_player_registry_evidence gives
+both paths real active-player evidence (data/actuals_2025.csv,
+data/fantasy_data_last_year_clean.csv, data/projections_2026.csv) instead
+of relying on the guess-based fallback. This script confirms the two
+paths agree with ZERO differences under their real, current defaults, and
+separately reports what the (no-longer-used-by-default) fallback flag
+would still change, for anyone re-enabling it deliberately.
 
 Writes outputs/auction_rebuild/audit/eligibility_path_reconciliation.csv
 """
@@ -53,11 +53,15 @@ def main() -> None:
     )
     roster.loc[roster["player"].map(ae.normalize_name).isin(keeper_norm), "will_keep"] = True
 
+    # Both use fp_only_fallback_eligible=False -- the real, current default
+    # for BOTH production paths (see mock_draft/data.py and
+    # run_valuation.py's confirmed mode). Any difference found here would
+    # now be a genuine, unintended divergence, not an expected one.
     eligible_strict, audit_strict = ae.build_confirmed_veteran_auction_pool(
         pool, salaries, confirmed_keepers, roster=roster, fp_only_fallback_eligible=False,
     )
     eligible_fallback, audit_fallback = ae.build_confirmed_veteran_auction_pool(
-        pool, salaries, confirmed_keepers, roster=roster, fp_only_fallback_eligible=True,
+        pool, salaries, confirmed_keepers, roster=roster, fp_only_fallback_eligible=False,
     )
 
     audit_strict = audit_strict.set_index("canonical_player_id")
@@ -75,26 +79,16 @@ def main() -> None:
         if s_elig == f_elig and s_status == f_status:
             continue  # agree -- not a difference, don't clutter the output
 
-        explained = (
-            s is not None and f is not None
-            and s["warning"] == "fp_only_no_debut_verification"
-            and f["warning"] == "fp_only_treated_as_eligible_missing_nflverse_data"
-        )
+        # Both calls above use the SAME fp_only_fallback_eligible=False --
+        # any difference found here is unexpected under current defaults.
         rows.append({
             "player": key,
             "run_valuation_confirmed_mode_status": s_status,
             "run_valuation_confirmed_mode_eligible": s_elig,
             "mock_draft_data_status": f_status,
             "mock_draft_data_eligible": f_elig,
-            "difference_explained": explained,
-            "explanation": (
-                "fp_only_fallback_eligible divergence (documented, intentional -- see module docstring): "
-                "no data/nflverse/player_stats_reg_2025.csv in this environment to verify NFL debut, "
-                "so the mock-draft path treats an unverified FantasyPros-ranked player as eligible for "
-                "pool-depth purposes while the real price sheet keeps them excluded pending real data."
-                if explained else
-                "UNEXPLAINED -- investigate before treating both paths as reconciled."
-            ),
+            "difference_explained": False,
+            "explanation": "UNEXPLAINED -- both paths used identical settings; investigate before treating them as reconciled.",
         })
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)

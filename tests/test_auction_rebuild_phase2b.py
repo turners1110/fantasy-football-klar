@@ -27,7 +27,7 @@ from mock_draft.data import load_confirmed_pool_and_teams
 from mock_draft.feasibility import (
     DEFAULT_POSITION_MAX, check_roster_completion_feasibility, position_urgency,
 )
-from mock_draft.legal_lineup import build_production_lineup
+from mock_draft.legal_lineup import build_production_lineup, partial_lineup_value
 from mock_draft.models import Player, Team
 
 DATA_DIR = BASE_DIR / "data"
@@ -163,10 +163,38 @@ def test_09_last_open_slot_accepts_only_the_missing_required_position():
 # ---------------------------------------------------------------------------
 
 def test_10_third_quarterback_has_zero_incremental_utility():
-    roster = _roster(("QB1", "QB", 1, 300), ("QB2", "QB", 1, 100))
+    """PHASE 3A FIX: the original version of this test used a 2-player
+    (QB-only) roster, which is ILLEGAL both before and after adding QB3
+    (missing RB/WR/TE either way) -- so build_production_lineup returned
+    total_roster_utility=0 on both sides for the WRONG reason (the
+    illegal-roster zero-clamp phase 3A found and fixed in
+    mock_draft.legal_lineup.partial_lineup_value / mock_draft.auction.
+    _incremental_utility), not because third_qb's bench weight is 0. That
+    made this test a false positive: it would have kept passing even if
+    third_qb had a large positive weight, as long as the roster stayed
+    illegal. Rebuilt on a FULLY LEGAL roster (1 starting QB, a backup QB,
+    and a complete starting lineup) so the QB2->QB3 comparison actually
+    isolates PRODUCTION_BENCH_WEIGHTS["third_qb"] == 0.00 (see item 15's
+    explicit "third QB produces zero depth value" requirement -- the
+    bench-weight retune that would have contradicted this was tried and
+    reverted, see legal_lineup.py's PRODUCTION_BENCH_WEIGHTS comment)."""
+    roster = _roster(
+        ("QB1", "QB", 1, 300), ("QB2", "QB", 1, 100),
+        ("RB1", "RB", 1, 200), ("RB2", "RB", 1, 190),
+        ("WR1", "WR", 1, 180), ("WR2", "WR", 1, 170), ("TE1", "TE", 1, 150),
+        ("RB3", "RB", 1, 140), ("WR3", "WR", 1, 130), ("TE2", "TE", 1, 120),
+    )
+    assert build_production_lineup(roster).lineup_is_legal is True
+
     before = build_production_lineup(roster).total_roster_utility
     after = build_production_lineup(roster + [("QB3", "QB", 1, 20)]).total_roster_utility
     assert after - before == pytest.approx(0.0, abs=1e-6)
+
+    # Same assertion against partial_lineup_value -- the function the live
+    # bid gate (mock_draft.auction._incremental_utility) actually calls.
+    before_partial = partial_lineup_value(roster)
+    after_partial = partial_lineup_value(roster + [("QB3", "QB", 1, 20)])
+    assert after_partial - before_partial == pytest.approx(0.0, abs=1e-6)
 
 
 def test_11_zero_utility_player_receives_no_bid_above_one_dollar():

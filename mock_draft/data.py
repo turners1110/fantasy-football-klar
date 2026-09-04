@@ -60,7 +60,7 @@ def load_pool_and_teams(snapshot_dir: str | Path = BASE_DIR / "output_mock_draft
 
     players = {}
     for _, row in prices.iterrows():
-        pts, is_real = points_for(row["player"], points_lookup, fallback_ratio, row["base_value"])
+        pts, is_real = points_for(row["player"], points_lookup, fallback_ratio, row["base_value"], row["position"])
         players[row["player"]] = Player(
             name=row["player"], position=row["position"], base_value=float(row["base_value"]),
             tier=int(row["tier"]), tier_size=int(row["tier_size"]), tier_rank=int(row["tier_rank"]),
@@ -75,7 +75,10 @@ def load_pool_and_teams(snapshot_dir: str | Path = BASE_DIR / "output_mock_draft
         roster = []
         for _, row in group.iterrows():
             price = float(row["keeper_price_2026"]) if pd.notna(row["keeper_price_2026"]) else 0.0
-            pts, _ = points_for(row["player"], points_lookup, fallback_ratio, row["salary_2025"] if pd.notna(row["salary_2025"]) else 0.0)
+            pts, _ = points_for(
+                row["player"], points_lookup, fallback_ratio,
+                row["salary_2025"] if pd.notna(row["salary_2025"]) else 0.0, row["position"],
+            )
             roster.append((row["player"], row["position"], price, pts))
         teams[team_name] = Team(
             name=team_name,
@@ -149,16 +152,19 @@ def load_confirmed_pool_and_teams(
     contaminated = prices[prices_before.isin(excluded_names)]
     prices, eligibility_audit = build_confirmed_veteran_auction_pool(
         prices, salaries, confirmed_keepers, roster=eligibility_roster,
-        # See classify_player_eligibility's docstring: without
-        # data/nflverse/player_stats_reg_2025.csv (absent in this
-        # environment), the strict default misclassifies real active
-        # veteran free agents as ineligible, shrinking the pool below
-        # what a 12-team/9-pick draft needs to complete. Opted in ONLY
-        # here (the mock-draft simulator, where pool depth matters more
-        # than excluding a rare false positive) -- run_valuation.py's real
-        # price sheet keeps the strict default. Documented, not silent:
-        # see outputs/auction_rebuild/audit/eligibility_path_reconciliation.csv.
-        fp_only_fallback_eligible=True,
+        # PHASE 3A: fp_only_fallback_eligible=True is no longer needed here.
+        # Phase 2B's fallback approximated "probably a real active player"
+        # from FantasyPros-rank presence alone (confidence 0.3) because
+        # nflverse debut data was the ONLY active-player evidence source
+        # wired in, and its file is absent in this environment. Phase 3A
+        # added real evidence sources instead (data/actuals_2025.csv,
+        # data/fantasy_data_last_year_clean.csv, data/projections_2026.csv
+        # -- see auction_model.auction_eligibility._active_player_registry_evidence),
+        # which correctly include real veterans like Mike Evans/Stefon
+        # Diggs/Courtland Sutton via genuine roster/production evidence.
+        # Both production paths now use the SAME strict default (False) --
+        # the documented divergence this flag existed for is gone.
+        fp_only_fallback_eligible=False,
     )
     prices = prices[["player", "position", "base_value"]]
 
@@ -170,7 +176,7 @@ def load_confirmed_pool_and_teams(
 
     players = {}
     for _, row in prices.iterrows():
-        pts, is_real = points_for(row["player"], points_lookup, fallback_ratio, row["base_value"])
+        pts, is_real = points_for(row["player"], points_lookup, fallback_ratio, row["base_value"], row["position"])
         players[row["player"]] = Player(
             name=row["player"], position=row["position"], base_value=float(row["base_value"]),
             tier=int(row["tier"]), tier_size=int(row["tier_size"]), tier_rank=int(row["tier_rank"]),
@@ -187,7 +193,7 @@ def load_confirmed_pool_and_teams(
         ]
         roster = []
         for _, kr in team_keepers.iterrows():
-            pts, _ = points_for(kr["player_name"], points_lookup, fallback_ratio, float(kr["keeper_cost"]))
+            pts, _ = points_for(kr["player_name"], points_lookup, fallback_ratio, float(kr["keeper_cost"]), kr["position"])
             roster.append((kr["player_name"], kr["position"], float(kr["keeper_cost"]), pts))
         teams[team_name] = Team(
             name=team_name,
