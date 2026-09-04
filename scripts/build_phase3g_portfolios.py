@@ -112,6 +112,8 @@ def main():
             ("PRIMARY_CONSERVATIVE", "P75_CONSERVATIVE", set()),
             ("FALLBACK_NO_ALLEN_RICE_MCLAURIN", "P50_WHOLE_DOLLAR", {"Josh Allen", "Rashee Rice", "Terry McLaurin"}),
             ("TE_CONTINGENCY_NO_KITTLE", "P50_WHOLE_DOLLAR", {"George Kittle"}),
+            ("NO_JOSH_ALLEN", "P50_WHOLE_DOLLAR", {"Josh Allen"}),
+            ("NO_RASHEE_RICE", "P50_WHOLE_DOLLAR", {"Rashee Rice"}),
         ]
 
         rows_for_file = []

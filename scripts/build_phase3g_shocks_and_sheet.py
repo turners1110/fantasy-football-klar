@@ -46,12 +46,14 @@ def build_pool_df(players, planning_prices, exclude, price_bump=None):
 
 
 def main():
+    budget_scenario = sys.argv[1] if len(sys.argv) > 1 else "primary"
+    scen_suffix = "223" if budget_scenario == "primary" else "221"
     planning_df = pd.read_csv(OUT_DIR / "selected_player_planning_prices.csv")
     planning_prices = {r["player"]: {"P50_WHOLE_DOLLAR": r["expected_planning_price"],
                                       "hard_max": r["safety_adjusted_hard_maximum"] if pd.notna(r["safety_adjusted_hard_maximum"]) else None}
                         for _, r in planning_df.iterrows()}
 
-    players, teams, _ = load_confirmed_pool_and_teams(budget_scenario="primary")
+    players, teams, _ = load_confirmed_pool_and_teams(budget_scenario=budget_scenario)
     sam = teams["Sam"]
     keepers_df = _keepers_to_exact_df(sam.roster)
 
@@ -119,7 +121,7 @@ def main():
                      "starting_point_change_vs_baseline": round(result.starting_points - baseline.starting_points, 2) if feasible else None,
                      "unused_cash": round(result.unused_cash, 2) if feasible else None, "solver_status": result.status})
 
-    with (OUT_DIR / "sam_portfolio_shock_tests.csv").open("w", newline="") as f:
+    with (OUT_DIR / f"sam_portfolio_shock_tests_{scen_suffix}.csv").open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         w.writeheader(); w.writerows(rows)
     print(f"wrote {len(rows)} shock rows")
@@ -160,7 +162,8 @@ def main():
                       else "Cross-budget ceiling gap resolved defensively -- see terry_mclaurin_ceiling_explanation.txt" if name == "Terry McLaurin"
                       else ""),
         })
-    pd.DataFrame(sheet_rows).to_csv(OUT_DIR / "sam_final_auction_sheet.csv", index=False)
+    if budget_scenario == "primary":
+        pd.DataFrame(sheet_rows).to_csv(OUT_DIR / "sam_final_auction_sheet.csv", index=False)
     print(f"wrote final auction sheet ({len(sheet_rows)} rows)")
 
 
