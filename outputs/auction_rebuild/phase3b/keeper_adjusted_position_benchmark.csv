@@ -1,0 +1,5 @@
+position,keepers_at_position,open_required_starter_slots,open_flex_demand,expected_bench_demand,auction_eligible_players,players_above_replacement,elite_players_available,league_cash_of_needy_teams,public_value_share,projection_value_share,historical_value_share,blended_target_share
+QB,5,7,0.0,2.4,47,13,11,1660.0,0.2279,0.0484,0.1155,0.1306
+RB,25,4,16.2,14.4,89,54,25,1022.0,0.2959,0.5079,0.4213,0.4084
+WR,32,1,16.2,14.4,119,54,36,274.0,0.382,0.3768,0.3896,0.3828
+TE,10,3,3.6,2.4,65,17,17,731.0,0.0942,0.0669,0.0736,0.0782

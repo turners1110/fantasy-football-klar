@@ -1,0 +1,5 @@
+position,player_count,players_with_projection,projection_coverage,mean_points,median_points,90th_percentile_points,maximum_points,replacement_points,VBD_mean,VBD_median,VBD_maximum
+QB,77,42,0.5455,196.22,244.27,289.2,328.82,258.88,7.28,0.0,69.94
+RB,125,98,0.784,104.74,76.27,209.25,296.35,68.64,50.69,7.62,227.71
+WR,190,144,0.7579,95.81,79.42,184.43,266.33,105.92,22.46,0.0,160.41
+TE,116,66,0.569,75.16,59.8,140.2,188.05,111.55,6.76,0.0,76.5

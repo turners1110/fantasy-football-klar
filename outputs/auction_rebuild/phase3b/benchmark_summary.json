@@ -1,0 +1,45 @@
+{
+  "league_budget": 3021.0,
+  "n_open_slots": 108,
+  "discretionary_cash": 2913.0,
+  "curves": {
+    "PUBLIC_AUCTION_VALUE": {
+      "status": "NOT_AVAILABLE",
+      "reason": "No external public dollar-value auction list exists anywhere in this repo (searched inputs/, data/, output*/). Not fabricated."
+    },
+    "PUBLIC_RANK_TIER": {
+      "status": "BUILT",
+      "matched_to_fantasypros": 310,
+      "unmatched": 10,
+      "top_12_share": 0.3159,
+      "top_24_share": 0.4685,
+      "position_spending": {
+        "QB": 470.72,
+        "RB": 611.2,
+        "TE": 194.51,
+        "WR": 789.02
+      },
+      "one_dollar_count": 0,
+      "maximum_price": 125.04,
+      "median_drafted_price": 13.85,
+      "total_spend": 2065.44,
+      "players_priced": 320
+    },
+    "EXISTING_PROJECTION_NEUTRAL": {
+      "status": "BUILT",
+      "top_12_share": 0.3065,
+      "top_24_share": 0.5178,
+      "position_spending": {
+        "QB": 175.0,
+        "RB": 1836.0,
+        "TE": 242.0,
+        "WR": 1362.0
+      },
+      "one_dollar_count": 0,
+      "maximum_price": 137.0,
+      "median_drafted_price": 22.0,
+      "total_spend": 3615.0,
+      "players_priced": 418
+    }
+  }
+}

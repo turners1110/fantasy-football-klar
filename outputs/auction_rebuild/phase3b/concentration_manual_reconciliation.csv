@@ -1,0 +1,109 @@
+player,position,winning_team,sale_price,bidder_count,rank_by_price,cumulative_spend,cumulative_share,in_top_12,in_top_24
+Jaylen Warren,RB,James,256.32,12,1,256.32,0.089,True,True
+Bhayshul Tuten,RB,Travis,256.0,12,2,512.32,0.1778,True,True
+Jacory Croskey-Merritt,RB,CJ,234.36111111111114,12,3,746.68,0.2592,True,True
+Josh Jacobs,RB,Reid,202.0,11,4,948.68,0.3293,True,True
+Rashee Rice,WR,Shane,202.0,11,5,1150.68,0.3995,True,True
+Jaylen Waddle,WR,Jason,177.0,11,6,1327.68,0.4609,True,True
+DeVonta Smith,WR,Brandon,116.0,11,7,1443.68,0.5012,True,True
+Tee Higgins,WR,Shane,76.02543888888891,11,8,1519.71,0.5276,True,True
+James Cook,RB,Evan,72.5398888888889,10,9,1592.25,0.5527,True,True
+Jordan Mason,RB,Ryan J,69.79463678576761,10,10,1662.04,0.577,True,True
+RJ Harvey,RB,Coby,61.0,10,11,1723.04,0.5981,True,True
+DJ Moore,WR,Brandon,61.0,11,12,1784.04,0.6193,True,True
+Deebo Samuel,WR,Evan,60.66566666666667,9,13,1844.71,0.6404,False,True
+Bucky Irving,RB,Coby,60.44711111111111,8,14,1905.15,0.6614,False,True
+Zach Charbonnet,RB,Ryan J,51.89934833999672,9,15,1957.05,0.6794,False,True
+JK Dobbins,RB,Reid,51.0,9,16,2008.05,0.6971,False,True
+Bill Croskey-Merritt,RB,Brad,48.740799909856065,9,17,2056.79,0.714,False,True
+DK Metcalf,WR,Sam,47.52377777777778,9,18,2104.32,0.7305,False,True
+Chuba Hubbard,RB,Brad,47.459055840834054,8,19,2151.78,0.747,False,True
+Terry McLaurin,WR,Coby,45.79,9,20,2197.57,0.7629,False,True
+Tony Pollard,RB,Coby,45.79,9,21,2243.36,0.7788,False,True
+Kenny Gainwell,RB,Coby,45.79,8,22,2289.15,0.7947,False,True
+Jonathon Brooks,RB,Evan,38.59731111111111,8,23,2327.74,0.8081,False,True
+Aaron Jones Sr,RB,Brad,35.68,8,24,2363.42,0.8204,False,True
+Davante Adams,WR,Sam,34.68,9,25,2398.1,0.8325,False,False
+Austin Ekeler,RB,Brad,29.064032,8,26,2427.17,0.8426,False,False
+Tyler Allgeier,RB,Ryan J,27.0,8,27,2454.17,0.8519,False,False
+Joe Burrow,QB,Ryan J,26.021366666666665,8,28,2480.19,0.861,False,False
+TJ Hockenson,TE,James,25.71888888888889,9,29,2505.91,0.8699,False,False
+Matthew Golden,WR,Sam,24.798771111111115,8,30,2530.71,0.8785,False,False
+Travis Etienne,RB,Jason,23.64,9,31,2554.35,0.8867,False,False
+KC Concepcion,WR,Brad,23.613566666666667,9,32,2577.96,0.8949,False,False
+Rachaad White,RB,CJ,22.64,7,33,2600.6,0.9028,False,False
+Chris Godwin Jr,WR,Sam,19.996944444444445,8,34,2620.6,0.9097,False,False
+Nick Chubb,RB,Ryan J,19.351865000000004,6,35,2639.95,0.9164,False,False
+Mike Evans,WR,Sam,17.467475555555556,8,36,2657.42,0.9225,False,False
+Josh Downs,WR,Shane,17.150753666666667,6,37,2674.57,0.9285,False,False
+Jakobi Meyers,WR,Ryan J,15.773772222222224,5,38,2690.34,0.9339,False,False
+Brian Robinson Jr,RB,Brad,15.0,6,39,2705.34,0.9391,False,False
+Romeo Doubs,WR,Sam,13.661708888888889,6,40,2719.0,0.9439,False,False
+Josh Allen,QB,Brad,13.18,6,41,2732.18,0.9485,False,False
+Travis Kelce,TE,Brad,12.609387777777776,7,42,2744.79,0.9528,False,False
+Mark Andrews,TE,Shane,12.488666666666667,6,43,2757.28,0.9572,False,False
+Keaton Mitchell,RB,Sam,11.0,5,44,2768.28,0.961,False,False
+Jalen Hurts,QB,Coby,8.19,4,45,2776.47,0.9638,False,False
+Michael Pittman Jr,WR,Ryan J,6.590303333333333,4,46,2783.06,0.9661,False,False
+Courtland Sutton,WR,Ryan J,6.0,5,47,2789.06,0.9682,False,False
+Khalil Shakir,WR,Ryan J,6.0,5,48,2795.06,0.9703,False,False
+Stefon Diggs,WR,Shane,5.51954,3,49,2800.58,0.9722,False,False
+Alvin Kamara,RB,Coby,4.99,3,50,2805.57,0.9739,False,False
+Lamar Jackson,QB,Evan,4.0,3,51,2809.57,0.9753,False,False
+Isiah Pacheco,RB,Evan,4.0,3,52,2813.57,0.9767,False,False
+Tyrone Tracy Jr,RB,Shane,3.005304888888889,4,53,2816.58,0.9778,False,False
+Ricky Pearsall,WR,Shane,2.3718222222222223,4,54,2818.95,0.9786,False,False
+Dallas Goedert,TE,Sam,2.2555555555555555,4,55,2821.2,0.9794,False,False
+AD Mitchell,WR,Shane,2.0131944444444443,4,56,2823.22,0.9801,False,False
+George Kittle,TE,Shane,1.7569066666666668,3,57,2824.97,0.9807,False,False
+Justin Herbert,QB,Jason,1.6466666666666667,3,58,2826.62,0.9812,False,False
+Mike Washington Jr.,RB,James,1.625,3,59,2828.25,0.9818,False,False
+Dalton Kincaid,TE,James,1.6033333333333335,2,60,2829.85,0.9824,False,False
+Ray Davis,RB,James,1.5816666666666668,2,61,2831.43,0.9829,False,False
+CJ Stroud,QB,James,1.5358933333333333,2,62,2832.97,0.9834,False,False
+Jayden Higgins,WR,Jason,1.4400000000000004,2,63,2834.41,0.9839,False,False
+Braelon Allen,RB,James,1.353928888888889,3,64,2835.76,0.9844,False,False
+Jayden Daniels,QB,Jason,1.2722222222222221,3,65,2837.03,0.9849,False,False
+Dylan Sampson,RB,James,1.2277777777777779,3,66,2838.26,0.9853,False,False
+Jajuan Jennings,WR,James,1.211111111111111,2,67,2839.47,0.9857,False,False
+Dak Prescott,QB,Evan,1.1900000000000004,2,68,2840.66,0.9861,False,False
+Geno Smith,QB,Brad,1.0,1,69,2841.66,0.9865,False,False
+Riley Leonard,QB,Brandon,1.0,1,70,2842.66,0.9868,False,False
+Anthony Richardson Sr.,QB,Coby,1.0,1,71,2843.66,0.9872,False,False
+Joe Flacco,QB,Sam,1.0,1,72,2844.66,0.9875,False,False
+Jake Ferguson,TE,Jason,1.0,1,73,2845.66,0.9879,False,False
+Isaiah Likely,TE,Reid,1.0,1,74,2846.66,0.9882,False,False
+Jordan Love,QB,Brandon,1.0,1,75,2847.66,0.9885,False,False
+Xavier Worthy,WR,Coby,1.0,1,76,2848.66,0.9889,False,False
+Tyrod Taylor,QB,CJ,1.0,1,77,2849.66,0.9892,False,False
+Kimani Vidal,RB,Travis,1.0,1,78,2850.66,0.9896,False,False
+Cooper Kupp,WR,Jason,1.0,1,79,2851.66,0.9899,False,False
+Dalton Schultz,TE,Evan,1.0,1,80,2852.66,0.9903,False,False
+Bryce Young,QB,Reid,1.0,1,81,2853.66,0.9906,False,False
+Brenton Strange,TE,Brandon,1.0,1,82,2854.66,0.991,False,False
+Marcus Mariota,QB,CJ,1.0,1,83,2855.66,0.9913,False,False
+Tank Bigsby,RB,Travis,1.0,1,84,2856.66,0.9917,False,False
+Juwan Johnson,TE,Jason,1.0,1,85,2857.66,0.992,False,False
+James Conner,RB,Evan,1.0,1,86,2858.66,0.9924,False,False
+Chris Rodriguez Jr,RB,Reid,1.0,1,87,2859.66,0.9927,False,False
+Christian Kirk,WR,Brandon,1.0,1,88,2860.66,0.9931,False,False
+De'Zhaun Stribling,WR,CJ,1.0,1,89,2861.66,0.9934,False,False
+Justin Fields,QB,Travis,1.0,1,90,2862.66,0.9938,False,False
+Ryan Flournoy,WR,Jason,1.0,1,91,2863.66,0.9941,False,False
+Keenan Allen,WR,Evan,1.0,1,92,2864.66,0.9944,False,False
+Chig Okonkwo,TE,Brandon,1.0,1,93,2865.66,0.9948,False,False
+Justice Hill,RB,Brandon,1.0,1,94,2866.66,0.9951,False,False
+Samaje Perine,RB,CJ,1.0,1,95,2867.66,0.9955,False,False
+Patrick Mahomes,QB,Travis,1.0,1,96,2868.66,0.9958,False,False
+Rashid Shaheed,WR,Reid,1.0,1,97,2869.66,0.9962,False,False
+Rashod Bateman,WR,CJ,1.0,1,98,2870.66,0.9965,False,False
+Devin Neal,RB,Travis,1.0,1,99,2871.66,0.9969,False,False
+Chris Brooks,RB,Brandon,1.0,1,100,2872.66,0.9972,False,False
+Trey Benson,RB,CJ,1.0,1,101,2873.66,0.9976,False,False
+Kaelon Black,RB,Reid,1.0,1,102,2874.66,0.9979,False,False
+Tre Tucker,WR,Travis,1.0,1,103,2875.66,0.9983,False,False
+Keon Coleman,WR,Reid,1.0,1,104,2876.66,0.9986,False,False
+Pat Bryant,WR,CJ,1.0,1,105,2877.66,0.999,False,False
+Adonai Mitchell,WR,Travis,1.0,1,106,2878.66,0.9993,False,False
+Emanuel Wilson,RB,Reid,1.0,1,107,2879.66,0.9997,False,False
+LeQuint Allen Jr.,RB,Travis,1.0,1,108,2880.66,1.0,False,False

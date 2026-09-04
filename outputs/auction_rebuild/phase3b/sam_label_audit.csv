@@ -1,0 +1,9 @@
+player,position,projected_points,public_rank,public_tier,public_position_rank,assumed_purchase_price,draft_probability,n_sale_observations,market_price_p50,market_price_p75,marginal_lineup_points_UNITS_ARE_UTILITY_POINTS_NOT_DOLLARS,marginal_roster_utility_UNITS_ARE_UTILITY_POINTS_NOT_DOLLARS,budget_after_purchase_dollars,remaining_roster_slots_after_purchase
+Geno Smith,QB,177.54,210,11,QB29,0.0,0.2833,17,1.0,1.0,13.32,13.32,223.0,8
+Dak Prescott,QB,278.54,74,7,QB9,7.0,1.0,60,3.03,6.53,25.9,25.9,216.0,8
+Josh Allen,QB,328.82,27,4,QB1,40.0,1.0,60,21.95,33.92,76.18,76.18,183.0,8
+Rashee Rice,WR,197.11,25,4,WR14,72.0,1.0,60,53.62,70.6,197.11,197.11,151.0,8
+TJ Hockenson,TE,103.35,175,10,TE21,43.0,1.0,60,19.89,29.45,103.35,103.35,180.0,8
+Josh Jacobs,RB,189.35,48,5,RB18,126.0,1.0,60,201.5,259.5,189.35,189.35,97.0,8
+Terry McLaurin,WR,173.93,47,5,WR23,57.0,1.0,60,36.35,44.98,173.93,173.93,166.0,8
+Bucky Irving,RB,175.8,60,6,RB21,102.0,1.0,60,122.61,211.25,175.8,175.8,121.0,8
