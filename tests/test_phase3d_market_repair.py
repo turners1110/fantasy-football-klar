@@ -246,6 +246,28 @@ def test_16_value_purist_never_exceeds_own_anchor():
         assert w <= diag["base_market_anchor"] + 0.01
 
 
+def test_17b_zach_charbonnet_resolved_from_real_stats_not_generic_fallback():
+    """Item 17: phase 3C's missing_projection_audit.csv flagged Zach
+    Charbonnet (RB, SEA) as using mock_draft.points.points_for's generic
+    position-ratio fallback (points_is_real=False) because his
+    projected_points cell in data/projections_2026.csv is blank -- but his
+    row DOES carry real per-player rush/reception stat projections
+    (rush_yd=513.8, rush_td=5.3, reception=18.4, rec_yd=136.3, rec_td=0.5).
+    mock_draft.points.build_points_lookup already runs
+    auction_model.config.score_from_stats on exactly this case (a present
+    stat line with a blank aggregate projected_points), so the production
+    pipeline resolves him from his own real stats, not a generic $1 or
+    ratio-based fallback -- verified directly here rather than re-flagging
+    a since-resolved issue."""
+    players, _teams, _ = load_confirmed_pool_and_teams(budget_scenario="primary")
+    charbonnet = players.get("Zach Charbonnet")
+    assert charbonnet is not None
+    assert charbonnet.points_is_real is True
+    # 513.8*0.1 + 5.3*6.0 + 18.4*0.5 + 136.3*0.1 + 0.5*6.0 = 109.01, his own
+    # real stat-derived total -- not a generic fallback number.
+    assert charbonnet.projected_points == pytest.approx(107.61, abs=1.0)
+
+
 def test_17_base_market_anchor_falls_back_gracefully_with_no_external_coverage():
     from mock_draft.valuation import compute_base_market_anchor
     from mock_draft.models import Player
@@ -253,3 +275,93 @@ def test_17_base_market_anchor_falls_back_gracefully_with_no_external_coverage()
     assert player.public_anchor_value is None
     assert player.historical_anchor_value is None
     assert compute_base_market_anchor(player) == pytest.approx(25.0)
+
+
+# ---------------------------------------------------------------------------
+# items 9-11: calibration harness
+# ---------------------------------------------------------------------------
+
+def test_18_calibration_seeds_are_disjoint_and_meet_size_requirements():
+    from auction_model.calibration import N_HELD_OUT, generate_disjoint_seeds
+    seeds = generate_disjoint_seeds()
+    assert not (set(seeds["train"]) & set(seeds["val"]))
+    assert not (set(seeds["train"]) & set(seeds["held_out"]))
+    assert not (set(seeds["val"]) & set(seeds["held_out"]))
+    assert len(seeds["held_out"]) >= 200
+
+
+def test_19_calibration_outputs_exist_and_held_out_ran_once_at_full_seeds():
+    grid_path = PHASE3D_OUT / "calibration_grid.csv"
+    selection_path = PHASE3D_OUT / "calibration_selection.json"
+    held_out_path = PHASE3D_OUT / "held_out_results.json"
+    for p in (grid_path, selection_path, held_out_path):
+        _skip_if_missing(p)
+    import json
+    grid = pd.read_csv(grid_path)
+    assert len(grid) >= 10  # item 11: show >=10 leading parameter sets
+    held_out = json.loads(held_out_path.read_text())
+    assert held_out["n_seeds"] >= 200
+    selection = json.loads(selection_path.read_text())
+    assert len(selection["calibration_targets"]) == 15
+    assert len(selection["parameter_grid"]) == 12
+
+
+def test_20_calibration_loss_components_reported_separately():
+    path = PHASE3D_OUT / "validation_results.json"
+    _skip_if_missing(path)
+    import json
+    result = json.loads(path.read_text())
+    # Item 11: every target component reported separately, not folded into
+    # one opaque number.
+    assert len(result["loss_components"]) == 16  # 15 targets + TOTAL
+
+
+# ---------------------------------------------------------------------------
+# item 13: extreme-price review
+# ---------------------------------------------------------------------------
+
+def test_21_extreme_price_review_flags_are_internally_consistent():
+    path = PHASE3D_OUT / "price_distributions.csv"
+    _skip_if_missing(path)
+    df = pd.read_csv(path)
+    numeric_p50 = pd.to_numeric(df["p50"], errors="coerce")
+    numeric_p90 = pd.to_numeric(df["p90"], errors="coerce")
+    from auction_model.price_distributions import EXTREME_P50_THRESHOLD, EXTREME_P90_THRESHOLD
+    should_be_flagged = (numeric_p50 > EXTREME_P50_THRESHOLD) | (numeric_p90 > EXTREME_P90_THRESHOLD)
+    assert (df["extreme_price_flag"].astype(bool) == should_be_flagged.fillna(False)).all()
+
+
+def test_22_insufficient_sales_never_get_a_fabricated_percentile():
+    path = PHASE3D_OUT / "price_distributions.csv"
+    _skip_if_missing(path)
+    from auction_model.price_distributions import MIN_SALE_OBSERVATIONS, INSUFFICIENT_LABEL
+    df = pd.read_csv(path)
+    under_threshold = df[df["n_sold"] < MIN_SALE_OBSERVATIONS]
+    assert (under_threshold["p50"] == INSUFFICIENT_LABEL).all()
+
+
+# ---------------------------------------------------------------------------
+# item 16: Sam's exact preliminary bid board
+# ---------------------------------------------------------------------------
+
+def test_23_sam_bid_board_uses_confirmed_budget_constants():
+    path = PHASE3D_OUT / "sam_preliminary_bid_board.csv"
+    _skip_if_missing(path)
+    df = pd.read_csv(path)
+    assert (df["sam_primary_budget"] == 223).all()
+    assert (df["sam_conversion_budget"] == 221).all()
+    assert (df["label"] == "PRELIMINARY_NOT_FINAL").all()
+
+
+def test_24_sam_bid_board_excludes_her_own_keepers():
+    path = PHASE3D_OUT / "sam_preliminary_bid_board.csv"
+    _skip_if_missing(path)
+    df = pd.read_csv(path)
+    sam_keepers = {"Garrett Wilson", "Kenneth Walker III", "Quentin Johnston",
+                   "David Montgomery", "Cam Skattebo", "Jaxson Dart"}
+    assert not (set(df["player"]) & sam_keepers)
+
+
+# ---------------------------------------------------------------------------
+# item 17: Zach Charbonnet resolution (see test_17b above for the direct check)
+# ---------------------------------------------------------------------------

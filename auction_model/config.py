@@ -180,26 +180,36 @@ REPLACEMENT_METHOD = EXACT_LEAGUEWIDE_ALLOCATION
 # bound, not a per-player-type special case like the old star-ceiling
 # branch was.
 #
-# PRE-CALIBRATION DEFAULTS: every value below is a starting point only,
-# marked as such per the phase-3D spec's own instruction ("values to be
-# set via calibration, not manually") -- auction_model.calibration (item
-# 9-11) is the authority that actually tunes them against real targets.
-# These defaults exist so the model runs (and its own tests pass) before
-# that harness has been run, not as a substitute for calibration.
+# CALIBRATED (phase 3D items 9-11, auction_model/calibration.py): these
+# values were selected by a 20-candidate random-sampled search over
+# outputs/auction_rebuild/phase3d/calibration_grid.csv, chosen using
+# training+validation loss only (2.750 / 2.736), then confirmed on a
+# disjoint 200-seed held-out set the winner had never been evaluated
+# against during selection (held-out loss 2.743 -- close to train/val,
+# i.e. not overfit to the search seeds). See
+# outputs/auction_rebuild/phase3d/calibration_selection.json and
+# held_out_results.json for the full per-target breakdown. NOT a perfect
+# fit -- 7 of 15 calibration targets are fully met (all four position
+# spend shares, uncontested rate, extreme-price rate, total-spend ratio)
+# and top-12/24 concentration improved substantially (47.3%->38.9%,
+# 71.6%->61.7% on held-out seeds) but still sits just outside its target
+# range; avg_bidder_count and anchor-alignment error remain outside range
+# too. Reported honestly rather than re-widening ranges to force a pass
+# (item 12's own explicit instruction).
 # ---------------------------------------------------------------------------
-BASE_ANCHOR_WEIGHT_PUBLIC = 0.35
-BASE_ANCHOR_WEIGHT_HISTORICAL = 0.25
-BASE_ANCHOR_WEIGHT_PROJECTION_NEUTRAL = 0.40
+BASE_ANCHOR_WEIGHT_PUBLIC = 0.2
+BASE_ANCHOR_WEIGHT_HISTORICAL = 0.15
+BASE_ANCHOR_WEIGHT_PROJECTION_NEUTRAL = 0.65
 
 MAX_ROSTER_FIT_ADJUSTMENT = 15.0
-MAX_SCARCITY_ADJUSTMENT = 15.0
-MAX_TIER_ADJUSTMENT = 15.0
+MAX_SCARCITY_ADJUSTMENT = 25.0
+MAX_TIER_ADJUSTMENT = 8.0
 MAX_BUDGET_STATE_ADJUSTMENT = 10.0
-MAX_FUTURE_ALTERNATIVES_ADJUSTMENT = 10.0
-MAX_ARCHETYPE_ADJUSTMENT = 20.0
-MAX_NOISE_ADJUSTMENT = 10.0
-MAX_TOTAL_PREMIUM_OVER_ANCHOR = 60.0
-MAX_TOTAL_DISCOUNT_BELOW_ANCHOR = 40.0
+MAX_FUTURE_ALTERNATIVES_ADJUSTMENT = 18.0
+MAX_ARCHETYPE_ADJUSTMENT = 10.0
+MAX_NOISE_ADJUSTMENT = 18.0
+MAX_TOTAL_PREMIUM_OVER_ANCHOR = 15.0
+MAX_TOTAL_DISCOUNT_BELOW_ANCHOR = 70.0
 
 
 # ---------------------------------------------------------------------------
