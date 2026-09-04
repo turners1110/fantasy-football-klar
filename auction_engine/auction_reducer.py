@@ -73,6 +73,7 @@ def apply_event(state: AuctionState, event: AuctionEvent) -> AuctionState:
         team.roster.append({
             "player_id": player_id, "display_name": p["display_name"], "position": p["position"],
             "price": price, "is_keeper": False,
+            "projected_points": p.get("projected_points", 0.0),  # optional; live_values needs this for lineup math
         })
         new_state.sold_players[player_id] = {
             "winning_owner": winner, "sale_price": price, "nominating_owner": p.get("nominating_owner"),
