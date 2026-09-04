@@ -204,3 +204,26 @@ python3 scripts/build_phase3c_sam_exact_shortlist.py
 4. **Build the hybrid exact/approximate counterfactual solver** (item 13) -- needed before any broad-pool bid-ceiling claim can be trusted.
 5. **Extend price-distribution and Sam-shortlist coverage to the full required scope** once the above are in place -- calibrating or publishing prices against a market that's still known to be over-concentrated would just formalize the wrong answer.
 6. If pursuing better public-value coverage, a human with direct browser access should complete `data/external/auction_values_2026/manual_import_template.csv` from the sources this session's WebFetch could not reach.
+
+
+---
+
+## LABEL CORRECTION NOTICE (added retroactively, Phase 3G)
+
+This report predates Phase 3D's price-label taxonomy fix
+(`auction_model/labels.py`). Any dollar figure in this report that was
+described in generic terms ("simulated price," "market value," "bid
+ceiling," etc.) should be re-read under the corrected, mutually-exclusive
+label set introduced in Phase 3D and still in force as of Phase 3G:
+`UNCALIBRATED_SIMULATED_PRICE`, `CALIBRATED_EXPECTED_MARKET_PRICE`,
+`PUBLIC_AUCTION_ANCHOR`, `HISTORICAL_LEAGUE_PRICE`, `TEAM_SPECIFIC_VALUE`,
+`EXACT_TEAM_BID_CEILING`, `APPROXIMATE_TEAM_BID_CEILING`. In particular,
+every simulated price figure quoted in this report should be treated as
+`UNCALIBRATED_SIMULATED_PRICE` (this report predates any calibration
+validation) unless a later phase's report explicitly re-labels a specific
+number as `CALIBRATED_EXPECTED_MARKET_PRICE`. See
+`outputs/auction_rebuild/phase3e/circularity_audit.csv` and
+`outputs/auction_rebuild/phase3e/calibration_target_provenance.csv` for
+why calibration status still matters for every number in this document.
+This notice does not change any number in the report above; it only
+corrects which label applies to it.
