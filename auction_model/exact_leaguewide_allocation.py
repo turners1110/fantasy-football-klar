@@ -172,8 +172,16 @@ def solve_exact_leaguewide_allocation(
             bench_terms.append(pts * BENCH_WEIGHT * (on_roster - starter_indicator))
     prob += pulp.lpSum(starter_terms) + pulp.lpSum(bench_terms)
 
-    solver = pulp.PULP_CBC_CMD(msg=0, timeLimit=time_limit)
-    prob.solve(solver)
+    solved = False
+    for solver in (pulp.HiGHS(msg=0, timeLimit=time_limit), pulp.PULP_CBC_CMD(msg=0, timeLimit=time_limit)):
+        try:
+            prob.solve(solver)
+            solved = True
+            break
+        except Exception:
+            continue
+    if not solved:
+        warnings.append("no usable MIP solver backend available (HiGHS and CBC both failed)")
     status = pulp.LpStatus[prob.status]
     if status == "Optimal":
         result_status = "OPTIMAL"
