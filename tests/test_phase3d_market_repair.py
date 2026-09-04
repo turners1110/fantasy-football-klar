@@ -365,3 +365,80 @@ def test_24_sam_bid_board_excludes_her_own_keepers():
 # ---------------------------------------------------------------------------
 # item 17: Zach Charbonnet resolution (see test_17b above for the direct check)
 # ---------------------------------------------------------------------------
+
+
+def test_25_historical_anchor_rescale_factor_is_reasonable():
+    """Sanity bound on auction_model.historical_anchor's single rescale
+    scalar -- a wildly extreme factor (e.g. >10x or <0.1x) would signal a
+    unit-mismatch bug like the one found and fixed in public_anchor.py."""
+    from auction_model.historical_anchor import build_historical_league_anchor
+    players, _teams, _ = load_confirmed_pool_and_teams(budget_scenario="primary")
+    live_budget_total = 3021.0
+    df = build_historical_league_anchor(players, live_budget_total)
+    factor = df.attrs["rescale_factor"]
+    assert 0.1 <= factor <= 10.0, factor
+    assert df.attrs["n_matched"] > 0
+
+
+def test_26_willingness_and_sale_price_never_below_min_price():
+    from auction_model import config as cfg
+    from mock_draft.auction import run_single_auction
+    players, teams, _ = load_confirmed_pool_and_teams(budget_scenario="primary")
+    rng = np.random.default_rng(7)
+    log, _ = run_single_auction(players, teams, rng)
+    assert log
+    for e in log:
+        assert e["sale_price"] >= cfg.MIN_PRICE - 1e-6
+
+
+def test_27_calibration_held_out_not_overfit_to_search_seeds():
+    """Item 10's whole point: held-out score should be in the same
+    ballpark as training/validation, not dramatically worse -- if it were,
+    the search would have overfit to its 40+40 search seeds."""
+    path = PHASE3D_OUT / "held_out_results.json"
+    selection_path = PHASE3D_OUT / "calibration_selection.json"
+    _skip_if_missing(path)
+    _skip_if_missing(selection_path)
+    import json
+    held_out_loss = json.loads(path.read_text())["loss_total"]
+    selection = json.loads(selection_path.read_text())
+    val_loss = selection["validation_score"]
+    # Held-out loss shouldn't be more than double the validation loss --
+    # a much looser bound than train==val would need, since held-out runs
+    # on a completely different, larger (200 vs 40) seed sample.
+    assert held_out_loss <= max(2.0 * val_loss, val_loss + 2.0)
+
+
+def test_28_extreme_price_review_csv_has_valid_verdicts():
+    path = PHASE3D_OUT / "extreme_price_review.csv"
+    _skip_if_missing(path)
+    df = pd.read_csv(path)
+    if len(df):
+        assert set(df["extreme_price_review_verdict"]).issubset(
+            {"SUPPORTED_BY_INDEPENDENT_ANCHOR", "NOT_SUPPORTED_REVIEW_REQUIRED"}
+        )
+        assert df["extreme_price_flag"].all()
+
+
+def test_29_sam_bid_board_covers_a_meaningful_number_of_actionable_players():
+    path = PHASE3D_OUT / "sam_preliminary_bid_board.csv"
+    _skip_if_missing(path)
+    df = pd.read_csv(path)
+    # Actionable scope (item 16) is P50>=$20 union top-20 WR/top-15 RB/
+    # top-15 TE/top-10 QB -- comfortably more than a handful of players.
+    assert len(df) >= 10
+
+
+def test_30_sam_bid_board_percentile_surplus_is_monotonic_non_increasing_in_price():
+    """A higher purchase price can never increase Sam's exact roster-value
+    surplus for the SAME player (holding her roster/budget context fixed)
+    -- P90's surplus must never exceed P25's for the same player."""
+    path = PHASE3D_OUT / "sam_preliminary_bid_board.csv"
+    _skip_if_missing(path)
+    df = pd.read_csv(path)
+    violations = 0
+    for _, row in df.iterrows():
+        p25, p90 = row.get("p25_exact_surplus"), row.get("p90_exact_surplus")
+        if pd.notna(p25) and pd.notna(p90) and p90 > p25 + 1e-6:
+            violations += 1
+    assert violations == 0
