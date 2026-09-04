@@ -1,7 +1,7 @@
 {
   "keeper_mode": "confirmed",
   "keepers_file": "/home/user/fantasy-football-klar/data/keepers_2026_confirmed.csv",
-  "budget_adjustments_file": "/tmp/neg_budget_adj2.csv",
+  "budget_adjustments_file": "/home/user/fantasy-football-klar/data/team_budget_adjustments_2026.csv",
   "salaries_file": "/home/user/fantasy-football-klar/data/historical_salaries_2025_raw.csv",
   "fantasypros_rankings_file": "/home/user/fantasy-football-klar/FantasyPros_2026_Draft_ALL_Rankings.csv",
   "projections_file": "/home/user/fantasy-football-klar/data/projections_2026.csv",
@@ -11,10 +11,10 @@
   "sum_primary_auction_budget": 3021,
   "sum_confirmed_keeper_spend": 1734.0,
   "outputs": {
-    "veteran_auction_price_sheet": "/tmp/neg_test2/veteran_auction_price_sheet.csv",
-    "keepers_2026": "/tmp/neg_test2/keepers_2026.csv",
+    "veteran_auction_price_sheet": "/tmp/clean_confirmed_run/veteran_auction_price_sheet.csv",
+    "keepers_2026": "/tmp/clean_confirmed_run/keepers_2026.csv",
     "team_starting_states": "/home/user/fantasy-football-klar/outputs/auction_rebuild/data/team_starting_states.csv",
     "eligibility_audit": "/home/user/fantasy-football-klar/outputs/auction_rebuild/audit/run_valuation_eligibility_audit.csv"
   },
-  "rerun_command": "python3 run_valuation.py --keeper-mode confirmed --keepers-file data/keepers_2026_confirmed.csv --budget-adjustments-file /tmp/neg_budget_adj2.csv"
+  "rerun_command": "python3 run_valuation.py --keeper-mode confirmed --keepers-file data/keepers_2026_confirmed.csv --budget-adjustments-file data/team_budget_adjustments_2026.csv"
 }
