@@ -1,0 +1,73 @@
+{
+  "retrieval_date": "2026-09-04",
+  "attempted_sources": [
+    {
+      "source": "2026 Fantasy Football Auction Values",
+      "url": "https://www.rotowire.com/football/auction-values.php",
+      "status": "EGRESS_BLOCKED",
+      "reason": "EGRESS_BLOCKED by this execution environment's network proxy -- confirmed as a total restriction (tested against espn.com, an unrelated domain, with identical result), not a per-source failure."
+    },
+    {
+      "source": "Free 2026 Fantasy Football Auction Values - $200 Budget",
+      "url": "https://www.fantasynerds.com/nfl/auction",
+      "status": "EGRESS_BLOCKED",
+      "reason": "EGRESS_BLOCKED by this execution environment's network proxy -- confirmed as a total restriction (tested against espn.com, an unrelated domain, with identical result), not a per-source failure."
+    },
+    {
+      "source": "2026 Fantasy Football Auction Values ($200 Budget)",
+      "url": "https://www.rotoalpha.com/nfl/auction-values",
+      "status": "EGRESS_BLOCKED",
+      "reason": "EGRESS_BLOCKED by this execution environment's network proxy -- confirmed as a total restriction (tested against espn.com, an unrelated domain, with identical result), not a per-source failure."
+    },
+    {
+      "source": "Fantasy Football Auction Values Calculator \u2014 RotoAlpha",
+      "url": "https://www.rotoalpha.com/tools/auction-values",
+      "status": "EGRESS_BLOCKED",
+      "reason": "EGRESS_BLOCKED by this execution environment's network proxy -- confirmed as a total restriction (tested against espn.com, an unrelated domain, with identical result), not a per-source failure."
+    },
+    {
+      "source": "Free Fantasy Football Auction Value Calculator 2026 \u00b7 DraftExpert Pro",
+      "url": "https://draftexpertpro.com/tools/auction-calculator",
+      "status": "EGRESS_BLOCKED",
+      "reason": "EGRESS_BLOCKED by this execution environment's network proxy -- confirmed as a total restriction (tested against espn.com, an unrelated domain, with identical result), not a per-source failure."
+    },
+    {
+      "source": "2026 Fantasy Football Auction Values: Dollar Values For Every Player",
+      "url": "https://propsbot.ai/fantasy-football-auction-values/",
+      "status": "EGRESS_BLOCKED",
+      "reason": "EGRESS_BLOCKED by this execution environment's network proxy -- confirmed as a total restriction (tested against espn.com, an unrelated domain, with identical result), not a per-source failure."
+    },
+    {
+      "source": "Fantasy Football 2026 Salary Cap/Auction Values - Footballguys",
+      "url": "https://www.footballguys.com/salary-cap-auction-values",
+      "status": "EGRESS_BLOCKED",
+      "reason": "EGRESS_BLOCKED by this execution environment's network proxy -- confirmed as a total restriction (tested against espn.com, an unrelated domain, with identical result), not a per-source failure."
+    },
+    {
+      "source": "Quarterback and Tight End Pricing In 2026 Auctions - Yahoo Sports",
+      "url": "https://sports.yahoo.com/articles/quarterback-tight-end-pricing-2026-090711008.html",
+      "status": "EGRESS_BLOCKED",
+      "reason": "EGRESS_BLOCKED by this execution environment's network proxy -- confirmed as a total restriction (tested against espn.com, an unrelated domain, with identical result), not a per-source failure."
+    }
+  ],
+  "successful_retrieval_method": "WebSearch tool (result synthesis across cited sources, not a verbatim single-page scrape) -- see websearch_consensus_2026.json for the raw saved snapshot and full disclosure of this method's limitations.",
+  "coverage": {
+    "players_with_public_value": 34,
+    "position_breakdown": {
+      "RB": 12,
+      "WR": 12,
+      "QB": 5,
+      "TE": 5
+    },
+    "label": "PARTIAL -- top-tier players only (33 of ~320 auction-eligible players), consensus-level confidence, not a full-pool authoritative source."
+  },
+  "manual_import_template": "data/external/auction_values_2026/manual_import_template.csv",
+  "position_spend_share_consensus_cited": {
+    "source_note": "One cited source's own stated budget-allocation rule of thumb, not independently re-derived by this session",
+    "RB": 0.45,
+    "WR": 0.38,
+    "QB": 0.06,
+    "TE": 0.07,
+    "remaining_bench_K_DST": 0.04
+  }
+}

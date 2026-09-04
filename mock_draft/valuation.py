@@ -34,11 +34,25 @@ def _position_fit_multiplier(team: Team, player: Player, archetype: Archetype) -
     return 1.3 if current_share < target else 0.4
 
 
-def compute_willingness(team: Team, player: Player, rng: np.random.Generator, draft_progress: float = 0.0) -> float:
+def compute_willingness(
+    team: Team, player: Player, rng: np.random.Generator, draft_progress: float = 0.0,
+    diagnostics: dict | None = None,
+) -> float:
     """Max price this team is willing to raise a bid to, right now, for
-    this player -- before the hard roster-slot budget cap is applied."""
+    this player -- before the hard roster-slot budget cap is applied.
+
+    diagnostics: PHASE 3C item 7 instrumentation, optional and additive
+    (matches the existing bid_stats/unsold_log pattern -- every existing
+    caller is unaffected). If given, it is filled in place with the
+    named intermediate multiplier/value at each stage, keyed by stage
+    name, so a caller can audit exactly how a final willingness figure
+    was assembled without re-deriving it from scratch or guessing."""
     archetype = team.strategy
     private_val = get_private_value(team, player, rng)
+    if diagnostics is not None:
+        diagnostics["base_value"] = player.base_value
+        diagnostics["private_value_after_noise"] = private_val
+        diagnostics["noise_ratio"] = private_val / player.base_value if player.base_value else None
 
     is_star_candidate = (
         team.stars_bought < archetype.max_stars and player.is_star_eligible
@@ -60,25 +74,32 @@ def compute_willingness(team: Team, player: Player, rng: np.random.Generator, dr
     else:
         ceiling = team.budget_remaining * archetype.price_ceiling_pct
         willingness = private_val if archetype.strict_value_ceiling else min(private_val, max(ceiling, cfg.MIN_PRICE))
+    if diagnostics is not None:
+        diagnostics["is_star_candidate"] = is_star_candidate
+        diagnostics["willingness_after_star_or_ceiling"] = willingness
 
-    willingness *= _position_fit_multiplier(team, player, archetype)
-    willingness *= archetype.position_weight.get(player.position, 1.0)
+    position_fit = _position_fit_multiplier(team, player, archetype)
+    position_weight = archetype.position_weight.get(player.position, 1.0)
+    willingness *= position_fit
+    willingness *= position_weight
+    if diagnostics is not None:
+        diagnostics["position_fit_multiplier"] = position_fit
+        diagnostics["position_weight_multiplier"] = position_weight
 
     # Tier-cliff panic: last or second-to-last player left in this tier.
-    if player.tier_rank >= player.tier_size - 1:
+    tier_cliff = player.tier_rank >= player.tier_size - 1
+    if tier_cliff:
         willingness *= archetype.tier_aggression
+    if diagnostics is not None:
+        diagnostics["tier_aggression_applied"] = archetype.tier_aggression if tier_cliff else 1.0
 
     # Tilt: revenge-bidding after recent nomination losses at this position.
-    if team.tilt > 0:
+    tilt_applied = team.tilt > 0
+    if tilt_applied:
         willingness *= archetype.tilt_boost
-
-    # Re-clamp star candidates AFTER the multipliers above: applying
-    # position-fit/tier-aggression on top of an already-capped star
-    # ceiling defeated the cap (e.g. a $145 ceiling * 1.3 position-fit *
-    # 1.3 tier-aggression ~ $245) -- caught in testing via a $58 WR
-    # simulating at a $197+ mean price despite the 2.5x value cap above.
-    if is_star_candidate and not archetype.strict_value_ceiling:
-        willingness = min(willingness, player.base_value * cfg.STAR_MAX_VALUE_MULTIPLE)
+    if diagnostics is not None:
+        diagnostics["tilt_boost_applied"] = archetype.tilt_boost if tilt_applied else 1.0
+        diagnostics["willingness_after_tier_and_tilt"] = willingness
 
     # Early-draft premium: decaying multiplicative bump, not a floor, so it
     # scales *relevant* willingness up (a real $50 player bid more
@@ -87,9 +108,38 @@ def compute_willingness(team: Team, player: Player, rng: np.random.Generator, dr
     # Value Purist: their whole identity is a preset price immune to market
     # mood, which is exactly the discipline the OTHER archetypes are
     # meant to be overpaying against.
+    #
+    # PHASE 3C FIX: this used to run AFTER the star re-clamp below, which
+    # defeated the very cap the re-clamp exists to enforce -- a stacked-
+    # multiplier bug caught via item 7's bid-construction audit
+    # (top_sale_bid_decomposition.csv): Jaylen Waddle, base_value $64,
+    # star-ceiling-clamped to $160 (2.5x), then multiplied by the
+    # early-draft premium (1.57x at draft_progress~0) to $251.56 -- 3.93x
+    # base_value, well past the documented 2.5x hard cap. Moved above the
+    # re-clamp so it is bounded by it like every other multiplier.
     if not archetype.strict_value_ceiling:
         premium = 1.0 + cfg.EARLY_DRAFT_PREMIUM_MAX * (1.0 - draft_progress)
         willingness *= premium
+        if diagnostics is not None:
+            diagnostics["early_draft_premium_multiplier"] = premium
+    elif diagnostics is not None:
+        diagnostics["early_draft_premium_multiplier"] = 1.0
+
+    # Re-clamp star candidates AFTER every multiplier above (position-fit,
+    # tier-aggression, tilt, AND early-draft premium -- see the premium
+    # block's own comment for why this now runs last): applying any of
+    # them on top of an already-capped star ceiling defeats the cap
+    # (e.g. a $145 ceiling * 1.3 tier-aggression * 1.5 early-draft ~ $283)
+    # -- caught in testing via a $58 WR simulating at a $197+ mean price
+    # despite the 2.5x value cap above.
+    if is_star_candidate and not archetype.strict_value_ceiling:
+        willingness = min(willingness, player.base_value * cfg.STAR_MAX_VALUE_MULTIPLE)
+        if diagnostics is not None:
+            diagnostics["star_reclamp_applied"] = True
+
+    if diagnostics is not None:
+        diagnostics["final_willingness"] = willingness
+        diagnostics["total_multiplier_vs_base_value"] = willingness / player.base_value if player.base_value else None
 
     # NOTE: no "spend the rest of my budget" pressure lives here. Two
     # earlier attempts at that (a hard cliff at slots_needed==1, then a

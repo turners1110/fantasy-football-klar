@@ -1,0 +1,9 @@
+player,position,market_price,price_source,exact_starting_points_with_player,exact_starting_points_if_pass,exact_lineup_gain_surplus,budget_after_purchase,remaining_roster_slots_after_purchase,solver_status_with_player,solver_status_without_player,solver_status,solver_runtime_seconds
+Geno Smith,QB,1.0,market_price_p50,1859.3,1899.27,-39.97,222.0,8,OPTIMAL,OPTIMAL,OPTIMAL,3.042
+Dak Prescott,QB,3.03,market_price_p50,1864.72,1899.27,-34.55,219.97,8,OPTIMAL,OPTIMAL,OPTIMAL,4.159
+Josh Allen,QB,21.95,market_price_p50,1915.0,1883.64,31.36,201.05,8,OPTIMAL,OPTIMAL,OPTIMAL,2.994
+Rashee Rice,WR,53.62,market_price_p50,1915.0,1899.27,15.73,169.38,8,OPTIMAL,OPTIMAL,OPTIMAL,1.787
+TJ Hockenson,TE,19.89,market_price_p50,1871.83,1899.27,-27.44,203.11,8,OPTIMAL,OPTIMAL,OPTIMAL,2.858
+Josh Jacobs,RB,201.5,market_price_p50,1570.26,1899.27,-329.01,21.5,8,OPTIMAL,OPTIMAL,OPTIMAL,1.545
+Terry McLaurin,WR,36.35,market_price_p50,1891.82,1899.27,-7.45,186.65,8,OPTIMAL,OPTIMAL,OPTIMAL,2.558
+Bucky Irving,RB,122.61,market_price_p50,1753.51,1899.27,-145.76,100.39,8,OPTIMAL,OPTIMAL,OPTIMAL,2.409

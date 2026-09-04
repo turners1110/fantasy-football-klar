@@ -92,6 +92,7 @@ def resolve_bid(
     draft_progress: float, available: dict[str, Player],
     position_max: dict | None = None,
     bid_stats: dict | None = None,
+    bid_diagnostics_log: list | None = None,
 ) -> dict:
     """Open ascending auction starting at $1 with the nominator as the
     default winner if nobody raises. Returns a dict with winner, price,
@@ -108,7 +109,17 @@ def resolve_bid(
     blocked_feasibility, blocked_budget, blocked_roster_cap}} dict,
     mutated in place if given -- phase 3A diagnostic instrumentation for
     outputs/auction_rebuild/phase3a/unspent_cash_decomposition.csv. Never
-    required; every existing caller is unaffected."""
+    required; every existing caller is unaffected.
+
+    bid_diagnostics_log: optional list, appended to (once per resolve_bid
+    call) if given -- phase 3C item 7 instrumentation for
+    outputs/auction_rebuild/phase3c/top_sale_bid_decomposition.csv.
+    Captures the willingness component breakdown (see
+    valuation.compute_willingness's own diagnostics param) for every team
+    that successfully raised during this nomination, by reusing the
+    SAME compute_willingness call the bidding loop already makes (no
+    extra calls, no extra RNG draws, no behavior change) -- purely
+    additive. Never required; every existing caller is unaffected."""
     def _stat(name: str, field: str) -> None:
         if bid_stats is not None:
             bid_stats.setdefault(name, {
@@ -130,6 +141,7 @@ def resolve_bid(
     current_bid = float(cfg.MIN_PRICE)
     second_highest = 0.0  # highest amount reached by anyone OTHER than the eventual winner
     bidders = {current_leader}
+    team_diagnostics: dict[str, dict] = {}  # last-seen willingness breakdown per team this nomination
 
     changed = True
     rounds = 0
@@ -140,7 +152,10 @@ def resolve_bid(
             if name == current_leader:
                 continue
             team = teams[name]
-            willingness = compute_willingness(team, candidate, rng, draft_progress)
+            diag = {} if bid_diagnostics_log is not None else None
+            willingness = compute_willingness(team, candidate, rng, draft_progress, diagnostics=diag)
+            if diag is not None:
+                team_diagnostics[name] = diag
             cap = team.max_bid_cap()
             max_can_pay_pre_utility = min(willingness, cap)
 
@@ -186,6 +201,18 @@ def resolve_bid(
                 changed = True
 
     _stat(current_leader, "wins")
+    if bid_diagnostics_log is not None:
+        willingness_values = sorted(
+            (d["final_willingness"] for d in team_diagnostics.values() if d.get("final_willingness") is not None),
+            reverse=True,
+        )
+        bid_diagnostics_log.append({
+            "player": candidate.name, "position": candidate.position, "winner": current_leader,
+            "sale_price": current_bid, "bidder_count": len(bidders),
+            "winner_diagnostics": team_diagnostics.get(current_leader),
+            "final_highest_willingness": willingness_values[0] if willingness_values else None,
+            "final_second_willingness": willingness_values[1] if len(willingness_values) > 1 else None,
+        })
     return {
         "winner": current_leader,
         "price": current_bid,
@@ -204,6 +231,7 @@ def run_single_auction(
     enable_position_max: bool = True,
     position_max: dict | None = None,
     bid_stats: dict | None = None,
+    bid_diagnostics_log: list | None = None,
 ):
     """strategies: optional {team_name: Archetype} to drive bidding from an
     evolved genome instead of a random named archetype -- used by
@@ -221,7 +249,11 @@ def run_single_auction(
     feasibility.DEFAULT_POSITION_MAX -- history-grounded, see
     outputs/auction_rebuild/audit/historical_roster_position_counts.csv).
     Pass enable_position_max=False to run without them (phase 2B requires
-    testing both configurations)."""
+    testing both configurations).
+
+    bid_diagnostics_log: optional list, threaded straight through to every
+    resolve_bid call -- see resolve_bid's own docstring. Never required;
+    every existing caller is unaffected."""
     active_position_max = position_max if position_max is not None else (
         feas_mod.DEFAULT_POSITION_MAX if enable_position_max else None
     )
@@ -257,7 +289,10 @@ def run_single_auction(
         remaining_slots = sum(t.slots_needed for t in teams.values())
         draft_progress = 1.0 - (remaining_slots / total_initial_slots if total_initial_slots else 0.0)
 
-        sale = resolve_bid(candidate, nominator, teams, rng, draft_progress, available, active_position_max, bid_stats)
+        sale = resolve_bid(
+            candidate, nominator, teams, rng, draft_progress, available, active_position_max, bid_stats,
+            bid_diagnostics_log=bid_diagnostics_log,
+        )
         winner = sale["winner"]
 
         if winner is None:

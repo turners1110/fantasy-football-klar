@@ -1,0 +1,159 @@
+player,position,nfl_team,auction_eligible,public_rank,public_tier,base_value,fallback_source,fallback_points,fallback_confidence,classification,identity_issue,expected_draft_probability_HEURISTIC
+Zach Charbonnet,RB,SEA,True,147,9,36.0,"mock_draft.points.points_for (position-specific ratio, capped)",242.2,"LOW (imputed, no real projection)",RELEVANT_AUCTION_TARGET,False,0.9
+AJ Dillon,RB,CAR,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Kevin Coleman Jr.,WR,MIA,True,377,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Will Kacmarek,TE,MIA,True,463,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Jonnu Smith,TE,GB,True,452,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Kyle Juszczyk,RB,SF,True,384,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Theo Wease Jr.,WR,LAC,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Dyami Brown,WR,WAS,True,428,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Jacob Saylors,RB,DET,True,485,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+John Bates,TE,WAS,True,421,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Jeremy Ruckert,TE,NYJ,True,508,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Drew Sample,TE,CIN,True,495,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Nate Boerkircher,TE,JAC,True,507,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Nate Adkins,TE,DEN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Cade Stover,TE,HOU,True,479,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Jack Endries,TE,CIN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Luke Schoonmaker,TE,DAL,True,512,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Luke Musgrave,TE,GB,True,400,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Corey Kiner,RB,NE,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Foster Moreau,TE,HOU,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Bauer Sharp,TE,TB,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Dallen Bentley,TE,DEN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Mo Alie-Cox,TE,IND,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Will Shipley,RB,PHI,True,325,13,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Charlie Woerner,TE,ATL,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Isaiah Williams,WR,NYJ,True,424,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Jaylin Lane,WR,WAS,True,396,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Thomas Fidone II,TE,NYG,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Jared Wiley,TE,KC,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Eli Heidenreich,RB,PIT,True,360,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Hunter Luepke,RB,DAL,True,433,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Connor Heyward,TE,LV,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Will Mallory,TE,IND,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Odell Beckham Jr.,WR,NYG,True,432,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Kylen Granson,TE,TEN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Durham Smythe,TE,BAL,True,505,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Jimmy Horn Jr.,WR,CAR,True,480,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Jordan Whittington,WR,LAR,True,413,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Rasheen Ali,RB,BAL,True,415,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Payne Durham,TE,TB,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Konata Mumpfield,WR,LAR,True,339,13,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Max Klare,TE,LAR,True,350,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Grant Calcaterra,TE,PHI,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Seydou Traore,TE,MIA,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Barion Brown,WR,NO,True,414,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Jalen Royals,WR,KC,False,341,13,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Brevyn Spann-Ford,TE,DAL,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Tanner Koziol,TE,JAC,True,470,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+KeAndre Lambert-Smith,WR,LAC,True,509,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Sam Roush,TE,CHI,True,500,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Michael Burton,RB,CLE,True,504,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Josh Whyle,TE,GB,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Laquon Treadwell,WR,IND,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Bo Melton,WR,GB,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Josh Cuevas,TE,BAL,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Ian Thomas,TE,LV,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Ko Kieft,TE,TB,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Andrew Beck,RB,NYJ,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Alec Ingold,RB,LAC,True,448,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Drew Ogletree,TE,IND,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Ameer Abdullah,RB,JAC,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Blake Whiteheart,TE,CLE,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Tay Martin,WR,DET,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Isaac Guerendo,RB,SF,True,314,13,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Malachi Corley,WR,CLE,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Chris Manhertz,TE,NYG,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Kene Nwangwu,RB,NYJ,True,498,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Derius Davis,WR,LAC,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Adam Prentice,RB,DEN,True,472,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Dohnte Meyers,WR,CIN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Xavier Smith,WR,LAR,True,475,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Efton Chism III,WR,NE,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Jacob Cowing,WR,SF,True,476,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Max Bredeson,RB,MIN,True,469,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Kaleb Johnson,RB,GB,True,305,13,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Josh Cameron,WR,JAC,True,514,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Tai Felton,WR,MIN,True,442,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Jonathan Mingo,WR,DAL,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Luke Farrell,TE,SF,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Eric Saubert,TE,SEA,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Darius Cooper,WR,PHI,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Johnny Mundt,TE,PHI,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Reggie Virgil,WR,ARI,True,499,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Dareke Young,WR,LV,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Carsen Ryan,TE,CLE,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Brycen Tremayne,WR,CAR,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Riley Nowakowski,TE,PIT,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Reggie Gilliam,RB,NE,True,450,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Sione Vaki,RB,DET,True,416,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Patrick Ricard,RB,NYG,True,461,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Arian Smith,WR,NYJ,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Ben Skowronek,WR,PIT,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+British Brooks,RB,HOU,True,478,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Kameron Johnson,WR,TB,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Kaden Wetjen,WR,PIT,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Braxton Berrios,WR,NYG,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Gunner Olszewski,WR,NYG,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Devin Duvernay,WR,ARI,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Tylan Wallace,WR,CLE,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Skyy Moore,WR,GB,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Jalen Brooks,WR,ARI,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Nikko Remigio,WR,KC,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Tyrell Shavers,WR,BUF,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Mason Tipton,WR,NO,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Dont'e Thornton Jr.,WR,LV,True,380,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+LaJohntay Wester,WR,BAL,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Ke'Shawn Williams,WR,CIN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Myles Price,WR,MIN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Quintin Morris,TE,JAC,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Cole Turner,TE,MIA,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Jelani Woods,TE,NYJ,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Lucas Krull,TE,DEN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Ben Sims,TE,MIA,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Julian Hill,TE,NE,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Tip Reiman,TE,ARI,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+CJ Dippre,TE,TB,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Joe Royer,TE,CLE,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Jackson Meeks,WR,DET,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+DeeJay Dallas,RB,MIN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Jerome Ford,RB,WAS,True,315,13,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Tyler Badie,RB,DEN,True,460,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Dylan Laube,RB,LV,True,455,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Chris Collier,RB,LV,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Ty Simpson,QB,LAR,True,369,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Marcus Mariota,QB,WAS,True,410,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Riley Leonard,QB,IND,True,465,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Jameis Winston,QB,NYG,True,406,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Tommy DeVito,QB,NE,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Tyson Bagent,QB,CHI,True,506,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Jarrett Stidham,QB,DEN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Davis Mills,QB,HOU,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Tyrod Taylor,QB,GB,True,488,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Joshua Dobbs,QB,DET,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Tyler Huntley,QB,BAL,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Quinn Ewers,QB,JAC,True,477,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Trey Lance,QB,LAC,True,517,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Anthony Richardson Sr.,QB,IND,True,385,14,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Tanner McKee,QB,PHI,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Kenny Pickett,QB,CAR,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Jalon Daniels,QB,TB,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Sam Howell,QB,DAL,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Drew Lock,QB,SEA,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Andy Dalton,QB,PHI,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Drew Allar,QB,PIT,True,483,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Gardner Minshew II,QB,ARI,True,501,16,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Cade Klubnik,QB,NYJ,True,417,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Cole Payton,QB,PHI,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Kyle Allen,QB,BUF,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Mitchell Trubisky,QB,TEN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Jalen Milroe,QB,SEA,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Kyle McCord,QB,MIA,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Joe Milton III,QB,DAL,True,420,15,0.0,"mock_draft.points.points_for (position-specific ratio, capped)",0.0,"LOW (imputed, no real projection)",LIKELY_DOLLAR_ONE_PLAYER,False,0.35
+Will Howard,QB,PIT,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Mason Rudolph,QB,PIT,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Stetson Bennett IV,QB,LAR,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Josh Johnson,QB,CIN,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Nick Mullens,QB,JAC,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02
+Aidan O'Connell,QB,LV,False,,,,,,N/A (not auction-eligible),UNLIKELY_TO_BE_DRAFTED,False,0.02

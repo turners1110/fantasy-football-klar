@@ -1,0 +1,60 @@
+{
+  "retrieval_method": "WebSearch tool (Claude Code built-in), NOT a verbatim single-page scrape -- WebFetch was attempted first and is blocked entirely by this environment's network egress proxy for every external domain tested (rotoalpha.com, fantasynerds.com, rotowire.com, espn.com all returned EGRESS_BLOCKED). WebSearch's own result is itself an AI-synthesized summary drawn from multiple cited sources, not a raw scrape of one page -- treat this as a rough public-consensus snapshot, not an authoritative single-source table. This is a real, disclosed limitation, not a fabrication: the underlying dollar figures are attributed to real named public sites, but this session could not verify them against the raw page HTML directly.",
+  "retrieval_date": "2026-09-04",
+  "scoring_format_stated": "12 teams, $200 budget, standard/half-PPR (sources partially disagree on scoring format; not independently verified)",
+  "queries_run": [
+    "2026 fantasy football auction values calculator $200 budget half PPR",
+    "\"2026\" fantasy football auction values top 24 players dollar amounts RB WR QB TE",
+    "2026 fantasy football auction values tight ends TE dollar amounts $200 budget consensus"
+  ],
+  "cited_sources": [
+    {"title": "2026 Fantasy Football Auction Values", "url": "https://www.rotowire.com/football/auction-values.php", "fetch_status": "EGRESS_BLOCKED"},
+    {"title": "Free 2026 Fantasy Football Auction Values - $200 Budget", "url": "https://www.fantasynerds.com/nfl/auction", "fetch_status": "EGRESS_BLOCKED"},
+    {"title": "2026 Fantasy Football Auction Values ($200 Budget)", "url": "https://www.rotoalpha.com/nfl/auction-values", "fetch_status": "EGRESS_BLOCKED"},
+    {"title": "Fantasy Football Auction Values Calculator — RotoAlpha", "url": "https://www.rotoalpha.com/tools/auction-values", "fetch_status": "EGRESS_BLOCKED"},
+    {"title": "Free Fantasy Football Auction Value Calculator 2026 · DraftExpert Pro", "url": "https://draftexpertpro.com/tools/auction-calculator", "fetch_status": "EGRESS_BLOCKED"},
+    {"title": "2026 Fantasy Football Auction Values: Dollar Values For Every Player", "url": "https://propsbot.ai/fantasy-football-auction-values/", "fetch_status": "EGRESS_BLOCKED"},
+    {"title": "Fantasy Football 2026 Salary Cap/Auction Values - Footballguys", "url": "https://www.footballguys.com/salary-cap-auction-values", "fetch_status": "EGRESS_BLOCKED"},
+    {"title": "Quarterback and Tight End Pricing In 2026 Auctions - Yahoo Sports", "url": "https://sports.yahoo.com/articles/quarterback-tight-end-pricing-2026-090711008.html", "fetch_status": "EGRESS_BLOCKED"}
+  ],
+  "players": [
+    {"player": "Jahmyr Gibbs", "position": "RB", "nfl_team": "DET", "auction_value_200_budget": 70},
+    {"player": "Bijan Robinson", "position": "RB", "nfl_team": "ATL", "auction_value_200_budget": 68},
+    {"player": "Christian McCaffrey", "position": "RB", "nfl_team": "SF", "auction_value_200_budget": 61},
+    {"player": "Jonathan Taylor", "position": "RB", "nfl_team": "IND", "auction_value_200_budget": 60},
+    {"player": "De'Von Achane", "position": "RB", "nfl_team": "MIA", "auction_value_200_budget": 57},
+    {"player": "James Cook III", "position": "RB", "nfl_team": "BUF", "auction_value_200_budget": 54},
+    {"player": "Derrick Henry", "position": "RB", "nfl_team": "BAL", "auction_value_200_budget": 53},
+    {"player": "Ashton Jeanty", "position": "RB", "nfl_team": "LV", "auction_value_200_budget": 47},
+    {"player": "Chase Brown", "position": "RB", "nfl_team": "CIN", "auction_value_200_budget": 46},
+    {"player": "Saquon Barkley", "position": "RB", "nfl_team": "PHI", "auction_value_200_budget": 45},
+    {"player": "Omarion Hampton", "position": "RB", "nfl_team": "LAC", "auction_value_200_budget": 41},
+    {"player": "Josh Jacobs", "position": "RB", "nfl_team": "GB", "auction_value_200_budget": 40},
+    {"player": "Puka Nacua", "position": "WR", "nfl_team": "LAR", "auction_value_200_budget": 67},
+    {"player": "Ja'Marr Chase", "position": "WR", "nfl_team": "CIN", "auction_value_200_budget": 65},
+    {"player": "Jaxon Smith-Njigba", "position": "WR", "nfl_team": "SEA", "auction_value_200_budget": 63},
+    {"player": "Amon-Ra St. Brown", "position": "WR", "nfl_team": "DET", "auction_value_200_budget": 58},
+    {"player": "Drake London", "position": "WR", "nfl_team": "ATL", "auction_value_200_budget": 55},
+    {"player": "Rashee Rice", "position": "WR", "nfl_team": "KC", "auction_value_200_budget": 51},
+    {"player": "CeeDee Lamb", "position": "WR", "nfl_team": "DAL", "auction_value_200_budget": 50},
+    {"player": "Justin Jefferson", "position": "WR", "nfl_team": "MIN", "auction_value_200_budget": 49},
+    {"player": "A.J. Brown", "position": "WR", "nfl_team": "NE", "auction_value_200_budget": 44},
+    {"player": "George Pickens", "position": "WR", "nfl_team": "DAL", "auction_value_200_budget": 43},
+    {"player": "Chris Olave", "position": "WR", "nfl_team": "NO", "auction_value_200_budget": 39},
+    {"player": "Nico Collins", "position": "WR", "nfl_team": "HOU", "auction_value_200_budget": 39},
+    {"player": "Josh Allen", "position": "QB", "nfl_team": "BUF", "auction_value_200_budget": 26},
+    {"player": "Drake Maye", "position": "QB", "nfl_team": "NE", "auction_value_200_budget": 13},
+    {"player": "Lamar Jackson", "position": "QB", "nfl_team": "BAL", "auction_value_200_budget": 13},
+    {"player": "Jalen Hurts", "position": "QB", "nfl_team": "PHI", "auction_value_200_budget": 13},
+    {"player": "Joe Burrow", "position": "QB", "nfl_team": "CIN", "auction_value_200_budget": 12},
+    {"player": "Brock Bowers", "position": "TE", "nfl_team": "LV", "auction_value_200_budget": 36, "note": "sources disagreed 21-37; midpoint of the 35/36/37 cluster used"},
+    {"player": "Trey McBride", "position": "TE", "nfl_team": "ARI", "auction_value_200_budget": 19},
+    {"player": "Colston Loveland", "position": "TE", "nfl_team": "CHI", "auction_value_200_budget": 8},
+    {"player": "Tucker Kraft", "position": "TE", "nfl_team": "GB", "auction_value_200_budget": 7},
+    {"player": "Tyler Warren", "position": "TE", "nfl_team": "IND", "auction_value_200_budget": 6}
+  ],
+  "position_spend_share_consensus_cited": {
+    "source_note": "One cited source's own stated budget-allocation rule of thumb, not independently re-derived by this session",
+    "RB": 0.45, "WR": 0.38, "QB": 0.06, "TE": 0.07, "remaining_bench_K_DST": 0.04
+  }
+}
