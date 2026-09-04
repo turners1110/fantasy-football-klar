@@ -3,6 +3,5 @@ REQUIRED_IDENTITY_CHECK,Kenneth Walker III,kenneth walker,Sam,resolved OK
 REQUIRED_IDENTITY_CHECK,Quentin Johnston,quentin johnston,Sam,resolved OK
 REQUIRED_IDENTITY_CHECK,Jaxson Dart,jaxson dart,Sam,resolved OK
 REQUIRED_IDENTITY_CHECK,Cam Skattebo,cam skattebo,Sam,resolved OK
-NONE_FOUND,,,,No duplicate/ambiguous/multi-team identity issues found in keepers_2026_confirmed.csv
 UNMATCHED_TO_HISTORICAL_SALARY,Tetairoa McMillan,tetairoa mcmillan,Travis,No row in historical_salaries_2025_raw.csv matched by normalized name -- using confirmed file's own prior_salary ($1.0) / keeper_cost ($6.0) directly instead of silently dropping.
 UNMATCHED_TO_HISTORICAL_SALARY,MarShawn Lloyd,marshawn lloyd,Shane,No row in historical_salaries_2025_raw.csv matched by normalized name -- using confirmed file's own prior_salary ($1.0) / keeper_cost ($11.0) directly instead of silently dropping.

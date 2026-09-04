@@ -1,5 +1,4 @@
 player,position,base_value,projected_points,points_is_real,auction_eligible,eligibility_reason
-Jeremiyah Love,RB,137.0,202.4,True,True,not a confirmed keeper or college-rights hold
 Josh Jacobs,RB,126.0,189.35,True,True,not a confirmed keeper or college-rights hold
 Bucky Irving,RB,102.0,175.8,True,True,not a confirmed keeper or college-rights hold
 Bhayshul Tuten,RB,95.0,160.4,True,True,not a confirmed keeper or college-rights hold
@@ -30,7 +29,6 @@ Chris Godwin Jr,WR,37.0,134.26,True,True,not a confirmed keeper or college-right
 Zach Charbonnet,RB,36.0,107.61,True,True,not a confirmed keeper or college-rights hold
 Travis Etienne,RB,35.0,190.4,True,True,not a confirmed keeper or college-rights hold
 Nick Chubb,RB,34.0,451.25555555555553,False,True,not a confirmed keeper or college-rights hold
-Carnell Tate,WR,34.0,140.03,True,True,not a confirmed keeper or college-rights hold
 JK Dobbins,RB,34.0,134.15,True,True,not a confirmed keeper or college-rights hold
 DK Metcalf,WR,32.0,148.53,True,True,not a confirmed keeper or college-rights hold
 Austin Ekeler,RB,31.0,411.43888888888887,False,True,not a confirmed keeper or college-rights hold
@@ -50,7 +48,6 @@ Tyler Allgeier,RB,17.0,86.65,True,True,not a confirmed keeper or college-rights 
 Romeo Doubs,WR,17.0,122.25,True,True,not a confirmed keeper or college-rights hold
 Alvin Kamara,RB,16.0,68.7,True,True,not a confirmed keeper or college-rights hold
 Jayden Daniels,QB,16.0,293.28,True,True,not a confirmed keeper or college-rights hold
-Makai Lemon,WR,16.0,119.03,True,True,not a confirmed keeper or college-rights hold
 KC Concepcion,WR,16.0,118.36,True,True,not a confirmed keeper or college-rights hold
 Isiah Pacheco,RB,16.0,73.93,True,True,not a confirmed keeper or college-rights hold
 George Kittle,TE,15.0,130.46,True,True,not a confirmed keeper or college-rights hold
@@ -60,7 +57,6 @@ Ricky Pearsall,WR,15.0,199.08333333333334,False,True,not a confirmed keeper or c
 Travis Kelce,TE,13.0,129.94,True,True,not a confirmed keeper or college-rights hold
 Mike Washington Jr.,RB,12.0,80.65,True,True,not a confirmed keeper or college-rights hold
 Jajuan Jennings,WR,11.0,145.99444444444444,False,True,not a confirmed keeper or college-rights hold
-Jonah Coleman,RB,11.0,67.3,True,True,not a confirmed keeper or college-rights hold
 Tyrone Tracy Jr,RB,11.0,72.35,True,True,not a confirmed keeper or college-rights hold
 Mark Andrews,TE,11.0,128.18,True,True,not a confirmed keeper or college-rights hold
 AD Mitchell,WR,11.0,145.99444444444444,False,True,not a confirmed keeper or college-rights hold
@@ -74,7 +70,6 @@ Xavier Worthy,WR,8.0,118.5,True,True,not a confirmed keeper or college-rights ho
 Dalton Kincaid,TE,8.0,118.1,True,True,not a confirmed keeper or college-rights hold
 Dak Prescott,QB,7.0,278.54,True,True,not a confirmed keeper or college-rights hold
 Ray Davis,RB,7.0,61.54,True,True,not a confirmed keeper or college-rights hold
-Emmett Johnson,RB,7.0,63.25,True,True,not a confirmed keeper or college-rights hold
 Justin Herbert,QB,6.0,263.56,True,True,not a confirmed keeper or college-rights hold
 Juwan Johnson,TE,5.0,111.55,True,True,not a confirmed keeper or college-rights hold
 Brenton Strange,TE,5.0,112.65,True,True,not a confirmed keeper or college-rights hold
@@ -92,7 +87,6 @@ Chig Okonkwo,TE,3.0,98.45,True,True,not a confirmed keeper or college-rights hol
 Justice Hill,RB,2.0,57.9,True,True,not a confirmed keeper or college-rights hold
 Keon Coleman,WR,2.0,60.6,True,True,not a confirmed keeper or college-rights hold
 Adonai Mitchell,WR,2.0,84.34,True,True,not a confirmed keeper or college-rights hold
-Jordyn Tyson,WR,2.0,94.75,True,True,not a confirmed keeper or college-rights hold
 De'Zhaun Stribling,WR,2.0,92.85,True,True,not a confirmed keeper or college-rights hold
 Jordan Love,QB,2.0,256.74,True,True,not a confirmed keeper or college-rights hold
 Trey Benson,RB,2.0,11.03,True,True,not a confirmed keeper or college-rights hold
@@ -107,10 +101,8 @@ Pat Bryant,WR,1.0,79.5,True,True,not a confirmed keeper or college-rights hold
 Malik Davis,RB,1.0,30.01,True,True,not a confirmed keeper or college-rights hold
 Devin Neal,RB,1.0,15.95,True,True,not a confirmed keeper or college-rights hold
 Chris Brooks,RB,1.0,38.97,True,True,not a confirmed keeper or college-rights hold
-Kaytron Allen,RB,1.0,42.77,True,True,not a confirmed keeper or college-rights hold
 Cedric Tillman,WR,1.0,19.7,True,True,not a confirmed keeper or college-rights hold
 Najee Harris,RB,1.0,41.47,True,True,not a confirmed keeper or college-rights hold
-Jordan James,RB,1.0,50.45,True,True,not a confirmed keeper or college-rights hold
 Isaiah Davis,RB,1.0,45.95,True,True,not a confirmed keeper or college-rights hold
 LeQuint Allen Jr.,RB,1.0,38.64,True,True,not a confirmed keeper or college-rights hold
 Demond Claiborne,RB,1.0,32.59,True,True,not a confirmed keeper or college-rights hold
@@ -122,9 +114,7 @@ Seth McGowan,RB,1.0,34.66,True,True,not a confirmed keeper or college-rights hol
 Jaylen Wright,RB,1.0,47.44,True,True,not a confirmed keeper or college-rights hold
 DJ Giddens,RB,1.0,33.72,True,True,not a confirmed keeper or college-rights hold
 Kaelon Black,RB,1.0,47.43,True,True,not a confirmed keeper or college-rights hold
-Nicholas Singleton,RB,1.0,48.11,True,True,not a confirmed keeper or college-rights hold
 Tyler Shough,QB,1.0,258.88,True,True,not a confirmed keeper or college-rights hold
-Adam Randall,RB,1.0,33.18,True,True,not a confirmed keeper or college-rights hold
 Emanuel Wilson,RB,1.0,38.92,True,True,not a confirmed keeper or college-rights hold
 Malik Willis,QB,1.0,253.88,True,True,not a confirmed keeper or college-rights hold
 Emari Demercado,RB,1.0,26.21,True,True,not a confirmed keeper or college-rights hold
@@ -163,11 +153,9 @@ Malik Benson,WR,0.0,41.85,True,True,not a confirmed keeper or college-rights hol
 Eli Heidenreich,RB,0.0,20.8,True,True,not a confirmed keeper or college-rights hold
 Ja'Tavion Sanders,TE,0.0,29.55,True,True,not a confirmed keeper or college-rights hold
 Treylon Burks,WR,0.0,37.54,True,True,not a confirmed keeper or college-rights hold
-Chris Brazzell II,WR,0.0,0.0,False,True,not a confirmed keeper or college-rights hold
 Mac Jones,QB,0.0,27.06,True,True,not a confirmed keeper or college-rights hold
 Noah Gray,TE,0.0,42.1,True,True,not a confirmed keeper or college-rights hold
 Joshua Palmer,WR,0.0,37.3,True,True,not a confirmed keeper or college-rights hold
-Jalen Royals,WR,0.0,14.61,True,True,not a confirmed keeper or college-rights hold
 Devontez Walker,WR,0.0,35.2,True,True,not a confirmed keeper or college-rights hold
 Jaylin Lane,WR,0.0,21.12,True,True,not a confirmed keeper or college-rights hold
 Xavier Hutchinson,WR,0.0,33.06,True,True,not a confirmed keeper or college-rights hold
@@ -176,7 +164,6 @@ Charlie Kolar,TE,0.0,48.57,True,True,not a confirmed keeper or college-rights ho
 Elijah Arroyo,TE,0.0,52.8,True,True,not a confirmed keeper or college-rights hold
 Michael Mayer,TE,0.0,58.35,True,True,not a confirmed keeper or college-rights hold
 Carson Beck,QB,0.0,51.46,True,True,not a confirmed keeper or college-rights hold
-Oscar Delp,TE,0.0,34.7,True,True,not a confirmed keeper or college-rights hold
 Olamide Zaccheaus,WR,0.0,41.59,True,True,not a confirmed keeper or college-rights hold
 Konata Mumpfield,WR,0.0,16.27,True,True,not a confirmed keeper or college-rights hold
 Eli Raridon,TE,0.0,33.55,True,True,not a confirmed keeper or college-rights hold
@@ -288,7 +275,6 @@ Mason Taylor,TE,0.0,58.65,True,True,not a confirmed keeper or college-rights hol
 Malik Washington,WR,0.0,92.28,True,True,not a confirmed keeper or college-rights hold
 Terrance Ferguson,TE,0.0,82.7,True,True,not a confirmed keeper or college-rights hold
 Jaylin Noel,WR,0.0,77.12,True,True,not a confirmed keeper or college-rights hold
-Jaydn Ott,RB,0.0,0.0,False,True,not a confirmed keeper or college-rights hold
 Jalen Reagor,WR,0.0,0.0,False,True,not a confirmed keeper or college-rights hold
 Xavier Restrepo,WR,0.0,0.0,False,True,not a confirmed keeper or college-rights hold
 Frank Gore Jr.,RB,0.0,0.0,False,True,not a confirmed keeper or college-rights hold
@@ -324,8 +310,6 @@ Tank Dell,WR,0.0,58.82,True,True,not a confirmed keeper or college-rights hold
 Darnell Mooney,WR,0.0,63.83,True,True,not a confirmed keeper or college-rights hold
 Isaac TeSlaa,WR,0.0,66.3,True,True,not a confirmed keeper or college-rights hold
 Pat Freiermuth,TE,0.0,96.9,True,True,not a confirmed keeper or college-rights hold
-Germie Bernard,WR,0.0,67.71,True,True,not a confirmed keeper or college-rights hold
-Zachariah Branch,WR,0.0,63.51,True,True,not a confirmed keeper or college-rights hold
 Isaac Guerendo,RB,0.0,11.3,True,True,not a confirmed keeper or college-rights hold
 Jerome Ford,RB,0.0,0.0,True,True,not a confirmed keeper or college-rights hold
 Jaleel McLaughlin,RB,0.0,0.0,False,True,not a confirmed keeper or college-rights hold
@@ -336,7 +320,6 @@ Darnell Washington,TE,0.0,60.1,True,True,not a confirmed keeper or college-right
 Jahan Dotson,WR,0.0,66.13,True,True,not a confirmed keeper or college-rights hold
 Gunnar Helm,TE,0.0,85.2,True,True,not a confirmed keeper or college-rights hold
 Skyler Bell,WR,0.0,38.52,True,True,not a confirmed keeper or college-rights hold
-Trevor Etienne,RB,0.0,27.98,True,True,not a confirmed keeper or college-rights hold
 Brandon Aiyuk,WR,0.0,0.0,False,True,not a confirmed keeper or college-rights hold
 Jake Tonges,TE,0.0,46.75,True,True,not a confirmed keeper or college-rights hold
 Jarquez Hunter,RB,0.0,0.0,False,True,not a confirmed keeper or college-rights hold
@@ -352,7 +335,6 @@ Eli Stowers,TE,0.0,48.79,True,True,not a confirmed keeper or college-rights hold
 Mack Hollins,WR,0.0,34.99,True,True,not a confirmed keeper or college-rights hold
 Aaron Rodgers,QB,0.0,191.83,True,True,not a confirmed keeper or college-rights hold
 Geno Smith,QB,0.0,177.54,True,True,not a confirmed keeper or college-rights hold
-Kenyon Sadiq,TE,0.0,85.03,True,True,not a confirmed keeper or college-rights hold
 Bryce Young,QB,0.0,218.36,True,True,not a confirmed keeper or college-rights hold
 Jerry Jeudy,WR,0.0,93.02,True,True,not a confirmed keeper or college-rights hold
 Jauan Jennings,WR,0.0,89.4,True,True,not a confirmed keeper or college-rights hold
@@ -368,15 +350,11 @@ Evan Engram,TE,0.0,59.49,True,True,not a confirmed keeper or college-rights hold
 Cyrus Allen,WR,0.0,66.53,True,True,not a confirmed keeper or college-rights hold
 Tua Tagovailoa,QB,0.0,103.67,True,True,not a confirmed keeper or college-rights hold
 Tyquan Thornton,WR,0.0,57.5,True,True,not a confirmed keeper or college-rights hold
-Elijah Sarratt,WR,0.0,45.38,True,True,not a confirmed keeper or college-rights hold
 Jack Bech,WR,0.0,58.15,True,True,not a confirmed keeper or college-rights hold
 David Njoku,TE,0.0,56.0,True,True,not a confirmed keeper or college-rights hold
-Chris Bell,WR,0.0,59.45,True,True,not a confirmed keeper or college-rights hold
 Ted Hurst III,WR,0.0,61.33,True,True,not a confirmed keeper or college-rights hold
 Chimere Dike,WR,0.0,52.35,True,True,not a confirmed keeper or college-rights hold
 Ty Johnson,RB,0.0,48.65,True,True,not a confirmed keeper or college-rights hold
 Greg Dulcich,TE,0.0,101.4,True,True,not a confirmed keeper or college-rights hold
-Antonio Williams,WR,0.0,51.37,True,True,not a confirmed keeper or college-rights hold
 Caleb Douglas,WR,0.0,83.27,True,True,not a confirmed keeper or college-rights hold
-Malachi Fields,WR,0.0,69.38,True,True,not a confirmed keeper or college-rights hold
 Cam Ward,QB,0.0,221.28,True,True,not a confirmed keeper or college-rights hold

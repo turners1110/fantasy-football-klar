@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from . import college_prospects, config, data_pipeline
+from .confirmed_keeper_pipeline import normalize_name
 
 # Canonical auction statuses (Part 1)
 VETERAN_AUCTION_ELIGIBLE = "VETERAN_AUCTION_ELIGIBLE"
@@ -91,8 +92,28 @@ def classify_player_eligibility(
     college_audit: pd.Series | None,
     debut_info: dict | None,
     fp_only: bool,
+    fp_only_fallback_eligible: bool = False,
 ) -> dict:
-    """Return eligibility record for one player."""
+    """Return eligibility record for one player.
+
+    fp_only_fallback_eligible: PHASE 2B addition. This classifier's
+    fp_only branch requires verified nflverse debut data
+    (data/nflverse/player_stats_reg_2025.csv) to distinguish a real
+    active veteran free agent (e.g. a well-known starter who simply isn't
+    on any of this league's 12 rosters) from a genuinely retired/inactive
+    player -- and that file does not exist in this environment. With it
+    absent, hundreds of obviously-active real veterans (Mike Evans,
+    Stefon Diggs, Courtland Sutton, etc., confirmed by manual spot-check)
+    were misclassified UNKNOWN_STATUS/ineligible, shrinking the auction
+    pool below what a 12-team/9-pick-per-team draft needs to complete.
+    Defaults to False (preserves the strict, conservative original
+    behavior for run_valuation.py's real production price sheet, where
+    excluding an uncertain player is the safer error). Set True only for
+    the mock-draft simulator, where pool depth/completion matters more
+    than excluding a rare false positive -- see
+    outputs/auction_rebuild/audit/eligibility_path_reconciliation.csv for
+    this as the one documented, explained divergence between the two
+    production paths."""
     canonical = data_pipeline._normalize_name(player)
     verified_debut = debut_info is not None and int(debut_info.get("games_played", 0)) >= 1
 
@@ -126,6 +147,27 @@ def classify_player_eligibility(
             confidence=0.9,
         )
 
+    if on_historical and not has_salary and not will_keep:
+        # PHASE 2B FIX: a player IS on this league's own real 2025 roster
+        # (direct positive evidence they're a genuine, known player) but
+        # has no recorded salary_2025 (e.g. a late-season waiver pickup
+        # never priced) -- the pre-existing decision tree had no branch
+        # for this and fell through to the generic "insufficient
+        # evidence" UNKNOWN_STATUS bucket, which is wrong: we have BETTER
+        # evidence for this player than for an unverified FantasyPros-only
+        # name, not worse. Caught in testing via real examples (Stefon
+        # Diggs, Courtland Sutton, Mike Evans -- all on Coby's actual 2025
+        # roster with salary_2025 blank).
+        return _record(
+            player, canonical, position, nfl_team, source_roster,
+            VETERAN_ROSTERED_RELEASED, True,
+            "2025 league roster with NO recorded salary (e.g. a late-season waiver pickup never priced) -- "
+            "still a known, real player with direct roster evidence, not treated as unverified",
+            "historical_salaries_2025_raw.csv", "",
+            confidence=0.7,
+            warning="on_historical_missing_salary",
+        )
+
     if verified_debut:
         return _record(
             player, canonical, position, nfl_team, source_roster,
@@ -137,6 +179,17 @@ def classify_player_eligibility(
         )
 
     if fp_only:
+        if fp_only_fallback_eligible:
+            return _record(
+                player, canonical, position, nfl_team, source_roster,
+                VETERAN_AUCTION_ELIGIBLE, True,
+                "FantasyPros-ranked, no verified NFL debut or league salary -- treated as eligible "
+                "under the fp_only_fallback_eligible policy because data/nflverse/player_stats_reg_2025.csv "
+                "is unavailable in this environment to verify debut status one way or the other",
+                "FantasyPros_2026_Draft_ALL_Rankings.csv", "",
+                confidence=0.3,
+                warning="fp_only_treated_as_eligible_missing_nflverse_data",
+            )
         return _record(
             player, canonical, position, nfl_team, source_roster,
             UNKNOWN_STATUS, False,
@@ -206,8 +259,10 @@ def build_eligibility_audit(
     roster: pd.DataFrame | None = None,
     holdings_path: Path | None = None,
     nflverse_dir: Path | None = None,
+    fp_only_fallback_eligible: bool = False,
 ) -> pd.DataFrame:
-    """Classify every player in the combined universe."""
+    """Classify every player in the combined universe. See
+    classify_player_eligibility's docstring for fp_only_fallback_eligible."""
     holdings_path = holdings_path or Path("data/college_holdings.csv")
     nflverse_dir = nflverse_dir or Path("data/nflverse")
 
@@ -264,6 +319,7 @@ def build_eligibility_audit(
             college_audit=pd.Series(college_by_key[key]) if key in college_by_key else None,
             debut_info=debut_keys.get(key),
             fp_only=fp_only and not on_hist,
+            fp_only_fallback_eligible=fp_only_fallback_eligible,
         )
         rows.append(rec)
 
@@ -317,3 +373,67 @@ def contamination_report(audit: pd.DataFrame, selected_players: list[str]) -> pd
         & (audit["final_auction_status"] != VETERAN_KEPT)
     ]
     return blocked
+
+
+CONFIRMED_OVERRIDE_STATUS = "CONFIRMED_KEEPER_OR_COLLEGE_RIGHTS_OVERRIDE"
+
+
+def build_confirmed_veteran_auction_pool(
+    pool: pd.DataFrame,
+    salaries: pd.DataFrame,
+    confirmed_keepers: pd.DataFrame,
+    roster: pd.DataFrame | None = None,
+    holdings_path: Path | None = None,
+    nflverse_dir: Path | None = None,
+    fp_only_fallback_eligible: bool = False,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """ONE shared function for building the veteran auction pool -- phase
+    2B requires both run_valuation.py (confirmed mode) and
+    mock_draft/data.py to call this same function so their eligibility
+    decisions can never silently diverge.
+
+    Runs the full classifier (build_eligibility_audit: nflverse-debut-
+    aware, college-holdings-aware, historical-salary-aware) and THEN
+    force-excludes every player named in `confirmed_keepers`
+    (data/keepers_2026_confirmed.csv-shaped -- both veteran keepers and
+    college-rights holds) as a hard override, since that tracked file is
+    this league's highest-priority, commissioner/user-confirmed source
+    for these specific 2026 rosters -- higher priority than the general
+    classifier's own (necessarily more heuristic) nflverse/college-
+    holdings inference for the same names. Name normalization
+    (confirmed_keeper_pipeline.normalize_name) is used ONLY to match
+    identity between the two sources; it never decides eligibility by
+    itself -- an unmatched name still goes through the general classifier
+    and is not silently treated as safe or excluded on name grounds alone.
+
+    Returns (eligible_pool, audit). `eligible_pool` carries four new
+    columns: auction_eligible (always True on rows that survive -- the
+    column exists for schema consistency with `audit`),
+    eligibility_status, eligibility_reason, eligibility_source. `audit` is
+    the full classification for every player in `pool`, eligible or not.
+    """
+    audit = build_eligibility_audit(
+        pool, salaries, roster=roster, holdings_path=holdings_path, nflverse_dir=nflverse_dir,
+        fp_only_fallback_eligible=fp_only_fallback_eligible,
+    )
+
+    confirmed_norm = set(confirmed_keepers["player_name"].map(normalize_name))
+    override_mask = audit["canonical_player_id"].isin(confirmed_norm)
+    audit.loc[override_mask, "auction_eligible"] = False
+    audit.loc[override_mask, "final_auction_status"] = CONFIRMED_OVERRIDE_STATUS
+    audit.loc[override_mask, "eligibility_reason"] = (
+        "excluded by data/keepers_2026_confirmed.csv (highest-priority tracked source for this league's "
+        "real 2026 keepers/college-rights holds, overriding the general classifier's own inference for this name)"
+    )
+    audit.loc[override_mask, "evidence_source"] = "data/keepers_2026_confirmed.csv"
+
+    eligible = filter_veteran_auction_pool(pool, audit, fail_on_ineligible=False).copy()
+    audit_by_key = audit.set_index("canonical_player_id")
+    eligible["_key"] = eligible["player"].map(data_pipeline._normalize_name)
+    eligible["auction_eligible"] = True
+    eligible["eligibility_status"] = eligible["_key"].map(audit_by_key["final_auction_status"])
+    eligible["eligibility_reason"] = eligible["_key"].map(audit_by_key["eligibility_reason"])
+    eligible["eligibility_source"] = eligible["_key"].map(audit_by_key["evidence_source"])
+    eligible = eligible.drop(columns=["_key"])
+
+    return eligible, audit

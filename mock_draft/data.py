@@ -19,6 +19,8 @@ from .points import build_points_lookup, compute_fallback_ratio, points_for
 
 BASE_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(BASE_DIR))
+from auction_model import data_pipeline  # noqa: E402
+from auction_model.auction_eligibility import build_confirmed_veteran_auction_pool  # noqa: E402
 from auction_model.confirmed_keeper_pipeline import normalize_name  # noqa: E402
 
 
@@ -126,18 +128,39 @@ def load_confirmed_pool_and_teams(
     prices = prices.rename(columns={"suggested_auction_price": "base_value"})
     prices = prices[["player", "position", "base_value"]]
 
-    # Exclude every confirmed veteran keeper AND every college-rights hold
-    # from the auction-eligible pool -- the one eligibility decision this
-    # loader makes, independent of auction_model.auction_eligibility's own
-    # (broader, nflverse/college-holdings-aware) classification, which
-    # governs the real run_valuation.py price sheet instead. Both must
-    # agree that keepers/holds are excluded; this loader enforces it
-    # directly against the confirmed-keeper file as a hard guarantee for
-    # the mock-draft pool specifically.
+    # PHASE 2B FIX: this used to be a direct name-exclusion against the
+    # confirmed-keeper file only -- phase 2's own documented gap, since it
+    # meant this pool never received the real nflverse-debut-aware /
+    # college-rights-aware classification auction_model.auction_eligibility
+    # provides (a name match is identity resolution, not eligibility).
+    # Now calls the SAME shared function run_valuation.py's confirmed mode
+    # uses, so both production paths can never silently diverge on who is
+    # auction-eligible. See
+    # outputs/auction_rebuild/audit/eligibility_path_reconciliation.csv
+    # for the required cross-check between the two paths.
+    salaries, _ = data_pipeline.load_historical_salaries(BASE_DIR / "data" / "historical_salaries_2025_raw.csv")
+    eligibility_roster = salaries.copy()
+    eligibility_roster["will_keep"] = False
+    keeper_norm = set(confirmed_keepers.loc[confirmed_keepers["counts_as_keeper"].astype(bool), "player_name"].map(normalize_name))
+    eligibility_roster.loc[eligibility_roster["player"].map(normalize_name).isin(keeper_norm), "will_keep"] = True
+
     excluded_names = set(confirmed_keepers["player_name"].map(normalize_name))
-    prices["_key"] = prices["player"].map(normalize_name)
-    contaminated = prices[prices["_key"].isin(excluded_names)]
-    prices = prices[~prices["_key"].isin(excluded_names)].drop(columns=["_key"])
+    prices_before = prices["player"].map(normalize_name)
+    contaminated = prices[prices_before.isin(excluded_names)]
+    prices, eligibility_audit = build_confirmed_veteran_auction_pool(
+        prices, salaries, confirmed_keepers, roster=eligibility_roster,
+        # See classify_player_eligibility's docstring: without
+        # data/nflverse/player_stats_reg_2025.csv (absent in this
+        # environment), the strict default misclassifies real active
+        # veteran free agents as ineligible, shrinking the pool below
+        # what a 12-team/9-pick draft needs to complete. Opted in ONLY
+        # here (the mock-draft simulator, where pool depth matters more
+        # than excluding a rare false positive) -- run_valuation.py's real
+        # price sheet keeps the strict default. Documented, not silent:
+        # see outputs/auction_rebuild/audit/eligibility_path_reconciliation.csv.
+        fp_only_fallback_eligible=True,
+    )
+    prices = prices[["player", "position", "base_value"]]
 
     prices = build_tiers(prices)
     star_cutoff = prices["base_value"].sort_values(ascending=False).head(cfg.GLOBAL_STAR_COUNT).min()
@@ -175,5 +198,6 @@ def load_confirmed_pool_and_teams(
     return players, teams, {
         "excluded_count": len(excluded_names),
         "contaminated_in_price_sheet_before_filter": contaminated["player"].tolist(),
+        "eligibility_audit": eligibility_audit,
         "budget_scenario": budget_scenario,
     }

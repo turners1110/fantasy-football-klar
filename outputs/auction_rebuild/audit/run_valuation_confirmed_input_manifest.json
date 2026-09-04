@@ -11,8 +11,8 @@
   "sum_primary_auction_budget": 3021,
   "sum_confirmed_keeper_spend": 1734.0,
   "outputs": {
-    "veteran_auction_price_sheet": "/tmp/clean_confirmed_run/veteran_auction_price_sheet.csv",
-    "keepers_2026": "/tmp/clean_confirmed_run/keepers_2026.csv",
+    "veteran_auction_price_sheet": "/tmp/manifest_only_run/veteran_auction_price_sheet.csv",
+    "keepers_2026": "/tmp/manifest_only_run/keepers_2026.csv",
     "team_starting_states": "/home/user/fantasy-football-klar/outputs/auction_rebuild/data/team_starting_states.csv",
     "eligibility_audit": "/home/user/fantasy-football-klar/outputs/auction_rebuild/audit/run_valuation_eligibility_audit.csv"
   },

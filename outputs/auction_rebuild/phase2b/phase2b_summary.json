@@ -1,0 +1,22 @@
+{
+  "n_seeds": 200,
+  "n_teams": 12,
+  "n_team_runs_total_capped_scenario": 2400,
+  "legal_roster_count": 2400,
+  "legal_roster_rate": 1.0,
+  "legal_lineup_count": 2400,
+  "legal_lineup_rate": 1.0,
+  "negative_budget_count": 0,
+  "duplicate_sale_count": 0,
+  "keeper_sold_count": 0,
+  "forced_final_slot_count": 0,
+  "max_qb_count_position_caps_enabled": 4,
+  "configured_qb_cap": 4,
+  "qb_cap_held": true,
+  "n_team_runs_with_3plus_qb_capped_scenario": 550,
+  "max_qb_count_position_caps_disabled_comparison": 6,
+  "outputs": {
+    "seed_team_results": "/home/user/fantasy-football-klar/outputs/auction_rebuild/phase2b/seed_team_results.csv",
+    "failures": "/home/user/fantasy-football-klar/outputs/auction_rebuild/phase2b/failures.csv"
+  }
+}

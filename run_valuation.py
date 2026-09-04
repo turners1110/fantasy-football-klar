@@ -17,6 +17,7 @@ With no --projections file, prices are pure historical-salary anchoring
 from __future__ import annotations
 
 import argparse
+import csv
 import sys
 from pathlib import Path
 
@@ -164,7 +165,7 @@ def _load_confirmed_keepers(
         raise ValueError(f"Confirmed keepers file {keepers_path} missing required columns: {sorted(missing_cols)}")
     adjustments = pd.read_csv(adjustments_path)
 
-    identity_rows = compute_identity_issues(confirmed_keepers)
+    identity_rows = compute_identity_issues(confirmed_keepers, salaries=salaries)
     unresolved = unresolved_duplicate_identities(identity_rows)
     if unresolved:
         raise ValueError(
@@ -181,13 +182,24 @@ def _load_confirmed_keepers(
     out_data_dir = BASE_DIR / "outputs" / "auction_rebuild" / "data"
     audit_dir.mkdir(parents=True, exist_ok=True)
     out_data_dir.mkdir(parents=True, exist_ok=True)
+    # Written with csv.DictWriter (not pd.DataFrame.to_csv) to be
+    # byte-for-byte identical to scripts/build_team_states.py's output --
+    # pandas' to_csv writes CRLF line endings here, which made the two
+    # "one authoritative pipeline" entry points produce spuriously
+    # different files even when the underlying data was identical.
     if conflict_rows:
-        pd.DataFrame(conflict_rows).to_csv(audit_dir / "keeper_source_conflicts.csv", index=False)
+        with (audit_dir / "keeper_source_conflicts.csv").open("w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(conflict_rows[0].keys()))
+            w.writeheader()
+            w.writerows(conflict_rows)
     else:
         (audit_dir / "keeper_source_conflicts.csv").write_text(
             "team,field,winning_source,winning_value,losing_source,losing_value,detail\n"
         )
-    pd.DataFrame(state_rows).to_csv(out_data_dir / "team_starting_states.csv", index=False)
+    with (out_data_dir / "team_starting_states.csv").open("w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(state_rows[0].keys()))
+        w.writeheader()
+        w.writerows(state_rows)
 
     veteran_rows = confirmed_keepers[confirmed_keepers["counts_as_keeper"].astype(bool)]
     with_keepers = salaries.copy()
@@ -205,18 +217,13 @@ def _load_confirmed_keepers(
             # either a nickname/full-name mismatch (e.g. "Tet" vs "Tetairoa"
             # McMillan) or a player genuinely absent from that extraction
             # (e.g. a 2025 rookie never on a captured roster snapshot). NOT
-            # silently dropped: logged to keeper_identity_issues.csv below,
-            # and a synthetic roster row is built directly from the
-            # confirmed keeper file's own (authoritative) prior_salary /
-            # keeper_cost so this keeper still counts correctly everywhere
-            # downstream (auction exclusion, keepers_2026.csv export).
-            identity_rows.append({
-                "issue_type": "UNMATCHED_TO_HISTORICAL_SALARY", "player_name": kr["player_name"],
-                "normalized": normalize_name(kr["player_name"]), "team": kr["team_name"],
-                "detail": f"No row in historical_salaries_2025_raw.csv matched by normalized name "
-                          f"-- using confirmed file's own prior_salary (${kr['prior_salary']}) / "
-                          f"keeper_cost (${kr['keeper_cost']}) directly instead of silently dropping.",
-            })
+            # silently dropped: already logged to identity_rows above (the
+            # shared compute_identity_issues(..., salaries=salaries) call
+            # includes this UNMATCHED_TO_HISTORICAL_SALARY check), and a
+            # synthetic roster row is built directly from the confirmed
+            # keeper file's own (authoritative) prior_salary / keeper_cost
+            # so this keeper still counts correctly everywhere downstream
+            # (auction exclusion, keepers_2026.csv export).
             unmatched_synthetic_rows.append({
                 "team": kr["team_name"], "player": kr["player_name"], "position": kr["position"],
                 "salary_2025": float(kr["prior_salary"]) if pd.notna(kr["prior_salary"]) else pd.NA,
@@ -235,7 +242,10 @@ def _load_confirmed_keepers(
     if unmatched_synthetic_rows:
         with_keepers = pd.concat([with_keepers, pd.DataFrame(unmatched_synthetic_rows)], ignore_index=True)
 
-    pd.DataFrame(identity_rows).to_csv(audit_dir / "keeper_identity_issues.csv", index=False)
+    with (audit_dir / "keeper_identity_issues.csv").open("w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["issue_type", "player_name", "normalized", "team", "detail"])
+        w.writeheader()
+        w.writerows(identity_rows)
 
     total_keeper_spend = float(veteran_rows["keeper_cost"].astype(float).sum())
     historical_value_removed = float(veteran_rows["prior_salary"].astype(float).sum())
@@ -407,26 +417,24 @@ def main() -> None:
     )
 
     if use_confirmed:
-        # ONE eligibility decision for the veteran price sheet: run the real
-        # auction_model.auction_eligibility classifier (nflverse debut /
-        # college-rights aware) for the general pool, THEN force-exclude
-        # every player named in the confirmed keeper file (both veteran
-        # keepers and college-rights holds) as a hard override -- the
-        # confirmed file is the higher-priority, commissioner-sourced
-        # identity for these specific players regardless of what the
-        # more general classifier concludes about them.
-        eligibility_audit = auction_eligibility.build_eligibility_audit(full_pool, salaries, roster=with_keepers)
-        full_pool = auction_eligibility.filter_veteran_auction_pool(full_pool, eligibility_audit, fail_on_ineligible=False)
+        # ONE shared function (auction_model.auction_eligibility.
+        # build_confirmed_veteran_auction_pool) builds the veteran auction
+        # pool for BOTH this script's confirmed mode AND
+        # mock_draft/data.py's mock-draft pool -- the phase-2B fix for
+        # phase 2's gap, where mock_draft/data.py bypassed the real
+        # classifier entirely via a direct name-exclusion. Both paths now
+        # get the same nflverse/college-rights-aware classification, with
+        # the confirmed keeper file as a hard override on top for this
+        # league's actual named keepers/holds.
+        full_pool, eligibility_audit = auction_eligibility.build_confirmed_veteran_auction_pool(
+            full_pool, salaries, confirmed_keepers_df, roster=with_keepers,
+        )
         confirmed_excluded_names = set(confirmed_keepers_df["player_name"].map(normalize_name))
-        full_pool_key = full_pool["player"].map(normalize_name)
-        still_present = full_pool.loc[full_pool_key.isin(confirmed_excluded_names), "player"].tolist()
-        full_pool = full_pool.loc[~full_pool_key.isin(confirmed_excluded_names)].reset_index(drop=True)
         audit_dir = BASE_DIR / "outputs" / "auction_rebuild" / "audit"
         eligibility_audit.to_csv(audit_dir / "run_valuation_eligibility_audit.csv", index=False)
-        print(f"\nApplied auction_model.auction_eligibility to the veteran price-sheet pool "
-              f"(wrote {audit_dir / 'run_valuation_eligibility_audit.csv'}); confirmed-file override "
-              f"additionally force-excluded {len(confirmed_excluded_names)} named keepers/holds "
-              f"({len(still_present)} of whom the general classifier alone would NOT have excluded).")
+        print(f"\nApplied the shared auction_model.auction_eligibility.build_confirmed_veteran_auction_pool "
+              f"to the veteran price-sheet pool (wrote {audit_dir / 'run_valuation_eligibility_audit.csv'}); "
+              f"{len(confirmed_excluded_names)} confirmed keepers/holds excluded as a hard override.")
 
     priced, priced_hypothetical = valuation.price_live_and_hypothetical(full_pool, inflation, blend_weight)
 

@@ -8,26 +8,28 @@ PHASE 2 CHANGE: the forced-final-slot rule (a team's last roster slot cost
 its entire remaining budget, overriding the competitive bid) has been
 REMOVED. It was manufacturing artificial prices with no bidding basis --
 see outputs/auction_rebuild/audit/current_architecture.md section 11 for
-why it existed and outputs/auction_rebuild/phase2/ for proof the auction
-still completes legally without it. Every sale price now comes only from
-resolve_bid's competitive process; an uncontested nomination sells for
-$1, and unspent cash at the end of a draft is legal and expected.
+why it existed. Every sale price now comes only from resolve_bid's
+competitive process; an uncontested nomination sells for $1, and unspent
+cash at the end of a draft is legal and expected.
 
-max_bid_cap (models.py:Team.max_bid_cap) already reserves $1 for every
-OTHER remaining roster slot -- on a team's actual final slot that reserve
-is correctly $0, so their ceiling there is their full remaining budget,
-which they are free to not spend if no one bids that high. This is a
-legal ceiling, not a forced floor.
+PHASE 2B CHANGE (this was phase 2's own documented gap, and phase 2's
+smoke test proved it real: 27 of 240 simulated teams finished missing a
+required QB or TE while holding a full, budget-legal 15-player roster --
+e.g. one team rostered 11 WR / 3 RB / 1 QB / 0 TE). Every bid is now
+gated through mock_draft.feasibility.check_roster_completion_feasibility
+BEFORE it is allowed to raise, so a team can never legally construct a
+roster with no path to a legal 1QB/2RB/2WR/1TE/3FLEX/15-total lineup.
+Illegal construction is PREVENTED during bidding, not repaired afterward.
+A companion incremental-utility gate stops a team paying above $1 for a
+player who adds zero legal-lineup value (the mechanism behind phase 2's
+five-QB roster: a third-string QB is worthless under legal-lineup scoring
+but nothing previously stopped a team paying for one anyway).
 
-KNOWN LIMITATION (documented, not solved here): section 14 of the
-rebuild spec asks for a positional-feasibility check (a team should not
-be able to spend down to where it can no longer field a legal QB/RB/WR/
-TE lineup, even if it has cash and slots left). Not implemented as an
-explicit solver -- with a 382-player auction-eligible pool in this
-league (see outputs/auction_rebuild/data/auction_eligible_players.csv),
-running out of an entire position is not a practically reachable
-scenario, so this is treated as non-binding rather than actively
-enforced. Flagged as a real gap for a deeper pool or smaller league.
+max_bid_cap (models.py:Team.max_bid_cap) still reserves $1 for every
+OTHER remaining roster slot; the feasibility gate is a second, independent
+check on top of that cash reserve -- it additionally verifies enough
+eligible players remain at each required position and enough roster slots
+remain to fit them.
 """
 
 from __future__ import annotations
@@ -37,7 +39,10 @@ import copy
 import numpy as np
 
 from . import config_bridge as cfg
+from . import feasibility as feas_mod
 from .archetypes import ARCHETYPE_NAMES, Archetype
+from .feasibility import check_roster_completion_feasibility
+from .legal_lineup import build_production_lineup
 from .models import Player, Team
 from .nomination import choose_nomination
 from .valuation import compute_willingness
@@ -45,34 +50,91 @@ from .valuation import compute_willingness
 BID_SAFETY_ROUNDS = 60
 
 
+def _incremental_utility(team: Team, candidate: Player, price: float) -> float:
+    """total_roster_utility with vs. without the candidate on this team's
+    roster right now. <= 0 means the legal-lineup scorer gives this player
+    no credit at all -- typically a 3rd+ QB, or a bench slot that would be
+    filled by a strictly-worse player than what's already rostered."""
+    before = build_production_lineup(team.roster).total_roster_utility
+    after = build_production_lineup(
+        team.roster + [(candidate.name, candidate.position, price, candidate.projected_points)]
+    ).total_roster_utility
+    return after - before
+
+
+def _team_can_ever_take(team: Team, candidate: Player, available: dict, position_max: dict | None) -> bool:
+    """Cheapest possible legality check (candidate at $1) -- used to decide
+    whether a team belongs in the bidder pool AT ALL for this candidate,
+    independent of what they'd actually be willing to pay."""
+    feas = check_roster_completion_feasibility(
+        team.roster, team.budget_remaining, team.slots_needed, available,
+        candidate_player=candidate, candidate_price=float(cfg.MIN_PRICE), position_max=position_max,
+    )
+    return feas.is_feasible
+
+
 def resolve_bid(
-    candidate: Player, nominator: str, teams: dict[str, Team], rng: np.random.Generator, draft_progress: float
+    candidate: Player, nominator: str, teams: dict[str, Team], rng: np.random.Generator,
+    draft_progress: float, available: dict[str, Player],
+    position_max: dict | None = None,
 ) -> dict:
     """Open ascending auction starting at $1 with the nominator as the
     default winner if nobody raises. Returns a dict with winner, price,
     and the bid-transparency fields required by the rebuild spec
     (bidder_count, second_highest_bid) -- every sale is organic by
-    construction now that forced-final-slot pricing is gone."""
-    current_bid = float(cfg.MIN_PRICE)
-    current_leader = nominator
-    second_highest = 0.0  # highest amount reached by anyone OTHER than the eventual winner
-    bidders = {nominator}
+    construction now that forced-final-slot pricing is gone.
+
+    `winner` is None if NO team (nominator included) can legally take this
+    candidate at any price -- callers must handle that by not completing a
+    sale (see run_single_auction's NO_LEGAL_BUYER handling) rather than
+    forcing an illegal purchase."""
     eligible = [name for name, t in teams.items() if not t.is_done]
+    legally_biddable = [name for name in eligible if _team_can_ever_take(teams[name], candidate, available, position_max)]
+
+    if not legally_biddable:
+        return {
+            "winner": None, "price": None, "bidder_count": 0, "second_highest_bid": 0.0,
+            "sale_is_organic": False, "sale_has_competing_bid": False,
+            "block_reason": "POSITIONAL_INFEASIBILITY",
+        }
+
+    current_leader = nominator if nominator in legally_biddable else legally_biddable[0]
+    current_bid = float(cfg.MIN_PRICE)
+    second_highest = 0.0  # highest amount reached by anyone OTHER than the eventual winner
+    bidders = {current_leader}
 
     changed = True
     rounds = 0
     while changed and rounds < BID_SAFETY_ROUNDS:
         changed = False
         rounds += 1
-        for name in eligible:
+        for name in legally_biddable:
             if name == current_leader:
                 continue
             team = teams[name]
             willingness = compute_willingness(team, candidate, rng, draft_progress)
             cap = team.max_bid_cap()
             max_can_pay = min(willingness, cap)
+
+            # Zero/negative incremental-utility gate: a limited phase-2B
+            # safety check (not the full team-specific bid-ceiling engine)
+            # -- if the legal-lineup scorer credits this player with no
+            # marginal value to THIS team's roster right now, they may
+            # still pick it up uncontested for $1, but never bid above it.
+            if _incremental_utility(team, candidate, max_can_pay) <= 0:
+                max_can_pay = min(max_can_pay, float(cfg.MIN_PRICE))
+
             if max_can_pay <= current_bid:
                 continue
+
+            # Positional-feasibility gate at the actual price being considered.
+            feas = check_roster_completion_feasibility(
+                team.roster, team.budget_remaining, team.slots_needed, available,
+                candidate_player=candidate, candidate_price=max_can_pay, position_max=position_max,
+            )
+            if not feas.is_feasible:
+                continue
+
             archetype = team.strategy
             increment = 1.0
             if rng.random() < archetype.jump_bid_prob:
@@ -93,17 +155,37 @@ def resolve_bid(
         "second_highest_bid": second_highest,
         "sale_is_organic": True,
         "sale_has_competing_bid": len(bidders) > 1,
+        "block_reason": None,
     }
 
 
 def run_single_auction(
     players: dict[str, Player], teams: dict[str, Team], rng: np.random.Generator,
     verbose: bool = False, strategies: dict[str, Archetype] | None = None,
+    unsold_log: list | None = None,
+    enable_position_max: bool = True,
+    position_max: dict | None = None,
 ):
     """strategies: optional {team_name: Archetype} to drive bidding from an
     evolved genome instead of a random named archetype -- used by
     evolution.py. Teams not present in `strategies` fall back to the
-    normal random-archetype assignment."""
+    normal random-archetype assignment.
+
+    unsold_log: optional list -- if given, every player nobody could
+    legally take (see resolve_bid's NO_LEGAL_BUYER handling) is appended
+    to it in place. Return signature is unchanged ((draft_log, teams)) so
+    this is backward compatible with every existing caller; pass a list
+    only if you want to inspect unsold players (e.g. the smoke-test
+    reporting script).
+
+    enable_position_max/position_max: soft roster-position caps (default
+    feasibility.DEFAULT_POSITION_MAX -- history-grounded, see
+    outputs/auction_rebuild/audit/historical_roster_position_counts.csv).
+    Pass enable_position_max=False to run without them (phase 2B requires
+    testing both configurations)."""
+    active_position_max = position_max if position_max is not None else (
+        feas_mod.DEFAULT_POSITION_MAX if enable_position_max else None
+    )
     teams = copy.deepcopy(teams)
     available = dict(players)
 
@@ -120,7 +202,7 @@ def run_single_auction(
     idx = 0
     pick_num = 0
     safety = 0
-    max_picks = cfg.NUM_TEAMS * cfg.REQUIRED_ROSTER_SIZE + len(available)
+    max_picks = (cfg.NUM_TEAMS * cfg.REQUIRED_ROSTER_SIZE + len(available)) * 2
     total_initial_slots = sum(t.slots_needed for t in teams.values())
 
     while available and any(not t.is_done for t in teams.values()) and safety < max_picks:
@@ -136,8 +218,23 @@ def run_single_auction(
         remaining_slots = sum(t.slots_needed for t in teams.values())
         draft_progress = 1.0 - (remaining_slots / total_initial_slots if total_initial_slots else 0.0)
 
-        sale = resolve_bid(candidate, nominator, teams, rng, draft_progress)
-        winner, price = sale["winner"], sale["price"]
+        sale = resolve_bid(candidate, nominator, teams, rng, draft_progress, available, active_position_max)
+        winner = sale["winner"]
+
+        if winner is None:
+            # No team (nominator included) can legally take this player at
+            # any price right now -- it goes unsold rather than being
+            # forced onto a roster that would become illegal. Removed from
+            # the pool so it can't cause an infinite re-nomination loop.
+            if unsold_log is not None:
+                unsold_log.append({
+                    "player": candidate.name, "position": candidate.position,
+                    "nominating_team": nominator, "reason": sale["block_reason"],
+                })
+            del available[candidate_name]
+            continue
+
+        price = sale["price"]
         team = teams[winner]
 
         budget_before = team.budget_remaining

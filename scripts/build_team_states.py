@@ -25,6 +25,7 @@ import pandas as pd
 BASE_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
+from auction_model import data_pipeline  # noqa: E402
 from auction_model.confirmed_keeper_pipeline import (  # noqa: E402
     compute_identity_issues, compute_team_states,
 )
@@ -39,8 +40,9 @@ OUT_DATA_DIR.mkdir(parents=True, exist_ok=True)
 def main() -> None:
     keepers = pd.read_csv(DATA_DIR / "keepers_2026_confirmed.csv")
     adjustments = pd.read_csv(DATA_DIR / "team_budget_adjustments_2026.csv")
+    salaries, _ = data_pipeline.load_historical_salaries(DATA_DIR / "historical_salaries_2025_raw.csv")
 
-    identity_rows = compute_identity_issues(keepers)
+    identity_rows = compute_identity_issues(keepers, salaries=salaries)
     identity_path = AUDIT_DIR / "keeper_identity_issues.csv"
     with identity_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["issue_type", "player_name", "normalized", "team", "detail"])

@@ -41,7 +41,17 @@ def normalize_name(name: str) -> str:
     return name
 
 
-def compute_identity_issues(keepers: pd.DataFrame) -> list[dict]:
+def compute_identity_issues(keepers: pd.DataFrame, salaries: pd.DataFrame | None = None) -> list[dict]:
+    """salaries: optional data/historical_salaries_2025_raw.csv-shaped
+    DataFrame. When given, also flags confirmed veteran keepers that
+    don't match any row there by normalized name (UNMATCHED_TO_HISTORICAL_SALARY
+    -- e.g. a nickname/full-name mismatch, or a player genuinely absent
+    from that extraction). PHASE 2B FIX: this check used to live only
+    inside run_valuation.py's confirmed-mode loader, duplicated rather
+    than shared, so scripts/build_team_states.py's own identity audit
+    silently missed it -- the two 'one authoritative pipeline' entry
+    points were producing different identity audits depending on which
+    one ran last. Now both call this one function with the same inputs."""
     keepers = keepers.copy()
     keepers["_norm"] = keepers["player_name"].map(normalize_name)
     identity_rows = []
@@ -67,7 +77,21 @@ def compute_identity_issues(keepers: pd.DataFrame) -> list[dict]:
             "normalized": norm_name, "team": "MULTIPLE",
             "detail": f"appears on {n_teams} different teams",
         })
-    if not any(r["issue_type"] != "REQUIRED_IDENTITY_CHECK" for r in identity_rows):
+    if salaries is not None and "counts_as_keeper" in keepers.columns:
+        salary_norm = set(salaries["player"].map(normalize_name))
+        veteran_rows = keepers[keepers["counts_as_keeper"].astype(bool)]
+        for _, row in veteran_rows.iterrows():
+            if row["_norm"] not in salary_norm:
+                identity_rows.append({
+                    "issue_type": "UNMATCHED_TO_HISTORICAL_SALARY", "player_name": row["player_name"],
+                    "normalized": row["_norm"], "team": row["team_name"],
+                    "detail": (
+                        f"No row in historical_salaries_2025_raw.csv matched by normalized name -- using "
+                        f"confirmed file's own prior_salary (${row.get('prior_salary', '?')}) / "
+                        f"keeper_cost (${row.get('keeper_cost', '?')}) directly instead of silently dropping."
+                    ),
+                })
+    if not any(r["issue_type"] not in ("REQUIRED_IDENTITY_CHECK",) for r in identity_rows):
         identity_rows.append({
             "issue_type": "NONE_FOUND", "player_name": "", "normalized": "", "team": "",
             "detail": "No duplicate/ambiguous/multi-team identity issues found in keepers_2026_confirmed.csv",

@@ -1,0 +1,13 @@
+team,starting_budget,keeper_count,n_college_rights_holds,franchise_tag_count,keeper_spend,formula_budget_before_trades,sheet_reported_budget,cash_sent,cash_received,net_cash_adjustment,calculated_final_budget,difference,source,resolution_status,notes
+Brad,400,6,0,1,119.0,281.0,281,0.0,0.0,0.0,281.0,0.0,sheet_only,RESOLVED,
+Brandon,400,6,0,1,221.0,179.0,184,0.0,0.0,0.0,179.0,5.0,sheet_only,UNRESOLVED_GAP,"INFERRED (unconfirmed) trade-recipient hypothesis: if this team received the +$15 from Sam's Skattebo trade, calculated_final_budget would be $194 (diff vs sheet: -10) instead of $179 (diff: +5) -- the hypothesis does NOT close this team's gap, it changes which direction it's off. data/historical_salaries_2025_raw.csv row 25: 'Brandon,Cam Skattebo,RB,18' -- Brandon is the only team with any historical record of Cam Skattebo. Sam's confirmed keeper file prices Skattebo at $28 ($18 + $10 standard bump), consistent with this being the same player/salary chain. UNCONFIRMED: no tracked source states Brandon received the $15."
+CJ,400,6,0,1,136.0,264.0,264,0.0,0.0,0.0,264.0,0.0,sheet_only,RESOLVED,
+Coby,400,6,0,1,126.0,274.0,274,0.0,0.0,0.0,274.0,0.0,sheet_only,RESOLVED,
+Evan,400,6,0,1,206.0,194.0,184,0.0,0.0,0.0,194.0,-10.0,sheet_only,UNRESOLVED_GAP,
+James,400,6,0,1,103.0,297.0,297,0.0,0.0,0.0,297.0,0.0,sheet_only,RESOLVED,
+Jason,400,6,0,1,186.0,214.0,209,0.0,0.0,0.0,214.0,-5.0,sheet_only,UNRESOLVED_GAP,
+Reid,400,6,0,1,150.0,250.0,260,0.0,0.0,0.0,250.0,10.0,sheet_only,UNRESOLVED_GAP,
+Ryan J,400,6,0,1,136.0,264.0,257,0.0,0.0,0.0,264.0,-7.0,sheet_only,UNRESOLVED_GAP,
+Sam,400,6,2,1,162.0,238.0,225,15.0,0.0,-15.0,223.0,2.0,sheet+user_direct_statement,UNRESOLVED_GAP,"Sam's primary budget is set by explicit user statement (223), NOT derived from this formula -- shown here for comparison only. Required formula for Sam: 400 - $162 keeper_spend - $15 cash_sent = $223 (matches user-required value exactly)."
+Shane,400,6,1,1,76.0,324.0,324,0.0,0.0,0.0,324.0,0.0,sheet_only,RESOLVED,
+Travis,400,6,2,1,113.0,287.0,264,0.0,0.0,0.0,287.0,-23.0,sheet_only,UNRESOLVED_GAP,

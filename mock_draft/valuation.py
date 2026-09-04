@@ -95,11 +95,12 @@ def compute_willingness(team: Team, player: Player, rng: np.random.Generator, dr
     # earlier attempts at that (a hard cliff at slots_needed==1, then a
     # continuous fair-share floor applied to every player) either produced
     # a $286 bid on a ~$21 player or made teams bid $30+ on scrub backup
-    # QBs. Guaranteeing "every dollar spent AND every roster spot filled"
-    # is handled instead as an explicit deterministic rule in auction.py
-    # (a team's final roster slot costs exactly whatever budget they have
-    # left) -- English-auction bidding literally cannot force spend beyond
-    # a winning bid when nobody contests a nomination, so this has to be a
-    # rule layered on top, not an emergent willingness effect.
+    # QBs. PHASE 2 removed the forced-final-slot rule entirely (a team's
+    # last roster slot no longer costs its whole remaining budget) --
+    # unspent cash at the end of a draft is now legal and expected;
+    # roster COMPLETION (not cash exhaustion) is guaranteed instead by
+    # mock_draft.feasibility.check_roster_completion_feasibility, which
+    # blocks a purchase that would leave no legal path to fill every
+    # required slot.
 
     return willingness
