@@ -122,11 +122,36 @@ BENCH_DEMAND_PER_TEAM = {"QB": 0.2, "RB": 1.2, "WR": 1.2, "TE": 0.2}
 def replacement_rank(position: str) -> int:
     """Return the league-wide rank at which 'replacement level' sits for a
     position, given this league's actual starting lineup + bench demand
-    (not a generic redraft assumption)."""
+    (not a generic redraft assumption).
+
+    PHASE 3D: this is the FIXED_RANK_LEGACY method only -- see
+    REPLACEMENT_METHOD below and auction_model.valuation.
+    compute_replacement_baseline_from_method for the two alternatives
+    (GREEDY_LEAGUEWIDE_ALLOCATION, EXACT_LEAGUEWIDE_ALLOCATION) validated
+    in outputs/auction_rebuild/phase3d/exact_replacement_allocation.csv
+    and greedy_exact_replacement_comparison.csv. FLEX_SHARE above (the
+    45/45/10 RB/WR/TE assumption this formula depends on) was found in
+    phase 3C/3D to not match real optimized-lineup FLEX fill -- kept here
+    unchanged as the LEGACY method's own input, not silently altered."""
     dedicated = STARTING_LINEUP.get(position, 0) * NUM_TEAMS
     flex = STARTING_LINEUP["FLEX"] * NUM_TEAMS * FLEX_SHARE.get(position, 0)
     bench = BENCH_DEMAND_PER_TEAM.get(position, 0) * NUM_TEAMS
     return round(dedicated + flex + bench)
+
+
+# ---------------------------------------------------------------------------
+# Phase 3D: replacement-level method selection
+# ---------------------------------------------------------------------------
+FIXED_RANK_LEGACY = "FIXED_RANK_LEGACY"
+GREEDY_LEAGUEWIDE_ALLOCATION = "GREEDY_LEAGUEWIDE_ALLOCATION"
+EXACT_LEAGUEWIDE_ALLOCATION = "EXACT_LEAGUEWIDE_ALLOCATION"
+REPLACEMENT_METHODS = (FIXED_RANK_LEGACY, GREEDY_LEAGUEWIDE_ALLOCATION, EXACT_LEAGUEWIDE_ALLOCATION)
+# Set to EXACT_LEAGUEWIDE_ALLOCATION after validation (phase 3D): the exact
+# MIP solves reliably (OPTIMAL, <2s) and gives RB/WR/QB/TE value shares far
+# closer to every historical/public benchmark gathered across phases 3B-3D
+# than the fixed-rank legacy method's own RB 57%/WR 33% split. See
+# outputs/auction_rebuild/phase3d/final_report.md section 5.
+REPLACEMENT_METHOD = EXACT_LEAGUEWIDE_ALLOCATION
 
 
 # ---------------------------------------------------------------------------

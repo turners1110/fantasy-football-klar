@@ -19,6 +19,7 @@ from .points import build_points_lookup, compute_fallback_ratio, points_for
 
 BASE_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(BASE_DIR))
+from auction_model import config as auction_cfg  # noqa: E402
 from auction_model import data_pipeline  # noqa: E402
 from auction_model.auction_eligibility import build_confirmed_veteran_auction_pool  # noqa: E402
 from auction_model.confirmed_keeper_pipeline import normalize_name  # noqa: E402
@@ -168,15 +169,53 @@ def load_confirmed_pool_and_teams(
     )
     prices = prices[["player", "position", "base_value"]]
 
+    # Points are needed BEFORE base_value can be recomputed under the
+    # phase 3D replacement methods (VBD needs points), so this now happens
+    # ahead of build_tiers/star_cutoff (both of which depend on base_value).
+    points_lookup = build_points_lookup()
+    fallback_ratio = compute_fallback_ratio(prices, points_lookup)
+    player_points: dict[str, tuple[float, bool]] = {}
+    for _, row in prices.iterrows():
+        player_points[row["player"]] = points_for(
+            row["player"], points_lookup, fallback_ratio, row["base_value"], row["position"],
+        )
+
+    # PHASE 3D item 3: recompute base_value from the selected replacement
+    # method (auction_model.config.REPLACEMENT_METHOD) instead of using
+    # the snapshot's fixed-rank-derived suggested_auction_price as-is.
+    # FIXED_RANK_LEGACY keeps the snapshot's own values unchanged (no
+    # recompute -- this is exactly the pre-3D behavior, preserved as an
+    # explicit opt-back-in). GREEDY_/EXACT_LEAGUEWIDE_ALLOCATION rebuild
+    # VBD from that method's real replacement points, then redistribute
+    # the SAME per-position dollar pool proportionally to (new VBD)^power,
+    # so total league dollars are conserved -- only the SHAPE changes, not
+    # the total. See auction_model.replacement_methods.
+    if auction_cfg.REPLACEMENT_METHOD != auction_cfg.FIXED_RANK_LEGACY:
+        from auction_model import replacement_methods
+        team_keepers_for_solve = {
+            row["team_id"]: [
+                (kr["player_name"], kr["position"], player_points.get(kr["player_name"], (0.0, False))[0])
+                for _, kr in confirmed_keepers[
+                    (confirmed_keepers["team_id"] == row["team_id"]) & (confirmed_keepers["counts_as_keeper"].astype(bool))
+                ].iterrows()
+            ]
+            for _, row in team_states.iterrows()
+        }
+        pool_points_for_solve = {
+            name: (row["position"], player_points.get(name, (0.0, False))[0])
+            for name, row in prices.set_index("player").iterrows()
+        }
+        prices["base_value"] = replacement_methods.recompute_base_value(
+            prices, pool_points_for_solve, team_keepers_for_solve,
+            method=auction_cfg.REPLACEMENT_METHOD,
+        )
+
     prices = build_tiers(prices)
     star_cutoff = prices["base_value"].sort_values(ascending=False).head(cfg.GLOBAL_STAR_COUNT).min()
 
-    points_lookup = build_points_lookup()
-    fallback_ratio = compute_fallback_ratio(prices, points_lookup)
-
     players = {}
     for _, row in prices.iterrows():
-        pts, is_real = points_for(row["player"], points_lookup, fallback_ratio, row["base_value"], row["position"])
+        pts, is_real = player_points[row["player"]]
         players[row["player"]] = Player(
             name=row["player"], position=row["position"], base_value=float(row["base_value"]),
             tier=int(row["tier"]), tier_size=int(row["tier_size"]), tier_rank=int(row["tier_rank"]),
