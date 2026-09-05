@@ -291,6 +291,18 @@ class AuctionCLI:
         except ValueError:
             return f"ERROR: price must be a number, got {price!r}."
 
+        # GATE B (V3 repair, Part 5): the documented auction transaction
+        # rules -- whole-dollar integer price, minimum $1, no $0/decimal/
+        # negative sales -- were never actually enforced anywhere in the
+        # real sale path (the reducer only rejected a strictly negative
+        # price). Enforced here, at the single real entry point every
+        # sale-recording caller (CLI `sale` command, website /api/sale)
+        # funnels through, so both interfaces get it identically.
+        if price_f != int(price_f):
+            return f"ERROR: price must be a whole dollar amount, got {price_f} -- decimal prices are not legal in this auction."
+        if price_f < 1:
+            return f"ERROR: minimum sale price is $1, got ${price_f:.0f} -- $0 and negative sales are not legal."
+
         if not confirmed:
             reason = self._needs_large_sale_confirmation(player, team, price_f)
             if reason:
@@ -892,16 +904,34 @@ class AuctionCLI:
             price_f = float(price)
         except ValueError:
             return f"ERROR: price must be a number, got {price!r}."
+        # GATE B (V3 repair): same whole-dollar/minimum-$1 rule as
+        # cmd_sale -- a correction must not be able to introduce an
+        # illegal price the original sale path would have refused.
+        if price_f != int(price_f):
+            return f"ERROR: price must be a whole dollar amount, got {price_f} -- decimal prices are not legal in this auction."
+        if price_f < 1:
+            return f"ERROR: minimum sale price is $1, got ${price_f:.0f} -- $0 and negative sales are not legal."
         old = self.store.state.sold_players.get(player)
         if old is None:
             return f"ERROR: {player!r} has no recorded sale to correct."
         pos = None
+        points = None
         for t in self.store.state.teams.values():
             for p in t.roster:
                 if p["player_id"] == player:
                     pos = p["position"]
+                    points = p.get("projected_points")
+        # GATE B FIX (V3 repair, Part 4): a correction must preserve
+        # projected_points (and thus every downstream valuation/lineup
+        # calculation for this player), never silently recreate them as
+        # a $0/0-point ghost. Prefer the CURRENT roster entry's own
+        # points (most authoritative -- it's what's live right now);
+        # fall back to the canonical projections dict, then the old sale
+        # record itself, in that order.
+        if points is None:
+            points = self.players[player].projected_points if player in self.players else old.get("projected_points")
         try:
-            self.store.correct_sale(player, player, pos or "UNKNOWN", team, price_f, None)
+            self.store.correct_sale(player, player, pos or "UNKNOWN", team, price_f, None, projected_points=points)
         except IllegalEventError as e:
             return f"REFUSED: {e}"
         self._invalidate_exact_cache()

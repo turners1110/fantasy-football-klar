@@ -52,10 +52,20 @@ class AuctionStateStore:
         return self.state
 
     def correct_sale(self, player_id: str, display_name: str, position: str,
-                      winning_owner: str, sale_price: float, nominating_owner: str | None = None) -> AuctionState:
+                      winning_owner: str, sale_price: float, nominating_owner: str | None = None,
+                      projected_points: float | None = None) -> AuctionState:
+        """GATE B FIX (V3 repair, Part 4): a correction used to recreate
+        the player with ONLY name and position -- projected_points
+        silently defaulted to 0.0 in the re-applied PLAYER_SOLD event,
+        which would then corrupt every downstream lineup/valuation
+        calculation for that player (a $0-point "ghost" version of a
+        real starter). projected_points is now threaded through
+        end-to-end so a correction preserves the same valuation-relevant
+        metadata the original sale had."""
         event = self.record("SALE_CORRECTED", {
             "player_id": player_id, "display_name": display_name, "position": position,
             "winning_owner": winning_owner, "sale_price": sale_price, "nominating_owner": nominating_owner,
+            "projected_points": projected_points,
         })
         return self.state
 

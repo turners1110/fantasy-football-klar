@@ -53,8 +53,20 @@ def apply_event(state: AuctionState, event: AuctionEvent) -> AuctionState:
             raise IllegalEventError(f"{player_id} already on {winner}'s roster")
         if any(player_id in t.keeper_ids for t in new_state.teams.values()):
             raise IllegalEventError(f"{player_id} is a keeper and cannot be sold in the veteran auction")
-        if len(team.roster) >= 16:
-            raise IllegalEventError(f"{winner} already has 16 players")
+        # GATE B FIX (V3 repair): this cap used to check only
+        # len(team.roster) against 16 -- but college-rights holds (and,
+        # after the Gate A repair, Brad/Reid's unidentified 7th protected
+        # player) occupy a real roster slot via college_rights_count
+        # WITHOUT ever appearing in `roster` itself. A team with
+        # college_rights_count=2 could previously buy a full 16-player
+        # roster on top of those 2 slots, reaching 18 total protected
+        # players -- 2 over the official 16-player cap. Fixed to count
+        # both.
+        if len(team.roster) + team.college_rights_count >= 16:
+            raise IllegalEventError(
+                f"{winner} already has 16 players "
+                f"({len(team.roster)} rostered + {team.college_rights_count} protected-but-unlisted)"
+            )
         # legal-max-bid check: price must not exceed what was legally biddable
         # at the moment of sale (budget minus reserve for every OTHER open slot)
         other_open_after = max(0, team.open_slots - 1)
@@ -79,6 +91,10 @@ def apply_event(state: AuctionState, event: AuctionEvent) -> AuctionState:
             "winning_owner": winner, "sale_price": price, "nominating_owner": p.get("nominating_owner"),
             "observed_bidders": p.get("observed_bidders", []), "highest_losing_bidder": p.get("highest_losing_bidder"),
             "sequence_number": event.sequence_number,
+            # GATE B FIX (V3 repair): recorded so a later correction can
+            # fall back to it if the correction call site doesn't supply
+            # a fresher projected_points value -- see SALE_CORRECTED above.
+            "projected_points": p.get("projected_points", 0.0),
         }
         new_state.available_pool.pop(player_id, None)
 
@@ -98,7 +114,15 @@ def apply_event(state: AuctionState, event: AuctionEvent) -> AuctionState:
         del new_state.sold_players[player_id]
         new_state.available_pool[player_id] = {"display_name": p["display_name"], "position": p["position"]}
 
-        # Apply the corrected sale via the same legality path as a normal sale.
+        # Apply the corrected sale via the same legality path as a normal
+        # sale. GATE B FIX (V3 repair, Part 4): projected_points is now
+        # preserved from the correction payload (falling back to the OLD
+        # sale record's own points if the caller didn't supply a fresher
+        # value) -- a correction must never recreate the player as a
+        # $0/0-point ghost of themselves.
+        preserved_points = p.get("projected_points")
+        if preserved_points is None:
+            preserved_points = old.get("projected_points", 0.0)
         corrected_event = AuctionEvent(
             event_type="PLAYER_SOLD", sequence_number=event.sequence_number,
             payload={
@@ -106,6 +130,7 @@ def apply_event(state: AuctionState, event: AuctionEvent) -> AuctionState:
                 "winning_owner": p["winning_owner"], "sale_price": p["sale_price"],
                 "nominating_owner": p.get("nominating_owner"),
                 "observed_bidders": p.get("observed_bidders", []), "highest_losing_bidder": p.get("highest_losing_bidder"),
+                "projected_points": preserved_points,
             },
         )
         new_state = apply_event(new_state, corrected_event)
