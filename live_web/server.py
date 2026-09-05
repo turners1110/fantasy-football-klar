@@ -30,7 +30,7 @@ from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from live_auction_cli import AuctionCLI
+from live_auction_cli import AuctionCLI, DEFAULT_LOG_PATH
 from auction_engine.practice_scenarios import build_practice_cli, SCENARIOS
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -43,7 +43,18 @@ app = FastAPI(title="Sunday Live Auction Tool")
 # draft. It is NEVER mutated, replaced, or reset by practice-mode code
 # below -- switching modes only changes which instance _RUNTIME["cli"]
 # points at.
-cli = AuctionCLI(log_path=BASE_DIR / "outputs" / "auction_rebuild" / "live_mvp" / "web_session.jsonl")
+#
+# V3 REPAIR (Part 4): this used to point at its own separate
+# "web_session.jsonl" file while live_auction_cli.py's terminal REPL
+# defaulted to "cli_session.jsonl" -- two DIFFERENT production logs for
+# the same live draft. If Sam ever fell back from the website to the
+# terminal CLI mid-draft (the documented emergency path), the two
+# interfaces would silently diverge onto separate histories instead of
+# sharing one. Fixed by importing the SAME DEFAULT_LOG_PATH constant
+# live_auction_cli.py itself uses, so both interfaces always default to
+# the one production event log, with no path to configure them
+# differently by accident.
+cli = AuctionCLI(log_path=DEFAULT_LOG_PATH)
 
 # V2.1 Part 6: Practice Mode. _RUNTIME tracks which AuctionCLI instance is
 # "active" for every endpoint below (see _active()). A practice instance
