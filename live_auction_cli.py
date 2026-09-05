@@ -848,6 +848,84 @@ class AuctionCLI:
                            "team": p["winning_owner"], "price": p["sale_price"]})
         return out
 
+    def api_league(self) -> list[dict]:
+        """V2 Part 4: all-team auction room. Reads the SAME live
+        auction_engine state as everything else -- reflects real sales
+        immediately, not a static pre-draft snapshot."""
+        out = []
+        for team_id, t in self.store.state.teams.items():
+            needs = t.legal_starting_needs()
+            out.append({
+                "team": team_id, "budget_remaining": t.budget_remaining, "open_slots": t.open_slots,
+                "min_reserve": t.min_reserve, "legal_max_bid": t.legal_max_bid,
+                "position_counts": t.position_counts, "position_needs": needs,
+                "keeper_count": len(t.keeper_ids), "is_sam": team_id == self.store.state.sam_team_id,
+            })
+        return out
+
+    def api_team_detail(self, team_id: str) -> dict | None:
+        t = self.store.state.teams.get(team_id)
+        if t is None:
+            return None
+        sold_by_team = [e for e in self.api_log() if e["team"] == team_id]
+        return {
+            "team": team_id, "budget_remaining": t.budget_remaining, "open_slots": t.open_slots,
+            "legal_max_bid": t.legal_max_bid, "position_counts": t.position_counts,
+            "position_needs": t.legal_starting_needs(),
+            "roster": [{"position": p["position"], "display_name": p["display_name"], "price": p["price"],
+                       "is_keeper": bool(p.get("is_keeper"))} for p in t.roster],
+            "sale_history": sold_by_team,
+        }
+
+    def api_nominee_demand(self, player: str) -> dict | None:
+        """V2 Part 4: transparent, roster/budget-facts-only demand label
+        per team for the given nominee -- no inferred manager preference."""
+        info = self.store.state.available_pool.get(player)
+        if info is None:
+            return None
+        pos = info["position"]
+        out = {}
+        credible = 0
+        for team_id, t in self.store.state.teams.items():
+            needs = t.legal_starting_needs()
+            has_cash = t.legal_max_bid > 1
+            if not has_cash:
+                label = "NO_LEGAL_BID"
+            elif needs.get(pos, 0) > 0:
+                label = "HIGH_REQUIRED_STARTER_NEED"
+            elif needs.get("FLEX", 0) > 0 and pos in ("RB", "WR", "TE"):
+                label = "MEDIUM_FLEX_OR_DEPTH_NEED"
+            else:
+                label = "LOW_POSITION_FILLED"
+            if label in ("HIGH_REQUIRED_STARTER_NEED", "MEDIUM_FLEX_OR_DEPTH_NEED"):
+                credible += 1
+            out[team_id] = label
+        return {"player": player, "position": pos, "demand_by_team": out, "credible_bidder_count": credible}
+
+    def api_search(self, query: str, include_protected: bool = False) -> list[dict]:
+        """V2 Part 3: player search. Supports partial names, spaces/
+        underscores, case-insensitivity. Searches available auction
+        players by default; include_protected=True also returns keepers/
+        college-rights (shown with status+owner, no sale controls --
+        enforced by the caller, not this method)."""
+        query_norm = query.replace("_", " ").strip().lower()
+        if not query_norm:
+            return []
+        results = []
+        for name, info in self.store.state.available_pool.items():
+            if query_norm in name.lower():
+                results.append({"player": name, "position": info["position"], "status": "AVAILABLE"})
+        if include_protected:
+            for team_id, t in self.store.state.teams.items():
+                for p in t.roster:
+                    if query_norm in p["display_name"].lower():
+                        status = "KEEPER" if p.get("is_keeper") else "SOLD"
+                        results.append({"player": p["display_name"], "position": p["position"], "status": status, "owner": team_id})
+            for name in COLLEGE_RIGHTS:
+                if query_norm in name.lower():
+                    results.append({"player": name, "position": "?", "status": "COLLEGE_RIGHTS_HELD", "owner": "Sam"})
+        return results
+
     def cmd_help(self) -> str:
         lines = ["Commands:"]
         for cmd, desc in COMMANDS.items():

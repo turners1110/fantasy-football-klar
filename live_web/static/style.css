@@ -21,6 +21,12 @@ tr.rec-green { background: #e6ffe6; }
 tr.rec-yellow { background: #fffbe6; }
 tr.rec-red { background: #ffe6e6; }
 tr.rec-gray { background: #eee; color: #999; }
+tr.rec-critical { background: #ffddaa; border-left: 4px solid #cc6600; font-weight: bold; }
+#global-search { padding: 5px; width: 220px; }
+.search-results { position: fixed; top: 46px; right: 16px; background: white; border: 1px solid #999;
+  max-height: 300px; overflow-y: auto; z-index: 150; min-width: 260px; padding: 6px; }
+.search-row { padding: 4px; border-bottom: 1px solid #eee; }
+.search-row:hover { background: #f0f0f0; }
 .nominated-panel { background: #ffd166; padding: 10px 16px; position: sticky; top: 84px; z-index: 90; }
 .nominated-header { font-weight: bold; display: flex; justify-content: space-between; }
 .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }

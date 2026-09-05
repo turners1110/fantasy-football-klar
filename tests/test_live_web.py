@@ -184,3 +184,79 @@ def test_index_page_loads(client):
     r = client.get("/")
     assert r.status_code == 200
     assert "SUNDAY LIVE AUCTION TOOL" in r.text
+
+
+# ---------------------------------------------------------------------------
+# V2 Part 3/4: search and League Room endpoints
+# ---------------------------------------------------------------------------
+
+def test_league_endpoint_returns_all_12_teams(client):
+    r = client.get("/api/league")
+    assert r.status_code == 200
+    assert len(r.json()["teams"]) == 12
+
+
+def test_league_endpoint_includes_sam(client):
+    data = client.get("/api/league").json()["teams"]
+    sam = [t for t in data if t["team"] == "Sam"][0]
+    assert sam["is_sam"] is True
+    assert sam["keeper_count"] == 6
+
+
+def test_team_detail_endpoint(client):
+    r = client.get("/api/league/Sam")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data["roster"]) == 6  # 6 keepers, no purchases yet
+
+
+def test_team_detail_unknown_team_404(client):
+    r = client.get("/api/league/NotARealTeam")
+    assert r.status_code == 404
+
+
+def test_search_endpoint_finds_partial_match(client):
+    board = client.get("/api/board").json()["players"]
+    target = board[0]["player"]
+    partial = target.split()[0]
+    r = client.get(f"/api/search?q={partial}")
+    assert r.status_code == 200
+    names = [x["player"] for x in r.json()["results"]]
+    assert target in names
+
+
+def test_search_excludes_protected_by_default(client):
+    r = client.get("/api/search?q=Garrett Wilson")
+    names = [x["player"] for x in r.json()["results"]]
+    assert "Garrett Wilson" not in names  # keeper, excluded by default
+
+
+def test_search_includes_protected_when_requested(client):
+    r = client.get("/api/search?q=Garrett Wilson&include_protected=true")
+    results = [x for x in r.json()["results"] if x["player"] == "Garrett Wilson"]
+    assert len(results) == 1
+    assert results[0]["status"] == "KEEPER"
+    assert results[0]["owner"] == "Sam"
+
+
+def test_nominee_demand_endpoint(client):
+    rb = _first_available(client, "RB")
+    r = client.get(f"/api/demand/{rb}")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data["demand_by_team"]) == 12
+    assert data["credible_bidder_count"] >= 0
+
+
+def test_board_critical_review_field_present(client):
+    board = client.get("/api/board").json()["players"]
+    assert all("critical_review_required" in p for p in board[:5])
+
+
+def test_no_player_gets_stop_equal_to_raw_points_via_website(client):
+    """End-to-end regression for the Josh Jacobs fix, through the real
+    website API (not just the CLI)."""
+    board = client.get("/api/board").json()["players"]
+    for p in board:
+        if p["position"] == "RB" and p["expected_role"] == "required starter":
+            assert abs(p["recommended_stop"] - p.get("marginal_value", 0)) > 1 or p["marginal_value"] < 5

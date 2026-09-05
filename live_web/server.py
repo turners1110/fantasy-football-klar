@@ -105,6 +105,32 @@ def get_log():
     return {"events": cli.api_log()}
 
 
+@app.get("/api/league")
+def get_league():
+    return {"teams": cli.api_league()}
+
+
+@app.get("/api/league/{team_id}")
+def get_team_detail(team_id: str):
+    result = cli.api_team_detail(team_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"Unknown team: {team_id}")
+    return result
+
+
+@app.get("/api/demand/{player}")
+def get_nominee_demand(player: str):
+    result = cli.api_nominee_demand(player)
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"Unknown or unavailable player: {player}")
+    return result
+
+
+@app.get("/api/search")
+def get_search(q: str, include_protected: bool = False):
+    return {"results": cli.api_search(q, include_protected=include_protected)}
+
+
 @app.get("/api/emergency", response_class=PlainTextResponse)
 def get_emergency():
     return cli.cmd_emergency()

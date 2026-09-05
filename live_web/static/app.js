@@ -11,6 +11,7 @@ function toast(msg) {
 
 function recClass(rec) {
   if (!rec) return "rec-gray";
+  if (rec === "CRITICAL_REVIEW_REQUIRED") return "rec-critical";
   if (rec.startsWith("STRONG_BUY") || rec.startsWith("BUY_AT_DISCOUNT") || rec.startsWith("PRIORITY")) return "rec-green";
   if (rec.startsWith("PASS") || rec.startsWith("INSUFFICIENT")) return "rec-red";
   if (rec === "INELIGIBLE") return "rec-gray";
@@ -44,9 +45,67 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.getElementById("tab-" + btn.dataset.tab).classList.remove("hidden");
     if (btn.dataset.tab === "roster") loadRoster();
     if (btn.dataset.tab === "targets") loadTargets();
+    if (btn.dataset.tab === "league") loadLeague();
     if (btn.dataset.tab === "log") { loadLog(); loadMarket(); }
   });
 });
+
+// ---- Global search ----
+let searchTimer = null;
+document.getElementById("global-search").addEventListener("input", (e) => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  const resultsDiv = document.getElementById("global-search-results");
+  if (!q) { resultsDiv.classList.add("hidden"); return; }
+  searchTimer = setTimeout(async () => {
+    const data = await api("/search?q=" + encodeURIComponent(q) + "&include_protected=true");
+    resultsDiv.innerHTML = "";
+    if (data.results.length === 0) {
+      resultsDiv.innerHTML = "<div>No matches.</div>";
+    } else {
+      data.results.slice(0, 15).forEach(r => {
+        const div = document.createElement("div");
+        div.className = "search-row";
+        const statusTxt = r.status === "AVAILABLE" ? "" : ` [${r.status}${r.owner ? " -- " + r.owner : ""}]`;
+        div.textContent = `${r.player} (${r.position})${statusTxt}`;
+        if (r.status === "AVAILABLE") {
+          div.addEventListener("click", () => { nominate(r.player); resultsDiv.classList.add("hidden"); document.getElementById("global-search").value = ""; });
+          div.style.cursor = "pointer";
+        }
+        resultsDiv.appendChild(div);
+      });
+    }
+    resultsDiv.classList.remove("hidden");
+  }, 250);
+});
+
+// ---- League Room ----
+async function loadLeague() {
+  const data = await api("/league");
+  const tbody = document.getElementById("league-body");
+  tbody.innerHTML = "";
+  data.teams.sort((a, b) => b.budget_remaining - a.budget_remaining).forEach(t => {
+    const needs = Object.entries(t.position_needs).filter(([k, v]) => v > 0).map(([k, v]) => `${k}:${v}`).join(",") || "none";
+    const tr = document.createElement("tr");
+    if (t.is_sam) tr.style.fontWeight = "bold";
+    tr.innerHTML = `<td>${t.team}${t.is_sam ? " (Sam)" : ""}</td><td>$${t.budget_remaining.toFixed(0)}</td>
+      <td>${t.open_slots}</td><td>$${t.min_reserve.toFixed(0)}</td><td>$${t.legal_max_bid.toFixed(0)}</td>
+      <td>${t.position_counts.QB || 0}</td><td>${t.position_counts.RB || 0}</td>
+      <td>${t.position_counts.WR || 0}</td><td>${t.position_counts.TE || 0}</td><td>${needs}</td>`;
+    tr.style.cursor = "pointer";
+    tr.addEventListener("click", () => loadTeamDetail(t.team));
+    tbody.appendChild(tr);
+  });
+}
+async function loadTeamDetail(teamId) {
+  const t = await api("/league/" + encodeURIComponent(teamId));
+  const div = document.getElementById("team-detail");
+  const rosterRows = t.roster.map(p => `${p.position} ${p.display_name} $${p.price.toFixed(0)}${p.is_keeper ? " (keeper)" : ""}`).join("<br>");
+  const saleRows = t.sale_history.map(s => `${s.player} ($${s.price.toFixed(0)})`).join(", ") || "none yet";
+  div.innerHTML = `<h4>${teamId}</h4>Budget: $${t.budget_remaining.toFixed(2)} | Open slots: ${t.open_slots} | Legal max: $${t.legal_max_bid.toFixed(2)}<br>
+    <b>Roster:</b><br>${rosterRows}<br><b>Auction purchases:</b> ${saleRows}`;
+}
+document.getElementById("refresh-league").addEventListener("click", loadLeague);
 
 // ---- Draft Board ----
 async function loadBoard() {

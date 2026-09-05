@@ -9,17 +9,20 @@
 <div id="header">
   <div class="hdr-title">SUNDAY LIVE AUCTION TOOL <span class="hdr-badge">2026 -- NOT draft_ui</span></div>
   <div class="hdr-stats">
+    <input id="global-search" placeholder="Search any player...">
     <span>Budget: <b id="hdr-budget">--</b></span>
     <span>Open slots: <b id="hdr-slots">--</b></span>
     <span>Legal max bid: <b id="hdr-maxbid" class="hdr-maxbid">--</b></span>
   </div>
 </div>
+<div id="global-search-results" class="search-results hidden"></div>
 
 <div id="tabs">
   <button class="tab-btn active" data-tab="board">Draft Board</button>
   <button class="tab-btn" data-tab="roster">My Roster</button>
   <button class="tab-btn" data-tab="targets">Targets</button>
   <button class="tab-btn" data-tab="paths">Roster Paths</button>
+  <button class="tab-btn" data-tab="league">League Room</button>
   <button class="tab-btn" data-tab="log">Log / Controls</button>
 </div>
 
@@ -82,6 +85,17 @@
 <div id="tab-paths" class="tab-content hidden">
   <button id="refresh-paths">Refresh (slower -- exact solves)</button>
   <div id="paths-container">Click Refresh to compute (takes a few seconds).</div>
+</div>
+
+<!-- LEAGUE ROOM -->
+<div id="tab-league" class="tab-content hidden">
+  <button id="refresh-league">Refresh</button>
+  <table id="league-table">
+    <thead><tr><th>Team</th><th>Budget</th><th>Open Slots</th><th>Reserve</th><th>Legal Max</th>
+      <th>QB</th><th>RB</th><th>WR</th><th>TE</th><th>Needs</th></tr></thead>
+    <tbody id="league-body"></tbody>
+  </table>
+  <div id="team-detail"></div>
 </div>
 
 <!-- LOG / CONTROLS -->
