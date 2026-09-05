@@ -155,6 +155,15 @@ def get_team_detail(team_id: str):
     return result
 
 
+@app.get("/api/rosters")
+def get_all_rosters():
+    """V2.2 Request 3: every team's complete player-by-player roster
+    (starters + bench + keepers + auction purchases) in one response, so
+    the whole league can be scanned in one place instead of clicking
+    through 12 separate team pages."""
+    return {"teams": _active().api_all_rosters()}
+
+
 @app.get("/api/demand/{player}")
 def get_nominee_demand(player: str):
     result = _active().api_nominee_demand(player)

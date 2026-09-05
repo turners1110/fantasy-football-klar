@@ -99,15 +99,39 @@ async function loadLeague() {
     tbody.appendChild(tr);
   });
 }
+function rosterRowHtml(p) {
+  return `${p.slot_type === "STARTER" ? "<b>" : ""}${p.position} ${p.display_name} $${p.price.toFixed(0)}` +
+    `${p.is_keeper ? " (keeper)" : ""} -- ${p.lineup_role}${p.slot_type === "STARTER" ? "</b>" : ""}`;
+}
+
 async function loadTeamDetail(teamId) {
   const t = await api("/league/" + encodeURIComponent(teamId));
   const div = document.getElementById("team-detail");
-  const rosterRows = t.roster.map(p => `${p.position} ${p.display_name} $${p.price.toFixed(0)}${p.is_keeper ? " (keeper)" : ""}`).join("<br>");
+  const rosterRows = t.roster.map(rosterRowHtml).join("<br>");
   const saleRows = t.sale_history.map(s => `${s.player} ($${s.price.toFixed(0)})`).join(", ") || "none yet";
+  const rightsNote = t.college_rights_holdings.length
+    ? `<br><i>College-rights holdings (NOT part of the 15-man roster): ${t.college_rights_holdings.join(", ")}</i>` : "";
   div.innerHTML = `<h4>${teamId}</h4>Budget: $${t.budget_remaining.toFixed(2)} | Open slots: ${t.open_slots} | Legal max: $${t.legal_max_bid.toFixed(2)}<br>
-    <b>Roster:</b><br>${rosterRows}<br><b>Auction purchases:</b> ${saleRows}`;
+    <b>Roster (${t.roster_count}):</b><br>${rosterRows}<br><b>Auction purchases:</b> ${saleRows}${rightsNote}`;
 }
 document.getElementById("refresh-league").addEventListener("click", loadLeague);
+
+// ---- All-team full rosters (V2.2 Request 3) ----
+async function loadAllRosters() {
+  const data = await api("/rosters");
+  const div = document.getElementById("all-rosters");
+  div.classList.remove("hidden");
+  div.innerHTML = data.teams.map(t => {
+    const rosterRows = t.roster.map(rosterRowHtml).join("<br>");
+    const rightsNote = t.college_rights_holdings.length
+      ? `<br><i>College-rights holdings (NOT part of the 15-man roster): ${t.college_rights_holdings.join(", ")}</i>` : "";
+    return `<div class="team-roster-block">
+      <h4>${t.team} (${t.roster_count} players, $${t.budget_remaining.toFixed(0)} left)</h4>
+      ${rosterRows}${rightsNote}
+    </div>`;
+  }).join("");
+}
+document.getElementById("btn-all-rosters").addEventListener("click", loadAllRosters);
 
 // ---- Draft Board ----
 async function loadBoard() {

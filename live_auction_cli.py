@@ -32,6 +32,7 @@ from auction_engine.live_recommendations import compute_recommended_bid
 from auction_engine.live_target_scoring import compute_target_score
 from auction_engine.recommendation_guardrails import compute_governed_dollar_ceiling
 from auction_model import exact_roster_solver
+from auction_model.roster_optimizer import assign_lineup
 import pandas as pd
 from mock_draft.data import load_confirmed_pool_and_teams
 
@@ -1047,19 +1048,56 @@ class AuctionCLI:
             out.append(row)
         return out
 
+    def _roster_with_roles(self, roster: list[dict]) -> list[dict]:
+        """V2.2 Request 3: attaches a real starter/bench role to every
+        roster player using the SAME assign_lineup() function the
+        auction-path roster optimizer uses elsewhere -- no duplicated
+        lineup logic. Works for any team's roster, not just Sam's."""
+        if not roster:
+            return []
+        df = pd.DataFrame([
+            {"player": p["display_name"], "position": p["position"],
+             "projected_points": p.get("projected_points", 0) or 0}
+            for p in roster
+        ])
+        lineup = assign_lineup(df)
+        out = []
+        for p in roster:
+            role = lineup.roles.get(p["display_name"], "UNKNOWN")
+            slot_type = "BENCH" if role.startswith("BENCH") else "STARTER"
+            out.append({
+                "position": p["position"], "display_name": p["display_name"], "price": p["price"],
+                "is_keeper": bool(p.get("is_keeper")), "lineup_role": role, "slot_type": slot_type,
+            })
+        return out
+
     def api_team_detail(self, team_id: str) -> dict | None:
         t = self.store.state.teams.get(team_id)
         if t is None:
             return None
         sold_by_team = [e for e in self.api_log() if e["team"] == team_id]
+        college_rights_holdings = sorted(COLLEGE_RIGHTS) if team_id == self.store.state.sam_team_id else []
         return {
             "team": team_id, "budget_remaining": t.budget_remaining, "open_slots": t.open_slots,
             "legal_max_bid": t.legal_max_bid, "position_counts": t.position_counts,
             "position_needs": t.legal_starting_needs(),
-            "roster": [{"position": p["position"], "display_name": p["display_name"], "price": p["price"],
-                       "is_keeper": bool(p.get("is_keeper"))} for p in t.roster],
+            "roster": self._roster_with_roles(t.roster),
+            "roster_count": len(t.roster),
             "sale_history": sold_by_team,
+            # College-rights holdings (e.g. Mendoza, Bond) are deliberately
+            # NOT part of any team's 15-man roster list above -- shown here
+            # only as a separate, clearly-labeled note so nothing implies
+            # they occupy a roster slot.
+            "college_rights_holdings": college_rights_holdings,
         }
+
+    def api_all_rosters(self) -> list[dict]:
+        """V2.2 Request 3: every team's complete player-by-player roster
+        in one call, reusing api_team_detail's per-team logic (which
+        itself reuses the real live auction_engine state and the real
+        assign_lineup roster optimizer -- no new data source, no
+        duplicated roster logic)."""
+        return [self.api_team_detail(team_id) for team_id in self.store.state.teams.keys()]
 
     def api_nominee_demand(self, player: str) -> dict | None:
         """V2 Part 4: transparent, roster/budget-facts-only demand label

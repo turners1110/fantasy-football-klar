@@ -238,6 +238,54 @@ def test_team_detail_endpoint(client):
     assert len(data["roster"]) == 6  # 6 keepers, no purchases yet
 
 
+# ---------------------------------------------------------------------------
+# V2.2 Request 3: full player-by-player rosters for all 12 teams
+# ---------------------------------------------------------------------------
+
+def test_team_detail_includes_starter_bench_roles(client):
+    data = client.get("/api/league/Sam").json()
+    assert data["roster_count"] == 6
+    for p in data["roster"]:
+        assert "lineup_role" in p and "slot_type" in p
+        assert p["slot_type"] in ("STARTER", "BENCH")
+    starters = [p for p in data["roster"] if p["slot_type"] == "STARTER"]
+    assert len(starters) > 0
+
+
+def test_college_rights_holdings_never_appear_inside_roster_list(client):
+    data = client.get("/api/league/Sam").json()
+    roster_names = {p["display_name"] for p in data["roster"]}
+    assert "Fernando Mendoza" not in roster_names
+    assert "Isaiah Bond" not in roster_names
+    assert data["college_rights_holdings"] == ["Fernando Mendoza", "Isaiah Bond"]
+
+
+def test_non_sam_team_has_no_college_rights_holdings(client):
+    data = client.get("/api/league/Brandon").json()
+    assert data["college_rights_holdings"] == []
+
+
+def test_all_rosters_endpoint_returns_all_12_teams(client):
+    r = client.get("/api/rosters")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data["teams"]) == 12
+    for t in data["teams"]:
+        assert t["roster_count"] == len(t["roster"]) == 6  # pre-auction: 6 keepers each
+        assert all("Fernando Mendoza" != p["display_name"] and "Isaiah Bond" != p["display_name"] for p in t["roster"])
+
+
+def test_all_rosters_reflects_sale_immediately(client):
+    board = client.get("/api/board").json()["players"]
+    player = next(p["player"] for p in board if p.get("player"))
+    client.post("/api/sale", json={"player": player, "team": "Brandon", "price": 3, "confirm": True})
+    data = client.get("/api/rosters").json()
+    brandon = next(t for t in data["teams"] if t["team"] == "Brandon")
+    assert any(p["display_name"] == player for p in brandon["roster"])
+    assert brandon["roster_count"] == 7
+    client.post("/api/undo")
+
+
 def test_team_detail_unknown_team_404(client):
     r = client.get("/api/league/NotARealTeam")
     assert r.status_code == 404
