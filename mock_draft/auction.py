@@ -49,6 +49,29 @@ from .valuation import compute_willingness
 
 BID_SAFETY_ROUNDS = 60
 
+# ---------------------------------------------------------------------------
+# Bidder-count definitions (official data / simulation repair, Part 9).
+#
+# The OLD `bidder_count` conflated "touched the bid once" with "credible
+# bidder" -- a team that raised the price by $1 before immediately getting
+# priced out counted the same as the team that fought to the final dollar.
+# Reviewing ten simulated drafts found this made ~12-bidder counts show up
+# on nearly every sale, including $100+ ones, which is not a meaningful
+# signal. These thresholds define the real tiers requested; they are module
+# constants (not hardcoded inline) specifically so tests can assert on them
+# and so they can be tuned without touching resolve_bid's logic.
+# ---------------------------------------------------------------------------
+CREDIBLE_BIDDER_SHARE = 0.85          # a team is "credible" if its own computed
+                                       # ceiling reached >= 85% of the final sale price...
+CREDIBLE_BIDDER_DOLLAR_RANGE = 5.0    # ...OR its ceiling was within $5 of the final
+                                       # sale price (whichever is more permissive --
+                                       # matters at low dollar amounts where 85% is a
+                                       # tiny absolute gap).
+FINAL_STAGE_DOLLAR_BAND = 3.0         # a team is "final-stage" if its own ceiling
+                                       # was within $3 of the final sale price -- i.e.
+                                       # it was still active in the very last stretch
+                                       # of bidding, not just credible at some point.
+
 
 def _incremental_utility(team: Team, candidate: Player, price: float) -> float:
     """Partial-lineup value with vs. without the candidate on this team's
@@ -133,6 +156,10 @@ def resolve_bid(
     if not legally_biddable:
         return {
             "winner": None, "price": None, "bidder_count": 0, "second_highest_bid": 0.0,
+            "eligible_team_count": 0, "positive_interest_count": 0, "opening_bidder_count": 0,
+            "credible_bidder_count": 0, "final_stage_bidder_count": 0,
+            "winning_team": None, "winning_ceiling": 0.0, "second_highest_credible_ceiling": 0.0,
+            "sale_price": None,
             "sale_is_organic": False, "sale_has_competing_bid": False,
             "block_reason": "POSITIONAL_INFEASIBILITY",
         }
@@ -140,7 +167,9 @@ def resolve_bid(
     current_leader = nominator if nominator in legally_biddable else legally_biddable[0]
     current_bid = float(cfg.MIN_PRICE)
     second_highest = 0.0  # highest amount reached by anyone OTHER than the eventual winner
-    bidders = {current_leader}
+    bidders = {current_leader}  # "opening_bidder_count" -- touched the bid at least once
+    positive_interest = set()   # willingness ever exceeded the $1 floor, whether or not they ever raised
+    team_ceiling: dict[str, float] = {}  # last-computed real max_can_pay per team this nomination
     team_diagnostics: dict[str, dict] = {}  # last-seen willingness breakdown per team this nomination
 
     changed = True
@@ -158,6 +187,8 @@ def resolve_bid(
                 team_diagnostics[name] = diag
             cap = team.max_bid_cap()
             max_can_pay_pre_utility = min(willingness, cap)
+            if willingness > cfg.MIN_PRICE:
+                positive_interest.add(name)
 
             # Zero/negative incremental-utility gate: a limited phase-2B
             # safety check (not the full team-specific bid-ceiling engine)
@@ -166,6 +197,7 @@ def resolve_bid(
             # still pick it up uncontested for $1, but never bid above it.
             utility_blocked = _incremental_utility(team, candidate, max_can_pay_pre_utility) <= 0
             max_can_pay = min(max_can_pay_pre_utility, float(cfg.MIN_PRICE)) if utility_blocked else max_can_pay_pre_utility
+            team_ceiling[name] = max_can_pay  # last-seen real ceiling, per Part 9's tiered definitions
 
             if max_can_pay <= current_bid:
                 if utility_blocked and max_can_pay_pre_utility > current_bid:
@@ -201,6 +233,31 @@ def resolve_bid(
                 changed = True
 
     _stat(current_leader, "wins")
+
+    # ---- Part 9 tiered bidder-count fields -------------------------------
+    # winning_ceiling: the winner's own last-computed real ceiling if we
+    # ever evaluated them as a challenger earlier in the loop; if they won
+    # uncontested as the default nominator and were never evaluated, their
+    # true ceiling is unknown -- current_bid (what they actually paid) is
+    # the only lower-bound-safe value available, so it's used as a
+    # disclosed fallback rather than a fabricated number.
+    winning_ceiling = team_ceiling.get(current_leader, current_bid)
+    non_winner_ceilings = [c for name, c in team_ceiling.items() if name != current_leader]
+    second_highest_credible_ceiling = max(non_winner_ceilings) if non_winner_ceilings else 0.0
+
+    def _is_credible(ceiling: float) -> bool:
+        share_threshold = current_bid * CREDIBLE_BIDDER_SHARE
+        dollar_threshold = current_bid - CREDIBLE_BIDDER_DOLLAR_RANGE
+        return ceiling >= share_threshold or ceiling >= dollar_threshold
+
+    def _is_final_stage(ceiling: float) -> bool:
+        return ceiling >= current_bid - FINAL_STAGE_DOLLAR_BAND
+
+    credible_bidders = {name for name, c in team_ceiling.items() if _is_credible(c)}
+    credible_bidders.add(current_leader)  # the winner is always credible by definition
+    final_stage_bidders = {name for name, c in team_ceiling.items() if _is_final_stage(c)}
+    final_stage_bidders.add(current_leader)
+
     if bid_diagnostics_log is not None:
         willingness_values = sorted(
             (d["final_willingness"] for d in team_diagnostics.values() if d.get("final_willingness") is not None),
@@ -216,8 +273,23 @@ def resolve_bid(
     return {
         "winner": current_leader,
         "price": current_bid,
+        # LEGACY fields, kept for backward compatibility with existing
+        # consumers -- "bidder_count" is exactly "opening_bidder_count"
+        # (touched the bid at least once, no credibility threshold).
         "bidder_count": len(bidders),
         "second_highest_bid": second_highest,
+        # Part 9 tiered bidder-count fields (see module-level threshold
+        # constants CREDIBLE_BIDDER_SHARE / CREDIBLE_BIDDER_DOLLAR_RANGE /
+        # FINAL_STAGE_DOLLAR_BAND for the exact definitions used):
+        "eligible_team_count": len(legally_biddable),
+        "positive_interest_count": len(positive_interest),
+        "opening_bidder_count": len(bidders),
+        "credible_bidder_count": len(credible_bidders),
+        "final_stage_bidder_count": len(final_stage_bidders),
+        "winning_team": current_leader,
+        "winning_ceiling": winning_ceiling,
+        "second_highest_credible_ceiling": second_highest_credible_ceiling,
+        "sale_price": current_bid,
         "sale_is_organic": True,
         "sale_has_competing_bid": len(bidders) > 1,
         "block_reason": None,
