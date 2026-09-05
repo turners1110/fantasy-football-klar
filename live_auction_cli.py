@@ -13,6 +13,7 @@ Type `help` at the prompt for the command list.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 import traceback
@@ -71,16 +72,37 @@ class AuctionCLI:
     """All command handlers as plain methods (return a string) so they
     can be tested directly without going through the REPL loop."""
 
-    def __init__(self, budget_scenario: str = "primary", log_path: Path | None = DEFAULT_LOG_PATH):
+    def __init__(self, budget_scenario: str = "primary", log_path: Path | None = DEFAULT_LOG_PATH,
+                 resume: bool | None = None):
+        """resume controls what happens to an existing session log at
+        `log_path` on launch:
+          - resume=True  -> replay it via AuctionStateStore.recover() and
+            keep appending to it (used after a Sam-confirmed "resume").
+          - resume=False -> delete it and start fresh (the historical
+            default behavior, used after a Sam-confirmed "clean").
+          - resume=None  -> read the AUCTION_RESUME_MODE env var
+            ("resume" or "clean"); if unset, defaults to "clean" (the
+            historical default), so nothing changes for any code path
+            that doesn't opt in (tests, practice mode, ad hoc scripts).
+        This is the real mechanism start_sunday_live_tool.sh's
+        resume/clean prompt drives -- see that script and
+        tests/test_startup_recovery.py."""
+        if resume is None:
+            resume = os.environ.get("AUCTION_RESUME_MODE", "clean") == "resume"
         self.budget_scenario = budget_scenario
         self.players, teams, _ = load_confirmed_pool_and_teams(budget_scenario=budget_scenario)
         self.initial_state = self._build_initial_state(teams)
         self.log_path = log_path
         if self.log_path is not None:
             self.log_path.parent.mkdir(parents=True, exist_ok=True)
-            if self.log_path.exists():
-                self.log_path.unlink()  # fresh session log each launch
-        self.store = AuctionStateStore(self.initial_state, log_path=self.log_path)
+            if resume and self.log_path.exists():
+                self.store = AuctionStateStore.recover(self.initial_state, self.log_path)
+            else:
+                if self.log_path.exists():
+                    self.log_path.unlink()  # fresh session log (clean mode, or nothing to resume)
+                self.store = AuctionStateStore(self.initial_state, log_path=self.log_path)
+        else:
+            self.store = AuctionStateStore(self.initial_state, log_path=self.log_path)
         self.market_state = MarketAdjustmentState()
         # exact-solve cache: keyed by (state_sequence_number, player, test_price) -- see
         # cmd_exact / _invalidate_exact_cache. Never shown as current if the state
