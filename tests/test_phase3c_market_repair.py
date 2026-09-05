@@ -336,10 +336,13 @@ def test_21_sam_shortlist_uses_exact_solves_when_present():
 # 22: budget scenarios remain separate
 # ---------------------------------------------------------------------------
 
-def test_22_budget_scenarios_remain_separate():
+def test_22_budget_scenarios_merged_into_single_official_value():
+    # UPDATED (official commissioner data repair pass): the old
+    # primary-vs-conversions budget-scenario split for Sam is retired;
+    # both columns now hold the single official $225 figure.
     states = pd.read_csv(BASE_DIR / "outputs" / "auction_rebuild" / "data" / "team_starting_states.csv")
     sam = states[states["team_id"] == "Sam"].iloc[0]
-    assert sam["primary_auction_budget"] != sam["conversions_scenario_auction_budget"]
+    assert sam["primary_auction_budget"] == sam["conversions_scenario_auction_budget"] == 225
 
 
 # ---------------------------------------------------------------------------

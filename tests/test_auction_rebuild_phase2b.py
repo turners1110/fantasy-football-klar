@@ -317,23 +317,31 @@ def test_18_internal_cash_transfers_net_to_zero_or_gap_is_named():
 
 
 def test_19_budget_adjustment_applies_once():
+    # UPDATED (official commissioner data repair): Sam's official
+    # remaining budget is $225 (the naive 400-162-15=223 formula check
+    # is now a logged conflict, not the winning value -- user-confirmed
+    # commissioner data takes priority). Sam's -$15 cash adjustment is
+    # still reflected exactly once inside that reconciliation, just no
+    # longer as the winning primary_auction_budget value.
     keepers = pd.read_csv(DATA_DIR / "keepers_2026_confirmed.csv")
     adjustments = pd.read_csv(DATA_DIR / "team_budget_adjustments_2026.csv")
     from auction_model.confirmed_keeper_pipeline import compute_team_states
     state_rows, _ = compute_team_states(keepers, adjustments)
     sam = next(r for r in state_rows if r["team_id"] == "Sam")
-    # Sam's -$15 must be reflected exactly once (223, not 208 or 238).
-    assert sam["primary_auction_budget"] == 223
+    assert sam["primary_auction_budget"] == 225
+    assert sam["cash_adjustments"] == -15
 
 
-def test_20_sam_primary_budget_equals_223_and_conversion_equals_221():
+def test_20_sam_primary_budget_equals_official_225():
+    # UPDATED (official commissioner data repair): $223/$221 retired;
+    # official commissioner value is $225 for both scenario columns.
     keepers = pd.read_csv(DATA_DIR / "keepers_2026_confirmed.csv")
     adjustments = pd.read_csv(DATA_DIR / "team_budget_adjustments_2026.csv")
     from auction_model.confirmed_keeper_pipeline import compute_team_states
     state_rows, _ = compute_team_states(keepers, adjustments)
     sam = next(r for r in state_rows if r["team_id"] == "Sam")
-    assert 400 - 162 - 15 == 223 == sam["primary_auction_budget"]
-    assert 223 - 1 - 1 == 221 == sam["conversions_scenario_auction_budget"]
+    assert sam["primary_auction_budget"] == 225
+    assert sam["conversions_scenario_auction_budget"] == 225
 
 
 # ---------------------------------------------------------------------------
@@ -346,24 +354,26 @@ def confirmed_pool_and_teams():
 
 
 def _roster_is_legal(team: Team) -> bool:
+    # UPDATED (official commissioner data repair): 16-player roster, not 15.
     counts = {"QB": 0, "RB": 0, "WR": 0, "TE": 0}
     names = set()
     for name, pos, _price, _pts in team.roster:
         counts[pos] = counts.get(pos, 0) + 1
         names.add(name)
     return (
-        len(team.roster) == 15 and len(names) == 15
+        len(team.roster) == 16 and len(names) == 16
         and counts["QB"] >= 1 and counts["RB"] >= 2 and counts["WR"] >= 2 and counts["TE"] >= 1
         and team.budget_remaining >= -1e-6
     )
 
 
-def test_21_full_auction_produces_fifteen_player_rosters(confirmed_pool_and_teams):
+def test_21_full_auction_produces_sixteen_player_rosters(confirmed_pool_and_teams):
+    # UPDATED (official commissioner data repair): 16-player roster, not 15.
     players, teams, _ = confirmed_pool_and_teams
     rng = np.random.default_rng(1)
     _, final_teams = run_single_auction(players, teams, rng)
     for team in final_teams.values():
-        assert len(team.roster) == 15
+        assert len(team.roster) == 16
 
 
 def test_22_full_auction_produces_legal_lineups(confirmed_pool_and_teams):

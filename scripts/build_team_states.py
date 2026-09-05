@@ -73,8 +73,8 @@ def main() -> None:
     sam = next(r for r in state_rows if r["team_id"] == "Sam")
     assert sam["n_veteran_keepers"] == 6, sam
     assert sam["keeper_spend"] == 162, sam
-    assert sam["primary_auction_budget"] == 223, sam
-    assert sam["conversions_scenario_auction_budget"] == 221, sam
+    assert sam["primary_auction_budget"] == 225, sam
+    assert sam["conversions_scenario_auction_budget"] == 225, sam
     walker = keepers[keepers["player_name"] == "Kenneth Walker III"].iloc[0]
     assert walker["keeper_cost"] == 36 and walker["franchise_tag"], walker
     skattebo = keepers[keepers["player_name"] == "Cam Skattebo"].iloc[0]
@@ -83,7 +83,7 @@ def main() -> None:
         assert int(group["counts_as_keeper"].sum()) <= 6, f"{team} exceeds 6 veteran keepers"
     dupes = [r for r in identity_rows if r["issue_type"] == "DUPLICATE_NORMALIZED_NAME"]
     assert len(dupes) == 0  # already logged above if present, not silently ignored -- this asserts there are none
-    print("\nAll required assertions PASSED: Sam 6 keepers / $162 spend / $223 primary / $221 conversions; "
+    print("\nAll required assertions PASSED: Sam 6 keepers / $162 spend / $225 primary / $225 conversions; "
           "Walker $36 tag; Skattebo $28; no team exceeds 6 veteran keepers.")
 
 

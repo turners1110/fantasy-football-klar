@@ -53,8 +53,8 @@ def apply_event(state: AuctionState, event: AuctionEvent) -> AuctionState:
             raise IllegalEventError(f"{player_id} already on {winner}'s roster")
         if any(player_id in t.keeper_ids for t in new_state.teams.values()):
             raise IllegalEventError(f"{player_id} is a keeper and cannot be sold in the veteran auction")
-        if len(team.roster) >= 15:
-            raise IllegalEventError(f"{winner} already has 15 players")
+        if len(team.roster) >= 16:
+            raise IllegalEventError(f"{winner} already has 16 players")
         # legal-max-bid check: price must not exceed what was legally biddable
         # at the moment of sale (budget minus reserve for every OTHER open slot)
         other_open_after = max(0, team.open_slots - 1)

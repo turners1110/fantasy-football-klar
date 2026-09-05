@@ -34,11 +34,13 @@ def test_05_reported_budget_scenario_uses_final_reported_values_once():
         assert row["primary_auction_budget"] == row["sheet_reported_remaining_budget"], row["team_id"]
 
 
-def test_06_sam_override_remains_223():
+def test_06_sam_override_is_official_225():
+    # UPDATED (official commissioner data repair pass): $223/$221 retired,
+    # official remaining budget is $225 for both columns.
     states = pd.read_csv(BASE_DIR / "outputs" / "auction_rebuild" / "data" / "team_starting_states.csv")
     sam = states[states["team_id"] == "Sam"].iloc[0]
-    assert sam["primary_auction_budget"] == 223
-    assert sam["conversions_scenario_auction_budget"] == 221
+    assert sam["primary_auction_budget"] == 225
+    assert sam["conversions_scenario_auction_budget"] == 225
 
 
 def test_07_brandon_trade_adjustment_not_double_counted():

@@ -456,7 +456,7 @@ class AuctionCLI:
         if info is None:
             return None, False
         sam = self._sam()
-        n_auction_spots = max(0, 15 - len(sam.roster))
+        n_auction_spots = max(0, 16 - len(sam.roster))
 
         pool_minus = self._pool_df_excluding(set())
         roster_with = sam.roster + [{"player_id": player, "position": info["position"], "price": test_price,
@@ -687,7 +687,7 @@ class AuctionCLI:
             surplus = round(rp.starting_points - rpass.starting_points, 2) if both_ok else None
             rows.append({
                 "price": p, "exact_surplus": surplus, "purchase_status": rp.status, "pass_status": rpass.status,
-                "roster_feasible": both_ok and len(rp.selected) == 15 and len(rpass.selected) == 15,
+                "roster_feasible": both_ok and len(rp.selected) == 16 and len(rpass.selected) == 16,
                 "recommended_action": ("BUY" if surplus is not None and surplus >= 0 else
                                        "PASS" if surplus is not None else "SOLVER_FAILURE"),
             })
@@ -1085,7 +1085,7 @@ class AuctionCLI:
             "roster_count": len(t.roster),
             "sale_history": sold_by_team,
             # College-rights holdings (e.g. Mendoza, Bond) are deliberately
-            # NOT part of any team's 15-man roster list above -- shown here
+            # NOT part of any team's 16-man roster list above -- shown here
             # only as a separate, clearly-labeled note so nothing implies
             # they occupy a roster slot.
             "college_rights_holdings": college_rights_holdings,

@@ -207,7 +207,7 @@ def solve_exact_roster(
     keepers: pd.DataFrame | None = None,
     exclude: set[str] | None = None,
 ) -> ExactSolveResult:
-    """Lexicographic exact solve for keepers + auction filling 15 active spots."""
+    """Lexicographic exact solve for keepers + auction filling active roster spots (config.ACTIVE_ROSTER_SIZE, 16)."""
     exclude = exclude or set()
     keepers = keepers if keepers is not None else pd.DataFrame()
     warnings: list[str] = []

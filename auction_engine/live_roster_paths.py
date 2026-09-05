@@ -33,7 +33,7 @@ def compute_live_roster_paths(
     Returns {style: {"status", "players": [...], "starting_points", "spend", "unused_cash"}}.
     """
     hard_maxes = hard_maxes or {}
-    n_auction_spots = max(0, 15 - len(sam_team.roster))
+    n_auction_spots = max(0, 16 - len(sam_team.roster))
     keepers_df = _keepers_df(sam_team.roster)
     results = {}
 

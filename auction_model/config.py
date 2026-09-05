@@ -40,7 +40,7 @@ STARTING_LINEUP = {
     "TE": 1,
     "FLEX": 3,  # W/R/T eligible only -- QB is NOT flex eligible in this league
 }
-BENCH_SPOTS = 6
+BENCH_SPOTS = 7  # official commissioner data: 16-player roster = 9 starters + 7 bench (was 6)
 IR_SPOTS = 2
 TOTAL_ROSTER_SPOTS_PER_TEAM = (
     sum(v for k, v in {"QB": 1, "RB": 2, "WR": 2, "TE": 1, "FLEX": 3}.items()) + BENCH_SPOTS + IR_SPOTS
@@ -48,10 +48,10 @@ TOTAL_ROSTER_SPOTS_PER_TEAM = (
 # Active auction roster = starters + bench (IR is optional injured reserve, not required at auction)
 ACTIVE_STARTER_SLOTS = sum(STARTING_LINEUP.values())  # 9
 STARTING_ROSTER_SIZE = ACTIVE_STARTER_SLOTS  # 9
-BENCH_SIZE = BENCH_SPOTS  # 6
-ACTIVE_ROSTER_SIZE = STARTING_ROSTER_SIZE + BENCH_SIZE  # 15
+BENCH_SIZE = BENCH_SPOTS  # 7
+ACTIVE_ROSTER_SIZE = STARTING_ROSTER_SIZE + BENCH_SIZE  # 16
 IR_CAPACITY = IR_SPOTS  # 2 optional; not required auction purchases
-REQUIRED_AUCTION_ROSTER_SIZE = ACTIVE_ROSTER_SIZE  # 15
+REQUIRED_AUCTION_ROSTER_SIZE = ACTIVE_ROSTER_SIZE  # 16
 AUCTION_PURCHASE_REQUIREMENT = REQUIRED_AUCTION_ROSTER_SIZE
 
 assert STARTING_ROSTER_SIZE + BENCH_SIZE == ACTIVE_ROSTER_SIZE, (

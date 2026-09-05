@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-ROSTER_SIZE = 15
+ROSTER_SIZE = 16  # official commissioner data: 16-player roster (9 starters + 7 bench), not 15
 MIN_PRICE = 1
 STARTING_LINEUP = {"QB": 1, "RB": 2, "WR": 2, "TE": 1, "FLEX": 3}
 FLEX_ELIGIBLE = {"RB", "WR", "TE"}

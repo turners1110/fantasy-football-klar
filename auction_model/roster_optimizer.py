@@ -161,7 +161,7 @@ def solve_auction_roster_greedy(
         return pd.DataFrame(), budget, 0.0
 
     pool["price"] = pool["suggested_auction_price"].clip(lower=config.MIN_PRICE)
-    # Include cheap depth — top-by-points alone cannot fill 15 spots under $400
+    # Include cheap depth — top-by-points alone cannot fill 16 spots under $400
     by_pts = pool.sort_values("projected_points", ascending=False).head(80)
     by_cheap = pool.sort_values(["price", "projected_points"], ascending=[True, False]).head(80)
     pool = pd.concat([by_pts, by_cheap]).drop_duplicates("player")

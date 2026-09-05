@@ -21,7 +21,7 @@ BUDGET_PER_TEAM = 400
 # higher-priority source (Sam's user-confirmed values win for Sam).
 SHEET_REPORTED_BUDGET = {
     "Brandon": 184, "Coby": 274, "Brad": 281, "Reid": 260, "Evan": 184,
-    "Sam": 225, "James": 297, "Ryan J": 257, "Jason": 209, "Travis": 264,
+    "Sam": 225, "James": 297, "Ryan J": 257, "Jason": 209, "Travis": 307,
     "CJ": 264, "Shane": 324,
 }
 
@@ -29,8 +29,20 @@ SHEET_REPORTED_BUDGET = {
 # hierarchy (explicit manual override > commissioner sheet). Only Sam's
 # values are directly user-confirmed; every other team relies on the
 # sheet alone.
+#
+# OFFICIAL COMMISSIONER DATA REPAIR (see
+# outputs/auction_rebuild/official_repair_v1/): Sam's real remaining
+# auction budget is $225 per the commissioner's own table (Woody
+# Johnson's D...efence: $387 start / 8 protected / $162 keeper / $225
+# remaining). The old $223/$221 primary/conversions split is RETIRED --
+# both scenario columns now hold the single official $225 figure.
+# Travis's SHEET_REPORTED_BUDGET above was also corrected from the old,
+# simply-wrong $264 to the official $307 (Bishop Sycamore) -- his
+# keeper_spend ($113) already matched the commissioner table exactly,
+# which is how this owner was identified as Bishop Sycamore in the
+# owner-to-team mapping audit.
 USER_CONFIRMED_BUDGET = {
-    "Sam": {"primary": 223, "conversions": 221},
+    "Sam": {"primary": 225, "conversions": 225},
 }
 
 

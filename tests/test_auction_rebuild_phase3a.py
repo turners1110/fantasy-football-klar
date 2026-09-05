@@ -58,16 +58,22 @@ def test_03_internal_trade_nets_to_zero():
     assert adj["amount"].sum() == pytest.approx(0.0)
 
 
-def test_04_sam_primary_223():
+def test_04_sam_primary_225_official():
+    # UPDATED (official commissioner data repair pass): Sam's real
+    # remaining auction budget is $225, not the old $223 estimate -- see
+    # outputs/auction_rebuild/official_repair_v1/budget_reconciliation.md.
     states = pd.read_csv(BASE_DIR / "outputs" / "auction_rebuild" / "data" / "team_starting_states.csv")
     row = states[states["team_id"] == "Sam"].iloc[0]
-    assert row["primary_auction_budget"] == pytest.approx(223.0)
+    assert row["primary_auction_budget"] == pytest.approx(225.0)
 
 
-def test_05_sam_conversion_221():
+def test_05_sam_conversion_scenario_merged_into_official_225():
+    # UPDATED: the old $221 "conversions" sensitivity scenario is
+    # retired per the official commissioner repair -- both budget
+    # columns now hold the single official $225 figure.
     states = pd.read_csv(BASE_DIR / "outputs" / "auction_rebuild" / "data" / "team_starting_states.csv")
     row = states[states["team_id"] == "Sam"].iloc[0]
-    assert row["conversions_scenario_auction_budget"] == pytest.approx(221.0)
+    assert row["conversions_scenario_auction_budget"] == pytest.approx(225.0)
 
 
 # ---------------------------------------------------------------------------
@@ -267,12 +273,16 @@ def test_16_no_forced_final_slot_returns():
     """Team.max_bid_cap is a ceiling, not a floor: a team on its last slot
     facing a cheap, low-value nomination must NOT be forced to spend its
     entire remaining budget."""
+    # 15 players filled -- official 16-player roster (updated from the
+    # retired 15-player assumption) leaves exactly 1 slot open, same
+    # "last slot" scenario the test's docstring describes.
     team = Team(name="T", budget_remaining=150.0, roster=[
         ("QB1", "QB", 1, 300), ("QB2", "QB", 1, 100),
         ("RB1", "RB", 1, 200), ("RB2", "RB", 1, 190),
         ("WR1", "WR", 1, 180), ("WR2", "WR", 1, 170), ("TE1", "TE", 1, 150),
         ("RB3", "RB", 1, 140), ("WR3", "WR", 1, 130), ("TE2", "TE", 1, 120),
         ("RB4", "RB", 1, 30), ("WR4", "WR", 1, 25), ("TE3", "TE", 1, 20), ("QB3", "QB", 1, 10),
+        ("WR5", "WR", 1, 5),
     ])
     assert team.slots_needed == 1
     assert team.max_bid_cap() == 150.0  # ceiling equals full remaining budget on the last slot
