@@ -260,3 +260,25 @@ def test_no_player_gets_stop_equal_to_raw_points_via_website(client):
     for p in board:
         if p["position"] == "RB" and p["expected_role"] == "required starter":
             assert abs(p["recommended_stop"] - p.get("marginal_value", 0)) > 1 or p["marginal_value"] < 5
+
+
+# ---------------------------------------------------------------------------
+# V2 Part 5: Monte Carlo distribution endpoints
+# ---------------------------------------------------------------------------
+
+def test_distributions_endpoint_returns_data(client):
+    r = client.get("/api/distributions")
+    assert r.status_code == 200
+    assert len(r.json()["players"]) > 0
+
+
+def test_distribution_unknown_player_404(client):
+    r = client.get("/api/distributions/Not_A_Real_Player_Xyz")
+    assert r.status_code == 404
+
+
+def test_distribution_insufficient_sales_labeled(client):
+    data = client.get("/api/distributions").json()["players"]
+    insufficient = [p for p in data if p["status"] == "INSUFFICIENT_SIMULATED_SALES"]
+    assert len(insufficient) > 0
+    assert all(p["p50"] in ("", None) for p in insufficient)

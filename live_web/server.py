@@ -131,6 +131,33 @@ def get_search(q: str, include_protected: bool = False):
     return {"results": cli.api_search(q, include_protected=include_protected)}
 
 
+_MC_PATH = BASE_DIR / "outputs" / "auction_rebuild" / "live_web_v2" / "player_price_distributions.csv"
+_mc_cache: dict = {}
+
+
+def _load_mc():
+    if not _mc_cache and _MC_PATH.exists():
+        import csv as _csv
+        with _MC_PATH.open() as f:
+            for row in _csv.DictReader(f):
+                _mc_cache[row["player"]] = row
+    return _mc_cache
+
+
+@app.get("/api/distributions/{player}")
+def get_distribution(player: str):
+    data = _load_mc()
+    row = data.get(player)
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"No Monte Carlo distribution for {player}")
+    return row
+
+
+@app.get("/api/distributions")
+def get_all_distributions():
+    return {"players": list(_load_mc().values()), "source": str(_MC_PATH.name)}
+
+
 @app.get("/api/emergency", response_class=PlainTextResponse)
 def get_emergency():
     return cli.cmd_emergency()
