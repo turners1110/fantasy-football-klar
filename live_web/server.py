@@ -129,6 +129,17 @@ def get_check(player: str):
     return result
 
 
+@app.get("/api/verdict/{player}")
+def get_verdict(player: str, current_bid: float | None = None, leading_team: str | None = None):
+    """V3 Parts 9-10: the single backend-authoritative nominee-panel
+    verdict -- BID / BID_BUT_RUN_EXACT_SOON / HOLD / ONE_MORE_DOLLAR /
+    PASS / ILLEGAL / CRITICAL_REVIEW_REQUIRED, per AuctionCLI.api_verdict."""
+    result = _active().api_verdict(player, current_bid=current_bid, leading_team=leading_team)
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"Unknown or unavailable player: {player}")
+    return result
+
+
 @app.get("/api/targets")
 def get_targets():
     return {"targets": _active().api_targets(25)}

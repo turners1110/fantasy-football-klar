@@ -215,7 +215,7 @@ document.getElementById("nom-clear").addEventListener("click", async () => {
   document.getElementById("nominated-panel").classList.add("hidden");
 });
 
-let nomState = { player: null, check: null, exact: null };
+let nomState = { player: null, check: null, exact: null, leadingTeam: null, verdict: null };
 
 async function showNominated(player) {
   const panel = document.getElementById("nominated-panel");
@@ -225,7 +225,7 @@ async function showNominated(player) {
   document.getElementById("nom-current-bid").value = "";
   document.getElementById("nom-exact-result").classList.add("hidden");
   document.getElementById("nom-ladder-result").classList.add("hidden");
-  nomState = { player, check: null, exact: null };
+  nomState = { player, check: null, exact: null, leadingTeam: null, verdict: null };
   try {
     const c = await api("/check/" + encodeURIComponent(player));
     nomState.check = c;
@@ -251,36 +251,42 @@ function governingCeiling() {
   return null;
 }
 
-function renderVerdict() {
-  const bidInput = document.getElementById("nom-current-bid");
-  const bid = parseFloat(bidInput.value);
-  const box = document.getElementById("nom-verdict");
-  const g = governingCeiling();
-  if (!g) { box.textContent = "Loading recommendation..."; return; }
-  if (isNaN(bid)) { box.textContent = `Enter a current bid. Recommended stop: $${g.ceiling.toFixed(0)} (${g.source}).`; box.className = "verdict-box"; return; }
+// V3 Parts 9-10: the verdict now comes from ONE backend-authoritative
+// endpoint (GET /api/verdict/{player}) using the exact required
+// taxonomy (BID / BID_BUT_RUN_EXACT_SOON / HOLD / ONE_MORE_DOLLAR /
+// PASS / ILLEGAL / CRITICAL_REVIEW_REQUIRED) -- this replaces the
+// client-side-only formula that used to live here (a second,
+// UI-only valuation path is exactly the class of bug this whole
+// repair exists to catch).
+let _verdictRequestToken = 0;
 
-  let verdict, reason;
-  if (g.critical) {
-    verdict = "RUN_EXACT_FIRST";
-    reason = `Critical warning active${nomState.exact ? "" : " (approximate result only)"} -- run Exact before trusting this recommendation.`;
-  } else if (bid > 20 && (!nomState.exact || nomState.exact.stale_status !== "CURRENT")) {
-    verdict = "RUN_EXACT_FIRST";
-    reason = `Bid $${bid} exceeds $20 and no current exact result exists -- run Exact first.`;
-  } else if (bid > g.ceiling) {
-    verdict = "PASS";
-    reason = `Bid $${bid} exceeds the recommended stop $${g.ceiling.toFixed(0)} (${g.source}).`;
-  } else if (g.ceiling - bid <= 2) {
-    verdict = "FINAL_BID";
-    reason = `Bid $${bid} is within $2 of the stop $${g.ceiling.toFixed(0)} (${g.source}) -- this should be your final bid.`;
-  } else if (g.ceiling - bid >= 3) {
-    verdict = "BID";
-    reason = `Bid $${bid} is safely below the stop $${g.ceiling.toFixed(0)} (${g.source}) -- go ahead.`;
-  } else {
-    verdict = "BID_WITH_CAUTION";
-    reason = `Bid $${bid} is close to the stop $${g.ceiling.toFixed(0)} (${g.source}) -- proceed cautiously.`;
+async function renderVerdict() {
+  const bidInput = document.getElementById("nom-current-bid");
+  const bidRaw = bidInput.value;
+  const bid = bidRaw === "" ? null : parseFloat(bidRaw);
+  const box = document.getElementById("nom-verdict");
+  if (!nomState.player) { box.textContent = "Loading recommendation..."; return; }
+  if (bidRaw !== "" && isNaN(bid)) { box.textContent = "Enter a valid numeric bid."; box.className = "verdict-box"; return; }
+
+  const myToken = ++_verdictRequestToken;
+  let url = "/verdict/" + encodeURIComponent(nomState.player);
+  const params = [];
+  if (bid !== null) params.push("current_bid=" + encodeURIComponent(bid));
+  if (nomState.leadingTeam) params.push("leading_team=" + encodeURIComponent(nomState.leadingTeam));
+  if (params.length) url += "?" + params.join("&");
+
+  let v;
+  try {
+    v = await api(url);
+  } catch (e) {
+    if (myToken === _verdictRequestToken) { box.textContent = "Verdict unavailable: " + e.message; box.className = "verdict-box"; }
+    return;
   }
-  box.textContent = `${verdict} -- ${reason}`;
-  box.className = "verdict-box verdict-" + verdict.toLowerCase();
+  if (myToken !== _verdictRequestToken) return;  // a newer request already superseded this one
+
+  box.textContent = `${v.verdict} -- ${v.reason}`;
+  box.className = "verdict-box verdict-" + v.verdict.toLowerCase();
+  nomState.verdict = v;
 }
 
 document.getElementById("nom-current-bid").addEventListener("input", renderVerdict);

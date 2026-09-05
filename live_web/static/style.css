@@ -31,10 +31,19 @@ tr.rec-critical { background: #ffddaa; border-left: 4px solid #cc6600; font-weig
 .bid-workflow input, .bid-workflow button { margin: 3px; }
 #nom-current-bid { width: 80px; padding: 5px; }
 .verdict-box { margin-top: 8px; padding: 8px; border-radius: 4px; font-weight: bold; background: #eee; }
+/* V3 Parts 9-10 required verdict taxonomy (backend-authoritative, GET /api/verdict) */
 .verdict-bid { background: #c8f7c5; }
+.verdict-one_more_dollar { background: #ffe0a3; }
+.verdict-hold { background: #eee; }
+.verdict-pass { background: #f8d0d0; }
+.verdict-bid_but_run_exact_soon { background: #ffddaa; border: 2px solid #cc6600; }
+.verdict-critical_review_required { background: #f8d0d0; border: 3px solid #cc0000; }
+.verdict-illegal { background: #333; color: white; border: 2px solid #000; }
+/* legacy classes (pre-V3 client-side verdict formula, kept only in case
+   any cached page still references them -- no longer produced by
+   renderVerdict, which now uses the backend taxonomy above) */
 .verdict-bid_with_caution { background: #fff3cd; }
 .verdict-final_bid { background: #ffe0a3; }
-.verdict-pass { background: #f8d0d0; }
 .verdict-run_exact_first { background: #ffddaa; border: 2px solid #cc6600; }
 .verdict-insufficient_evidence { background: #ddd; }
 .exact-result, .ladder-result { margin-top: 6px; padding: 6px; background: white; border: 1px solid #ccc; font-size: 0.85em; }

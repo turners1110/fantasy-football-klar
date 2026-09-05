@@ -1130,6 +1130,80 @@ class AuctionCLI:
             "calculation_label": market.get("calculation_label", "APPROXIMATE_LIVE_ROSTER_VALUE"),
         }
 
+    def _has_current_exact(self, player: str) -> bool:
+        seq = self.store.state.sequence_number
+        return any(k[0] == seq and k[1] == player for k in self._exact_cache)
+
+    def api_verdict(self, player: str, current_bid: float | None = None, leading_team: str | None = None) -> dict | None:
+        """V3 Parts 9-10: the single, backend-authoritative nominee-panel
+        verdict service. Replaces the ad hoc client-side JS verdict logic
+        that used to live in live_web/static/app.js -- verdicts must come
+        from the SAME governed service used everywhere else, never a
+        second UI-only formula, per this repair's own repeated finding
+        that duplicated valuation logic is where these bugs live.
+
+        Required verdict taxonomy (exact spec wording, normalized to
+        SCREAMING_SNAKE_CASE for a JSON field): BID; BID_BUT_RUN_EXACT_SOON;
+        HOLD; ONE_MORE_DOLLAR; PASS; ILLEGAL; CRITICAL_REVIEW_REQUIRED.
+
+        Every dollar-vs-points field is explicitly suffixed with its unit
+        (e.g. marginal_lineup_points vs team_specific_value_dollars) so a
+        UI can never accidentally render points with a $ sign again.
+        """
+        check = self.api_check(player)
+        if check is None:
+            return None
+        sam = self._sam()
+        exact_current = self._has_current_exact(player)
+        stop = check["recommended_stop"]
+        legal_max = check["legal_max_bid"]
+
+        verdict = None
+        reason = None
+        if current_bid is not None and current_bid > legal_max + 1e-9:
+            verdict = "ILLEGAL"
+            reason = f"${current_bid:.0f} exceeds Sam's legal maximum bid of ${legal_max:.0f} -- this bid cannot legally be paid."
+        elif check["critical_review_required"]:
+            verdict = "CRITICAL_REVIEW_REQUIRED"
+            reason = f"Critical guardrail(s) triggered: {', '.join(check['critical_reasons'])}. Review before bidding."
+        elif current_bid is None:
+            verdict = "HOLD"
+            reason = f"No current bid entered yet. Reference stop: ${stop:.0f} ({check['governed_calculation_label']})."
+        elif current_bid > stop + 1e-9:
+            verdict = "PASS"
+            reason = f"${current_bid:.0f} exceeds the recommended stop ${stop:.0f} -- pass."
+        elif stop - current_bid <= 1 + 1e-9:
+            verdict = "ONE_MORE_DOLLAR"
+            reason = f"${current_bid:.0f} is within $1 of the stop ${stop:.0f} -- this should be your final raise."
+        elif current_bid > 20 and not exact_current:
+            verdict = "BID_BUT_RUN_EXACT_SOON"
+            reason = f"${current_bid:.0f} is a meaningful bid with no current exact solve backing the ${stop:.0f} approximate stop -- run Exact before going further."
+        else:
+            verdict = "BID"
+            reason = f"${current_bid:.0f} is safely below the stop ${stop:.0f} -- bid."
+
+        return {
+            "player": player, "position": check["position"],
+            "current_bid_dollars": current_bid, "leading_team": leading_team,
+            "expected_market_price_dollars": check["live_expected_price"],
+            "market_p25_p50_p75_p90_dollars": None,  # not wired to a validated Monte Carlo batch this pass -- honestly None, not fabricated
+            "marginal_lineup_points": round(check["marginal_value"], 2),
+            "team_specific_value_dollars": check["recommended_stop"],  # the governed ceiling IS the team-specific-value-aware stop (V3 Part 7)
+            "approximate_ceiling_dollars": check["recommended_stop"],
+            "exact_ceiling_dollars": None,  # only populated by /api/exact; this endpoint is the fast path
+            "exact_is_current": exact_current,
+            "recommended_stop_dollars": stop,
+            "legal_max_bid_dollars": legal_max,
+            "money_remaining_if_sam_wins_dollars": (round(sam.budget_remaining - current_bid, 2) if current_bid is not None else None),
+            "open_slots_after_purchase": max(0, sam.open_slots - 1),
+            "surplus_or_deficit_dollars": (round(stop - current_bid, 2) if current_bid is not None else None),
+            "confidence": "LOW" if not exact_current else "HIGH",
+            "verdict": verdict,
+            "reason": reason,
+            "critical_review_required": check["critical_review_required"],
+            "critical_reasons": check["critical_reasons"],
+        }
+
     def api_paths(self) -> dict:
         pool = self._remaining_pool()
         remaining_for_paths = {n: {"display_name": n, "position": v["position"], "projected_points": v["projected_points"],
