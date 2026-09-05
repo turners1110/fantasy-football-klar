@@ -47,9 +47,41 @@ def build_tiers(pool: pd.DataFrame, tier_size: int = cfg.TIER_SIZE) -> pd.DataFr
     return pool
 
 
+class DuplicateCanonicalPlayerError(ValueError):
+    """Raised when two rows in the price sheet normalize to the same
+    canonical identity (V3 Part 3, minimal safety-net version). This is
+    NOT the full canonical player-identity layer the spec describes
+    (that would also cover keeper ingestion, protection, search, sale
+    entry, corrections, undo/replay, and Monte Carlo aggregation) --
+    it is a minimal, additive guard that refuses to build a pool
+    containing a known-duplicate alias pair (e.g. Bill/Jacory
+    Croskey-Merritt, Kenny/Kenneth Gainwell -- see
+    outputs/auction_rebuild/live_v3/canonical_player_aliases.csv), so a
+    simulation or live pool can never silently sell the same real person
+    twice under two different display names."""
+
+
+def _assert_no_canonical_duplicate_names(prices: pd.DataFrame) -> None:
+    seen: dict[str, str] = {}
+    collisions = []
+    for name in prices["player"]:
+        key = normalize_name(name)
+        if key in seen and seen[key] != name:
+            collisions.append((seen[key], name))
+        else:
+            seen[key] = name
+    if collisions:
+        raise DuplicateCanonicalPlayerError(
+            f"Duplicate canonical player identity detected in the price sheet -- refusing to "
+            f"build the pool (this is exactly the alias-duplicate-sale bug class found reviewing "
+            f"ten simulated drafts): {collisions}"
+        )
+
+
 def load_pool_and_teams(snapshot_dir: str | Path = BASE_DIR / "output_mock_draft_snapshot"):
     snapshot_dir = Path(snapshot_dir)
     prices = pd.read_csv(snapshot_dir / "veteran_auction_price_sheet.csv")
+    _assert_no_canonical_duplicate_names(prices)
     prices = prices[prices["suggested_auction_price"].notna()].copy()
     prices = prices.rename(columns={"suggested_auction_price": "base_value"})
     prices = prices[["player", "position", "base_value"]]
@@ -128,6 +160,7 @@ def load_confirmed_pool_and_teams(
     team_states = pd.read_csv(team_states_path)
 
     prices = pd.read_csv(snapshot_dir / "veteran_auction_price_sheet.csv")
+    _assert_no_canonical_duplicate_names(prices)
     prices = prices[prices["suggested_auction_price"].notna()].copy()
     prices = prices.rename(columns={"suggested_auction_price": "base_value"})
     prices = prices[["player", "position", "base_value"]]
