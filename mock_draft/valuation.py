@@ -23,6 +23,8 @@ entirely, not replaced with another hand-picked multiplier.
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
 from . import config_bridge as cfg
@@ -266,9 +268,18 @@ def compute_willingness(
     lower_bound = base_market_anchor - cfg.MAX_TOTAL_DISCOUNT_BELOW_ANCHOR
     upper_bound = base_market_anchor + cfg.MAX_TOTAL_PREMIUM_OVER_ANCHOR
     if raw_willingness > upper_bound:
-        willingness = upper_bound - float(rng.uniform(0.0, 1.5))
+        # floor() (never round()) to preserve BOTH invariants at once:
+        # whole-dollar prices, and "never above the bound" -- round()
+        # can round UP past upper_bound when the jitter draw is small
+        # (e.g. upper_bound=100.87, jitter=0.1 -> 100.77 -> round() = 101,
+        # which is ABOVE upper_bound and was caught by
+        # test_08_premium_bounds_hold_relative_to_anchor). floor() only
+        # ever moves the result down, so it can never violate the cap.
+        willingness = math.floor(upper_bound - float(rng.uniform(0.0, 1.5)))
     elif raw_willingness < lower_bound:
-        willingness = lower_bound + float(rng.uniform(0.0, 1.5))
+        # ceil() is floor()'s mirror for the lower bound -- only ever
+        # moves the result up, so it can never fall below lower_bound.
+        willingness = math.ceil(lower_bound + float(rng.uniform(0.0, 1.5)))
     else:
         willingness = raw_willingness
     willingness = max(willingness, cfg.MIN_PRICE)
