@@ -96,8 +96,10 @@ def test_deterministic():
     assert a.auction_players == b.auction_players
 
 
-def test_active_roster_size_is_15():
-    assert config.AUCTION_PURCHASE_REQUIREMENT == 15
+def test_active_roster_size_is_16():
+    # UPDATED (official commissioner data repair): 16-player roster
+    # (9 starters + 7 bench), not 15/6.
+    assert config.AUCTION_PURCHASE_REQUIREMENT == 16
     assert config.STARTING_ROSTER_SIZE == 9
-    assert config.BENCH_SIZE == 6
+    assert config.BENCH_SIZE == 7
     assert config.IR_CAPACITY == 2

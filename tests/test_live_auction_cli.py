@@ -26,12 +26,12 @@ def _first_available(cli, position):
 def test_status_shows_budget_and_roster(cli):
     out = cli.cmd_status()
     assert "budget remaining" in out
-    assert "Sam" not in out.split("\n")[0] or "$223" in out  # primary budget
+    assert "Sam" not in out.split("\n")[0] or "$225" in out  # official primary budget
 
 
 def test_full_mini_sequence_status_sales_check_undo_save_load(cli):
     status0 = cli.cmd_status()
-    assert "$223.00" in status0 or "223" in status0
+    assert "$225.00" in status0 or "225" in status0
 
     rb1 = _first_available(cli, "RB")
     sale_out = cli.cmd_sale(rb1, "Sam", "50", confirmed=True)

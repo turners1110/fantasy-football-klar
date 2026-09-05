@@ -159,8 +159,14 @@ class AuctionCLI:
         for team_id, t in teams.items():
             roster = [{"player_id": n, "display_name": n, "position": p, "price": pr, "is_keeper": True, "projected_points": pts}
                       for n, p, pr, pts in t.roster]
+            # College-rights holds (Mendoza, Bond for Sam) occupy a real
+            # 16-man roster slot per the official commissioner data, but
+            # are never added to `roster` itself -- see TeamState's
+            # college_rights_count docstring. Only Sam holds any today.
+            n_college_rights = len(COLLEGE_RIGHTS) if team_id == "Sam" else 0
             st.teams[team_id] = TeamState(team_id=team_id, budget_remaining=t.budget_remaining, roster=roster,
-                                           keeper_ids={n for n, p, pr, pts in t.roster})
+                                           keeper_ids={n for n, p, pr, pts in t.roster},
+                                           college_rights_count=n_college_rights)
         st.available_pool = {name: {"display_name": name, "position": p.position, "projected_points": p.projected_points,
                                      "base_value": p.base_value} for name, p in self.players.items()}
         st.college_rights_excluded = set(COLLEGE_RIGHTS)

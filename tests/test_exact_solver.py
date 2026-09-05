@@ -17,7 +17,8 @@ def _candidates(rows):
     return pd.DataFrame(rows)
 
 
-def test_exact_fifteen_players():
+def test_exact_sixteen_players():
+    # UPDATED (official commissioner data repair): 16-player roster, not 15.
     rows = []
     for i, (pos, pts, price) in enumerate([
         ("QB", 280, 30), ("RB", 220, 40), ("RB", 200, 35), ("RB", 180, 20),
@@ -26,9 +27,9 @@ def test_exact_fifteen_players():
         ("RB", 100, 3), ("WR", 90, 2), ("TE", 80, 1), ("QB", 60, 1),
     ]):
         rows.append({"player": f"P{i}", "position": pos, "projected_points": pts, "suggested_auction_price": price})
-    result = exact_roster_solver.solve_exact_auction_roster(_candidates(rows), 400, 15)
+    result = exact_roster_solver.solve_exact_auction_roster(_candidates(rows), 400, 16)
     assert result.status == "OPTIMAL"
-    assert len(result.selected) == 15
+    assert len(result.selected) == 16
     failures = exact_roster_solver.post_solve_assertions(result, 400)
     assert failures == []
 
@@ -44,7 +45,7 @@ def test_qb_not_in_flex():
         rows.append({"player": f"WR{i}", "position": "WR", "projected_points": 140 - i, "suggested_auction_price": 3})
     for i in range(10):
         rows.append({"player": f"TE{i}", "position": "TE", "projected_points": 100 - i, "suggested_auction_price": 2})
-    result = exact_roster_solver.solve_exact_auction_roster(_candidates(rows), 400, 15)
+    result = exact_roster_solver.solve_exact_auction_roster(_candidates(rows), 400, 16)
     assert result.status == "OPTIMAL"
     for player, role in result.role_assignments.items():
         if role.startswith("FLEX"):
@@ -57,13 +58,13 @@ def test_budget_not_exceeded():
     rows += [{"player": "QB1", "position": "QB", "projected_points": 200, "suggested_auction_price": 10}]
     rows += [{"player": f"WR{i}", "position": "WR", "projected_points": 90, "suggested_auction_price": 5} for i in range(10)]
     rows += [{"player": "TE1", "position": "TE", "projected_points": 80, "suggested_auction_price": 5}]
-    result = exact_roster_solver.solve_exact_auction_roster(_candidates(rows), 400, 15)
+    result = exact_roster_solver.solve_exact_auction_roster(_candidates(rows), 400, 16)
     assert result.spent <= 400
 
 
 def test_infeasible_budget():
     rows = [{"player": "QB1", "position": "QB", "projected_points": 300, "suggested_auction_price": 500}]
-    result = exact_roster_solver.solve_exact_auction_roster(_candidates(rows), 400, 15)
+    result = exact_roster_solver.solve_exact_auction_roster(_candidates(rows), 400, 16)
     assert result.status == "INFEASIBLE"
 
 
@@ -78,8 +79,8 @@ def test_exact_beats_or_matches_greedy():
         {"player": "TE1", "position": "TE", "projected_points": 120, "suggested_auction_price": 8},
     ]
     pool = _candidates(rows)
-    exact = exact_roster_solver.solve_exact_auction_roster(pool, 400, 15)
-    greedy, _, _ = roster_optimizer.solve_auction_roster_greedy(pool, 400, 15)
+    exact = exact_roster_solver.solve_exact_auction_roster(pool, 400, 16)
+    greedy, _, _ = roster_optimizer.solve_auction_roster_greedy(pool, 400, 16)
     greedy_owned = greedy.copy()
     greedy_lu = roster_optimizer.assign_lineup(greedy_owned)
     assert exact.starting_points >= greedy_lu.starting_points
@@ -91,7 +92,7 @@ def test_deterministic():
         {"player": "RB1", "position": "RB", "projected_points": 200, "suggested_auction_price": 20},
     ] * 10
     pool = _candidates(rows)
-    a = exact_roster_solver.solve_exact_auction_roster(pool, 400, 15)
-    b = exact_roster_solver.solve_exact_auction_roster(pool, 400, 15)
+    a = exact_roster_solver.solve_exact_auction_roster(pool, 400, 16)
+    b = exact_roster_solver.solve_exact_auction_roster(pool, 400, 16)
     assert a.starting_points == b.starting_points
     assert set(a.role_assignments.keys()) == set(b.role_assignments.keys())

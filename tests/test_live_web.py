@@ -37,8 +37,11 @@ def test_status_endpoint(client):
     r = client.get("/api/status")
     assert r.status_code == 200
     data = r.json()
-    assert data["budget_remaining"] == 223.0
-    assert data["open_slots"] == 9
+    # UPDATED (official commissioner data repair): Sam's official
+    # remaining budget is $225 with 8 open slots (16-player roster), not
+    # the old $223/9 assumption.
+    assert data["budget_remaining"] == 225.0
+    assert data["open_slots"] == 8
 
 
 def test_board_endpoint_returns_players(client):
@@ -115,7 +118,7 @@ def test_correct_via_api(client):
     r = client.post("/api/correct", json={"player": rb, "team": "Brad", "price": 15})
     assert r.status_code == 200
     status = server_module.cli.api_status()
-    assert status["budget_remaining"] == 223.0  # Sam's $20 fully refunded
+    assert status["budget_remaining"] == 225.0  # Sam's $20 fully refunded (official $225 budget)
     assert not any(p["display_name"] == rb for p in status["roster"])
 
 

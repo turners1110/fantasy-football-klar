@@ -25,10 +25,19 @@ class TeamState:
     budget_remaining: float
     roster: list = field(default_factory=list)  # list of dicts: player_id, display_name, position, price, is_keeper
     keeper_ids: set = field(default_factory=set)
+    # OFFICIAL COMMISSIONER DATA REPAIR: college-rights holds (e.g.
+    # Mendoza, Bond) occupy a real 16-man roster slot but are
+    # deliberately NEVER added to `roster` itself (they must never
+    # appear as if they were a sellable/displayable roster player -- see
+    # live_auction_cli.py's `college_rights_holdings` note and
+    # outputs/auction_rebuild/official_repair_v1/protected_eligibility_audit.md).
+    # This count-only field is the sole mechanism that reduces
+    # open_slots/legal_max_bid for the slots they occupy.
+    college_rights_count: int = 0
 
     @property
     def open_slots(self) -> int:
-        return max(0, ROSTER_SIZE - len(self.roster))
+        return max(0, ROSTER_SIZE - len(self.roster) - self.college_rights_count)
 
     @property
     def min_reserve(self) -> float:
@@ -118,7 +127,8 @@ class AuctionState:
             "available_pool": self.available_pool, "sold_players": self.sold_players,
             "teams": {
                 tid: {"team_id": t.team_id, "budget_remaining": t.budget_remaining,
-                      "roster": t.roster, "keeper_ids": sorted(t.keeper_ids)}
+                      "roster": t.roster, "keeper_ids": sorted(t.keeper_ids),
+                      "college_rights_count": t.college_rights_count}
                 for tid, t in self.teams.items()
             },
             "college_rights_excluded": sorted(self.college_rights_excluded),
@@ -141,5 +151,6 @@ class AuctionState:
             st.teams[tid] = TeamState(
                 team_id=t["team_id"], budget_remaining=t["budget_remaining"],
                 roster=t.get("roster", []), keeper_ids=set(t.get("keeper_ids", [])),
+                college_rights_count=t.get("college_rights_count", 0),
             )
         return st

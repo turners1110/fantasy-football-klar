@@ -82,11 +82,12 @@ def test_sale_price_above_legal_max_bid_rejected():
 
 
 def test_legal_max_bid_respects_slot_reserve():
+    # UPDATED (official commissioner data repair): 16-player roster, not 15.
     st = make_test_state()
     team = st.teams["Sam"]
-    assert team.open_slots == 14
-    assert team.min_reserve == 13
-    assert team.legal_max_bid == pytest.approx(210.0)
+    assert team.open_slots == 15
+    assert team.min_reserve == 14
+    assert team.legal_max_bid == pytest.approx(209.0)
 
 
 def test_replay_reproduces_saved_state_exactly():

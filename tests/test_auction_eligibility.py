@@ -72,6 +72,8 @@ def test_unknown_fp_only_excluded():
 
 
 def test_active_roster_config():
+    # UPDATED (official commissioner data repair): 16-player roster
+    # (9 starters + 7 bench), not 15.
     assert config.STARTING_ROSTER_SIZE + config.BENCH_SIZE == config.ACTIVE_ROSTER_SIZE
-    assert config.ACTIVE_ROSTER_SIZE == 15
+    assert config.ACTIVE_ROSTER_SIZE == 16
     assert config.IR_CAPACITY == 2

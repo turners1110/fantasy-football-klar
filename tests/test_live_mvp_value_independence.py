@@ -32,7 +32,7 @@ def test_identical_projection_different_price_same_benefit():
         + [{"player": f"te{i}", "position": "TE", "projected_points": 10.0, "suggested_auction_price": 1.0} for i in range(3)]
     )
     keepers = _keepers([])
-    result_low = exact_roster_solver.solve_exact_roster(pd.concat([pool_low, _pool(filler)], ignore_index=True), budget=400.0, n_auction_spots=15, keepers=keepers)
+    result_low = exact_roster_solver.solve_exact_roster(pd.concat([pool_low, _pool(filler)], ignore_index=True), budget=400.0, n_auction_spots=16, keepers=keepers)
     # In pool_high, A costs 500 (unaffordable) -- so instead confirm the OBJECTIVE contribution of A's points
     # is identical regardless of price by checking start_expr/bench_expr construction directly (see next test).
     assert result_low.status in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL")

@@ -67,11 +67,14 @@ def test_syn01_elite_te_beats_replacement_te_when_sam_has_no_te():
     ] + [{"player": f"pad_{i}", "position": "WR", "projected_points": 40.0 - i, "suggested_auction_price": 1.0} for i in range(10)])
     roster_with = list(zip(keepers["player"], keepers["position"], keepers["keeper_price_2026"], keepers["projected_points"]))
     roster_with.append(("Elite TE", "TE", 30.0, 220.0))
+    # UPDATED (official commissioner data repair): 16-player roster, not
+    # 15 -- n_auction_spots = 16 minus each scenario's filled roster count
+    # (6 for result_a: 5 keepers + Elite TE; 5 for result_b: keepers only).
     result_a = exact_roster_solver.solve_exact_roster(
-        pool[pool.player != "Elite TE"], budget=170.0, n_auction_spots=9, keepers=_keepers_from_tuples(roster_with),
+        pool[pool.player != "Elite TE"], budget=170.0, n_auction_spots=10, keepers=_keepers_from_tuples(roster_with),
     )
     result_b = exact_roster_solver.solve_exact_roster(
-        pool[pool.player != "Elite TE"], budget=200.0, n_auction_spots=10, keepers=keepers,
+        pool[pool.player != "Elite TE"], budget=200.0, n_auction_spots=11, keepers=keepers,
     )
     assert result_a.status in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL")
     assert result_b.status in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL")

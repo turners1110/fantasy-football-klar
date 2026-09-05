@@ -243,9 +243,34 @@ def compute_willingness(
     # Single overall bound relative to the anchor -- replaces the old
     # star-ceiling override with one uniform rule that applies to every
     # player alike, not a special case for "star" candidates.
+    #
+    # OFFICIAL DATA / SIMULATION REPAIR (root cause of "near-zero seed
+    # variation" and "sale price == second-highest bid" bugs found
+    # reviewing ten simulated drafts -- see
+    # outputs/auction_rebuild/official_repair_v1/simulation_regression_report.md):
+    # upper_bound/lower_bound are IDENTICAL for every team bidding on the
+    # same player (they depend only on base_market_anchor, a per-player
+    # constant, and the global MAX_TOTAL_*_ANCHOR constants -- never on
+    # team identity or the RNG seed). For a hot early nomination, many
+    # teams' team/behavior-adjusted raw_willingness independently exceeds
+    # upper_bound, so they ALL get clamped to the exact same number --
+    # which is exactly why James Cook/Chubb/Bill Croskey-Merritt/Ekeler
+    # showed near-zero variation across 10 different seeds, and why
+    # sale price sometimes exactly equalled the exported second-highest
+    # bid (two clamped teams sharing one ceiling). Fixed by applying a
+    # small, RNG-seeded de-collision jitter ONLY when a team is actually
+    # clamped -- it always moves the result slightly INSIDE the bound
+    # (never outside it), so the anchor-relative economic envelope this
+    # formula enforces is unchanged; it only stops multiple teams landing
+    # on the identical dollar figure.
     lower_bound = base_market_anchor - cfg.MAX_TOTAL_DISCOUNT_BELOW_ANCHOR
     upper_bound = base_market_anchor + cfg.MAX_TOTAL_PREMIUM_OVER_ANCHOR
-    willingness = max(lower_bound, min(raw_willingness, upper_bound))
+    if raw_willingness > upper_bound:
+        willingness = upper_bound - float(rng.uniform(0.0, 1.5))
+    elif raw_willingness < lower_bound:
+        willingness = lower_bound + float(rng.uniform(0.0, 1.5))
+    else:
+        willingness = raw_willingness
     willingness = max(willingness, cfg.MIN_PRICE)
 
     # Value Purist: refuses to cross their own anchor at all (no "just

@@ -105,9 +105,11 @@ def test_6_college_rights_holds_not_counted_as_keepers(confirmed_keepers):
 
 
 def test_7_sam_budget_scenarios(team_states):
+    # UPDATED (official commissioner data repair): $223/$221 retired,
+    # official value is $225 for both scenario columns.
     states, _ = team_states
-    assert states["Sam"]["primary_auction_budget"] == 223
-    assert states["Sam"]["conversions_scenario_auction_budget"] == 221
+    assert states["Sam"]["primary_auction_budget"] == 225
+    assert states["Sam"]["conversions_scenario_auction_budget"] == 225
 
 
 def test_8_no_team_exceeds_six_veteran_keepers(confirmed_keepers):
@@ -347,11 +349,12 @@ def _run_auctions(players, teams_template, seeds):
     return results
 
 
-def test_26_every_team_ends_with_fifteen_players(confirmed_pool_and_teams):
+def test_26_every_team_ends_with_sixteen_players(confirmed_pool_and_teams):
+    # UPDATED (official commissioner data repair): 16-player roster, not 15.
     players, teams, _ = confirmed_pool_and_teams
     for log, final_teams in _run_auctions(players, teams, range(5)):
         for name, team in final_teams.items():
-            assert len(team.roster) == 15, name
+            assert len(team.roster) == 16, name
 
 
 def test_27_no_negative_budgets(confirmed_pool_and_teams):
@@ -410,11 +413,12 @@ def test_33_no_duplicate_players_on_any_roster(confirmed_pool_and_teams):
             assert len(names) == len(set(names)), name
 
 
-def test_34_no_roster_exceeds_fifteen_players(confirmed_pool_and_teams):
+def test_34_no_roster_exceeds_sixteen_players(confirmed_pool_and_teams):
+    # UPDATED (official commissioner data repair): 16-player roster, not 15.
     players, teams, _ = confirmed_pool_and_teams
     for log, final_teams in _run_auctions(players, teams, range(5)):
         for name, team in final_teams.items():
-            assert len(team.roster) <= 15, name
+            assert len(team.roster) <= 16, name
 
 
 def test_35_pick_count_matches_total_required_slots(confirmed_pool_and_teams):
