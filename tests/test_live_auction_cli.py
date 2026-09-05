@@ -104,6 +104,28 @@ def test_targets_and_paths_return_strings(cli):
     assert "roster paths" in paths_out.lower()
 
 
+def test_targets_team_specific_value_is_dollars_not_raw_points(cli):
+    """Official data / V3 repair, Part 6: _scored_targets used to pass
+    r.marginal_value (fantasy POINTS, per compute_live_sam_values' own
+    documented meaning) directly into compute_target_score's
+    marginal_value/exact_or_approx_ceiling parameters, both of which are
+    compared against or subtracted from live_expected_price (a DOLLAR
+    figure) inside that function -- the same points-vs-dollars units bug
+    already fixed on the board/check/exact recommendation paths, but not
+    on the Targets ranking path. This asserts team_specific_value now
+    sits in a plausible DOLLAR range (well under Sam's legal max bid),
+    not a raw fantasy-points range (which regularly exceeds 100-300 for
+    a real starter -- e.g. the historical Josh Jacobs anomaly)."""
+    targets = cli.api_targets(25)
+    assert len(targets) > 0
+    sam = cli._sam()
+    for t in targets:
+        assert 0 <= t["team_specific_value"] <= sam.legal_max_bid + 1e-6, (
+            f"{t['player']}: team_specific_value {t['team_specific_value']} looks like raw fantasy "
+            f"points, not a dollar figure bounded by Sam's legal max bid ${sam.legal_max_bid}"
+        )
+
+
 def test_emergency_returns_content(cli):
     out = cli.cmd_emergency()
     assert len(out) > 0

@@ -346,9 +346,32 @@ class AuctionCLI:
             remaining_alts = max(0, pos_supply.get(r.position, 1) - 1)
             is_last = pos_supply.get(r.position, 0) <= 1 and needs.get(r.position, 0) > 0
             raw_need = min(1.0, needs.get(r.position, 0) / 2.0) if r.position in ("RB", "WR") else min(1.0, needs.get(r.position, 0))
+            # UNIT-INTEGRITY FIX (official data / V3 repair, Part 6): this
+            # call previously passed r.marginal_value -- fantasy POINTS,
+            # per compute_live_sam_values' own documented meaning -- into
+            # compute_target_score's marginal_value and
+            # exact_or_approx_ceiling parameters, both of which are
+            # subtracted against or compared to live_expected_price (a
+            # DOLLAR figure) inside that function (expected_surplus =
+            # marginal_value - live_expected_price; price_evidence =
+            # (ceiling - live_expected_price) / ceiling). That is the
+            # exact same points-vs-dollars units bug already fixed for
+            # the board/check/exact recommendation paths via
+            # _governed_ceiling, but it had NOT been fixed on the Targets
+            # ranking path -- meaning the Targets page's 0.40-weighted
+            # "quality_component" term and price-evidence term were
+            # comparing points to dollars, which could silently distort
+            # target ranking (though NOT the recommended_stop dollar
+            # figure shown per row, which already routes through the
+            # correct governed-ceiling call a few lines below in
+            # api_targets). Fixed by reusing the SAME governed-ceiling
+            # dollar conversion already used everywhere else in this
+            # file -- never a second, target-scorer-only formula.
+            governed_for_score = self._governed_ceiling(r.player, r.position, r.marginal_value, r.expected_role, pre_draft_price)
+            team_specific_dollar_value = governed_for_score.dollar_ceiling
             score = compute_target_score(
-                player=r.player, position=r.position, marginal_value=r.marginal_value, expected_role=r.expected_role,
-                live_expected_price=pre_draft_price, exact_or_approx_ceiling=max(1.0, r.marginal_value),
+                player=r.player, position=r.position, marginal_value=team_specific_dollar_value, expected_role=r.expected_role,
+                live_expected_price=pre_draft_price, exact_or_approx_ceiling=max(1.0, team_specific_dollar_value),
                 hard_max=None, remaining_alternatives_count=remaining_alts, is_last_legal_alternative=is_last,
                 price_confidence=0.5, position_need_score=raw_need, portfolio_paths_broken_if_missed=0,
             )
