@@ -34,15 +34,15 @@ def test_full_mini_sequence_status_sales_check_undo_save_load(cli):
     assert "$223.00" in status0 or "223" in status0
 
     rb1 = _first_available(cli, "RB")
-    sale_out = cli.cmd_sale(rb1, "Sam", "50")
+    sale_out = cli.cmd_sale(rb1, "Sam", "50", confirmed=True)
     assert "Recorded" in sale_out
     assert rb1 not in cli.store.state.available_pool
     assert any(p["player_id"] == rb1 for p in cli.store.state.teams["Sam"].roster)
 
     rb2 = _first_available(cli, "RB")
-    cli.cmd_sale(rb2, "Sam", "40")
+    cli.cmd_sale(rb2, "Sam", "40", confirmed=True)
     rb3 = _first_available(cli, "RB")
-    cli.cmd_sale(rb3, "Sam", "30")
+    cli.cmd_sale(rb3, "Sam", "30", confirmed=True)
 
     check_out = cli.cmd_check(_first_available(cli, "RB"))
     assert "RECOMMENDED STOP" in check_out
@@ -77,7 +77,7 @@ def test_keeper_sale_rejected(cli):
 
 
 def test_college_rights_sale_rejected(cli):
-    out = cli.cmd_sale("Fernando Mendoza", "Sam", "1")
+    out = cli.cmd_sale("Fernando Mendoza", "Sam", "1", confirmed=True)
     assert "REFUSED" in out
     assert "college-rights" in out.lower()
 
@@ -144,7 +144,7 @@ def test_exact_cache_clears_after_sale(cli):
 
 def test_exact_cache_clears_after_undo(cli):
     rb = _first_available(cli, "RB")
-    cli.cmd_sale(rb, "Sam", "20")
+    cli.cmd_sale(rb, "Sam", "20", confirmed=True)
     cli.cmd_exact(_first_available(cli, "WR"))
     assert cli._exact_cache != {}
     cli.cmd_undo()
@@ -179,3 +179,75 @@ def test_exact_command_via_dispatch_with_price(cli):
 def test_targets_uses_decision_score_not_raw_marginal_value(cli):
     out = cli.cmd_targets()
     assert "decision score" in out.lower()
+
+
+# ---------------------------------------------------------------------------
+# Sunday Final Build Stage 9: additional commands
+# ---------------------------------------------------------------------------
+
+def test_search_finds_partial_name_match(cli):
+    rb = _first_available(cli, "RB")
+    partial = rb.split()[0]
+    out = cli.cmd_search(partial)
+    assert rb in out or "1." in out
+
+
+def test_last_reports_most_recent_sale(cli):
+    rb = _first_available(cli, "RB")
+    cli.cmd_sale(rb, "Sam", "20", confirmed=True)
+    out = cli.cmd_last()
+    assert rb in out
+
+
+def test_correct_rebuilds_accounting(cli):
+    rb = _first_available(cli, "RB")
+    cli.cmd_sale(rb, "Sam", "20", confirmed=True)
+    budget_before_correct = cli.store.state.teams["Sam"].budget_remaining
+    out = cli.cmd_correct(rb, "Brad", "15")
+    assert "Corrected" in out
+    assert cli.store.state.teams["Sam"].budget_remaining == budget_before_correct + 20
+    assert any(p["player_id"] == rb for p in cli.store.state.teams["Brad"].roster)
+
+
+def test_market_shows_position_ratios(cli):
+    out = cli.cmd_market()
+    for pos in ("QB", "RB", "WR", "TE"):
+        assert pos in out
+
+
+def test_position_filter_returns_only_that_position(cli):
+    out = cli.cmd_position("TE")
+    assert "Remaining TE" in out or "No remaining players" in out
+
+
+def test_why_includes_all_required_fields(cli):
+    wr = _first_available(cli, "WR")
+    out = cli.cmd_why(wr)
+    for field in ("Projected points", "Expected role", "Pre-draft market prior", "RECOMMENDED STOP", "Confidence deductions"):
+        assert field in out
+
+
+def test_prior_reports_static_by_default(cli):
+    out = cli.cmd_prior()
+    assert "STATIC_PRE_DRAFT_MARKET_PRIOR" in out
+
+
+def test_large_sale_to_sam_requires_confirmation(cli):
+    rb = _first_available(cli, "RB")
+    out = cli.dispatch(f"sale {rb.replace(' ', '_')} Sam 20")
+    assert "CONFIRM:" in out
+    assert rb in cli.store.state.available_pool  # not yet recorded
+
+
+def test_large_sale_confirm_suffix_proceeds(cli):
+    rb = _first_available(cli, "RB")
+    cli.dispatch(f"sale {rb.replace(' ', '_')} Sam 20")
+    out = cli.dispatch(f"sale {rb.replace(' ', '_')} Sam 20 confirm")
+    assert "Recorded" in out
+    assert rb not in cli.store.state.available_pool
+
+
+def test_sale_above_50_to_rival_requires_confirmation(cli):
+    rb = _first_available(cli, "RB")
+    out = cli.dispatch(f"sale {rb.replace(' ', '_')} Brad 60")
+    assert "CONFIRM:" in out
