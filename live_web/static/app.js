@@ -117,18 +117,31 @@ async function loadBoard() {
   renderBoard();
 }
 
+// V2.2 Request 2: live, as-you-type table filtering. Pure client-side
+// filter over the already-fetched `currentBoard` array (341 rows max) --
+// no server round-trip, no debounce needed, well under the 300ms target.
+function normalizeNameQuery(s) {
+  return s.replace(/_/g, " ").trim().toLowerCase();
+}
+
 function renderBoard() {
   const posFilter = document.getElementById("f-position").value;
   const recFilter = document.getElementById("f-rec").value;
   const maxPrice = parseFloat(document.getElementById("f-maxprice").value) || null;
   const startingOnly = document.getElementById("f-starting").checked;
   const sortKey = document.getElementById("f-sort").value;
+  const nameQuery = normalizeNameQuery(document.getElementById("f-name").value);
 
   let rows = currentBoard.filter(r => {
     if (posFilter && r.position !== posFilter) return false;
     if (recFilter && r.recommendation !== recFilter) return false;
     if (maxPrice && r.live_expected_price > maxPrice) return false;
     if (startingOnly && r.expected_role === "bench depth") return false;
+    if (nameQuery) {
+      const nameHay = normalizeNameQuery(r.player);
+      const posHay = r.position.toLowerCase();
+      if (!nameHay.includes(nameQuery) && !posHay.includes(nameQuery)) return false;
+    }
     return true;
   });
 
@@ -164,7 +177,7 @@ function renderBoard() {
   tbody.querySelectorAll(".sold-btn").forEach(b => b.addEventListener("click", () => openSaleModal(b.dataset.player)));
 }
 
-["f-position", "f-rec", "f-maxprice", "f-starting", "f-sort"].forEach(id =>
+["f-name", "f-position", "f-rec", "f-maxprice", "f-starting", "f-sort"].forEach(id =>
   document.getElementById(id).addEventListener("input", renderBoard));
 document.getElementById("refresh-board").addEventListener("click", () => { loadBoard(); refreshHeader(); });
 

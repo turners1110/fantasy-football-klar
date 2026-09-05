@@ -58,3 +58,4 @@ h3, h4 { margin-top: 18px; }
   border-bottom: 4px solid #e65100; position: sticky; top: 0; z-index: 1000;
 }
 .mode-controls select { margin-left: 12px; padding: 4px 8px; font-weight: bold; }
+.board-name-filter { min-width: 260px; padding: 5px 8px; font-size: 1em; }
