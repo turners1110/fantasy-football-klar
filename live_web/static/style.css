@@ -51,3 +51,10 @@ tr.rec-critical { background: #ffddaa; border-left: 4px solid #cc6600; font-weig
 .slot-open { background: #ddd; }
 pre { white-space: pre-wrap; background: white; padding: 10px; border: 1px solid #ccc; max-height: 500px; overflow-y: auto; }
 h3, h4 { margin-top: 18px; }
+
+.practice-banner {
+  background: #ff9800; color: #1a1a1a; font-weight: 900; font-size: 1.15em;
+  text-align: center; padding: 10px; letter-spacing: 1px;
+  border-bottom: 4px solid #e65100; position: sticky; top: 0; z-index: 1000;
+}
+.mode-controls select { margin-left: 12px; padding: 4px 8px; font-weight: bold; }

@@ -6,6 +6,9 @@
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+<div id="practice-banner" class="practice-banner hidden">
+  PRACTICE MODE -- <span id="practice-scenario-label"></span> -- nothing here touches your real Sunday draft
+</div>
 <div id="header">
   <div class="hdr-title">SUNDAY LIVE AUCTION TOOL <span class="hdr-badge">2026 -- NOT draft_ui</span></div>
   <div class="hdr-stats">
@@ -13,6 +16,14 @@
     <span>Budget: <b id="hdr-budget">--</b></span>
     <span>Open slots: <b id="hdr-slots">--</b></span>
     <span>Legal max bid: <b id="hdr-maxbid" class="hdr-maxbid">--</b></span>
+    <span class="mode-controls">
+      <select id="mode-select">
+        <option value="production">Production</option>
+        <option value="normal">Practice: Normal field</option>
+        <option value="rb_expensive">Practice: RB-expensive field</option>
+        <option value="sam_rb_overload">Practice: Sam RB-overload</option>
+      </select>
+    </span>
   </div>
 </div>
 <div id="global-search-results" class="search-results hidden"></div>

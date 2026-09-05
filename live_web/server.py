@@ -31,19 +31,42 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from live_auction_cli import AuctionCLI
+from auction_engine.practice_scenarios import build_practice_cli, SCENARIOS
 
 STATIC_DIR = Path(__file__).parent / "static"
 
 app = FastAPI(title="Sunday Live Auction Tool")
 
-# Single process-wide AuctionCLI instance -- the SAME event-sourced
-# auction_engine state the CLI would use if launched instead. This is the
-# one and only source of truth for the running server.
+# Single process-wide PRODUCTION AuctionCLI instance -- the SAME
+# event-sourced auction_engine state the CLI would use if launched
+# instead. This is the one and only source of truth for a real Sunday
+# draft. It is NEVER mutated, replaced, or reset by practice-mode code
+# below -- switching modes only changes which instance _RUNTIME["cli"]
+# points at.
 cli = AuctionCLI(log_path=BASE_DIR / "outputs" / "auction_rebuild" / "live_mvp" / "web_session.jsonl")
+
+# V2.1 Part 6: Practice Mode. _RUNTIME tracks which AuctionCLI instance is
+# "active" for every endpoint below (see _active()). A practice instance
+# is a brand-new AuctionCLI object with its own store/event-log/
+# market-state/exact-cache/current-nomination -- full namespace isolation
+# by construction, since nothing here ever copies state between the two
+# objects. Switching back to production always returns the same
+# untouched `cli` object above; production's own state is never at risk
+# from anything that happens in practice mode.
+_RUNTIME: dict = {"mode": "production", "cli": cli, "scenario": None, "proof": {}}
 
 # UI-only "currently nominated" tracker -- explicitly NOT auction state
 # (nominating a player never touches auction_engine; only a sale does).
-_nominated: dict = {"player": None}
+# Kept per-mode so a practice nomination can never leak into production.
+_nominated_by_mode: dict = {"production": None, "practice": None}
+
+
+def _active() -> AuctionCLI:
+    return _RUNTIME["cli"]
+
+
+def _nominated() -> dict:
+    return _nominated_by_mode
 
 
 class SaleRequest(BaseModel):
@@ -79,17 +102,17 @@ class LadderRequest(BaseModel):
 
 @app.get("/api/status")
 def get_status():
-    return cli.api_status()
+    return _active().api_status()
 
 
 @app.get("/api/board")
 def get_board():
-    return {"players": cli.api_board(), "nominated": _nominated["player"]}
+    return {"players": _active().api_board(), "nominated": _nominated_by_mode[_RUNTIME["mode"]]}
 
 
 @app.get("/api/check/{player}")
 def get_check(player: str):
-    result = cli.api_check(player)
+    result = _active().api_check(player)
     if result is None:
         raise HTTPException(status_code=404, detail=f"Unknown or unavailable player: {player}")
     return result
@@ -97,32 +120,32 @@ def get_check(player: str):
 
 @app.get("/api/targets")
 def get_targets():
-    return {"targets": cli.api_targets(25)}
+    return {"targets": _active().api_targets(25)}
 
 
 @app.get("/api/paths")
 def get_paths():
-    return cli.api_paths()
+    return _active().api_paths()
 
 
 @app.get("/api/market")
 def get_market():
-    return cli.api_market()
+    return _active().api_market()
 
 
 @app.get("/api/log")
 def get_log():
-    return {"events": cli.api_log()}
+    return {"events": _active().api_log()}
 
 
 @app.get("/api/league")
 def get_league():
-    return {"teams": cli.api_league()}
+    return {"teams": _active().api_league()}
 
 
 @app.get("/api/league/{team_id}")
 def get_team_detail(team_id: str):
-    result = cli.api_team_detail(team_id)
+    result = _active().api_team_detail(team_id)
     if result is None:
         raise HTTPException(status_code=404, detail=f"Unknown team: {team_id}")
     return result
@@ -130,7 +153,7 @@ def get_team_detail(team_id: str):
 
 @app.get("/api/demand/{player}")
 def get_nominee_demand(player: str):
-    result = cli.api_nominee_demand(player)
+    result = _active().api_nominee_demand(player)
     if result is None:
         raise HTTPException(status_code=404, detail=f"Unknown or unavailable player: {player}")
     return result
@@ -138,7 +161,7 @@ def get_nominee_demand(player: str):
 
 @app.get("/api/search")
 def get_search(q: str, include_protected: bool = False):
-    return {"results": cli.api_search(q, include_protected=include_protected)}
+    return {"results": _active().api_search(q, include_protected=include_protected)}
 
 
 _MC_PATH = BASE_DIR / "outputs" / "auction_rebuild" / "live_web_v2" / "player_price_distributions.csv"
@@ -170,12 +193,12 @@ def get_all_distributions():
 
 @app.get("/api/emergency", response_class=PlainTextResponse)
 def get_emergency():
-    return cli.cmd_emergency()
+    return _active().cmd_emergency()
 
 
 @app.post("/api/exact")
 def post_exact(req: ExactRequest):
-    result = cli.api_exact(req.player, req.test_price, req.expected_sequence)
+    result = _active().api_exact(req.player, req.test_price, req.expected_sequence)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
     return result
@@ -183,7 +206,7 @@ def post_exact(req: ExactRequest):
 
 @app.post("/api/ladder")
 def post_ladder(req: LadderRequest):
-    result = cli.api_ladder(req.player)
+    result = _active().api_ladder(req.player)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
     return result
@@ -191,18 +214,18 @@ def post_ladder(req: LadderRequest):
 
 @app.get("/api/exact-status/{player}")
 def get_exact_status(player: str):
-    cache_key_prefix = (cli.store.state.sequence_number, player)
-    cached = [v for k, v in cli._exact_cache.items() if k[0] == cache_key_prefix[0] and k[1] == cache_key_prefix[1]]
+    cache_key_prefix = (_active().store.state.sequence_number, player)
+    cached = [v for k, v in _active()._exact_cache.items() if k[0] == cache_key_prefix[0] and k[1] == cache_key_prefix[1]]
     if not cached:
-        return {"player": player, "has_current_exact": False, "state_sequence": cli.store.state.sequence_number}
-    return {"player": player, "has_current_exact": True, "state_sequence": cli.store.state.sequence_number,
-           "cached_prices": [k[2] for k in cli._exact_cache if k[0] == cache_key_prefix[0] and k[1] == cache_key_prefix[1]]}
+        return {"player": player, "has_current_exact": False, "state_sequence": _active().store.state.sequence_number}
+    return {"player": player, "has_current_exact": True, "state_sequence": _active().store.state.sequence_number,
+           "cached_prices": [k[2] for k in _active()._exact_cache if k[0] == cache_key_prefix[0] and k[1] == cache_key_prefix[1]]}
 
 
 @app.post("/api/nominate")
 def post_nominate(req: NominateRequest):
-    _nominated["player"] = req.player
-    return {"nominated": _nominated["player"]}
+    _nominated_by_mode[_RUNTIME["mode"]] = req.player
+    return {"nominated": _nominated_by_mode[_RUNTIME["mode"]]}
 
 
 @app.post("/api/sale")
@@ -210,41 +233,85 @@ def post_sale(req: SaleRequest):
     # Same underlying call the CLI's `sale` command makes -- goes through
     # the real auction_engine event log, real keeper/college-rights
     # rejection, and the real large-sale confirmation gate.
-    message = cli.cmd_sale(req.player, req.team, str(req.price), confirmed=req.confirm)
+    message = _active().cmd_sale(req.player, req.team, str(req.price), confirmed=req.confirm)
     if message.startswith("REFUSED") or message.startswith("ERROR"):
         raise HTTPException(status_code=400, detail=message)
     if message.startswith("CONFIRM:"):
         return {"needs_confirmation": True, "message": message}
-    if _nominated["player"] == req.player:
-        _nominated["player"] = None
-    return {"needs_confirmation": False, "message": message, "status": cli.api_status()}
+    if _nominated_by_mode[_RUNTIME["mode"]] == req.player:
+        _nominated_by_mode[_RUNTIME["mode"]] = None
+    return {"needs_confirmation": False, "message": message, "status": _active().api_status()}
 
 
 @app.post("/api/undo")
 def post_undo():
-    message = cli.cmd_undo()
-    return {"message": message, "status": cli.api_status()}
+    message = _active().cmd_undo()
+    return {"message": message, "status": _active().api_status()}
 
 
 @app.post("/api/correct")
 def post_correct(req: CorrectRequest):
-    message = cli.cmd_correct(req.player, req.team, str(req.price))
+    message = _active().cmd_correct(req.player, req.team, str(req.price))
     if message.startswith("REFUSED") or message.startswith("ERROR"):
         raise HTTPException(status_code=400, detail=message)
-    return {"message": message, "status": cli.api_status()}
+    return {"message": message, "status": _active().api_status()}
 
 
 @app.post("/api/save")
 def post_save(req: SnapshotRequest):
-    return {"message": cli.cmd_save(req.name)}
+    return {"message": _active().cmd_save(req.name)}
 
 
 @app.post("/api/load")
 def post_load(req: SnapshotRequest):
-    message = cli.cmd_load(req.name)
+    message = _active().cmd_load(req.name)
     if message.startswith("ERROR"):
         raise HTTPException(status_code=400, detail=message)
-    return {"message": message, "status": cli.api_status()}
+    return {"message": message, "status": _active().api_status()}
+
+
+class ModeRequest(BaseModel):
+    scenario: str = "normal"
+
+
+@app.get("/api/mode")
+def get_mode():
+    return {
+        "mode": _RUNTIME["mode"],
+        "scenario": _RUNTIME["scenario"],
+        "proof": _RUNTIME["proof"],
+        "available_scenarios": list(SCENARIOS),
+    }
+
+
+@app.post("/api/mode/practice")
+def post_mode_practice(req: ModeRequest):
+    """Switches the active instance to a brand-new, fully isolated
+    practice AuctionCLI seeded with the requested scenario. The
+    production `cli` object above is never touched by this call -- it
+    keeps running in the background exactly as it was, so switching back
+    is always safe and lossless."""
+    if req.scenario not in SCENARIOS:
+        raise HTTPException(status_code=400, detail=f"Unknown scenario {req.scenario!r}; must be one of {SCENARIOS}")
+    practice_cli, proof = build_practice_cli(req.scenario)
+    _RUNTIME["mode"] = "practice"
+    _RUNTIME["cli"] = practice_cli
+    _RUNTIME["scenario"] = req.scenario
+    _RUNTIME["proof"] = proof
+    _nominated_by_mode["practice"] = None
+    return {"mode": "practice", "scenario": req.scenario, "proof": proof}
+
+
+@app.post("/api/mode/production")
+def post_mode_production():
+    """Switches back to the single persistent production AuctionCLI
+    instance. Nothing about production state is rebuilt or reset here --
+    it is the same object that has been running the whole time."""
+    _RUNTIME["mode"] = "production"
+    _RUNTIME["cli"] = cli
+    _RUNTIME["scenario"] = None
+    _RUNTIME["proof"] = {}
+    return {"mode": "production"}
 
 
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

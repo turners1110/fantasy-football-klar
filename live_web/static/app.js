@@ -446,6 +446,45 @@ document.getElementById("btn-emergency").addEventListener("click", async () => {
   el.classList.remove("hidden");
 });
 
+// ---- Practice Mode (V2.1 Part 6) ----
+async function refreshModeBanner() {
+  const m = await api("/mode");
+  const banner = document.getElementById("practice-banner");
+  const select = document.getElementById("mode-select");
+  if (m.mode === "practice") {
+    banner.classList.remove("hidden");
+    document.getElementById("practice-scenario-label").textContent = m.scenario;
+    select.value = m.scenario;
+    if (m.proof && m.proof.rb_marginal_value_before !== undefined) {
+      toast("RB-overload proof: RB marginal value " + m.proof.rb_marginal_value_before +
+            " -> " + m.proof.rb_marginal_value_after + " | WR/TE " +
+            m.proof.wr_te_marginal_value_before + " -> " + m.proof.wr_te_marginal_value_after);
+    }
+  } else {
+    banner.classList.add("hidden");
+    select.value = "production";
+  }
+  return m;
+}
+
+document.getElementById("mode-select").addEventListener("change", async (e) => {
+  const val = e.target.value;
+  try {
+    if (val === "production") {
+      await api("/mode/production", { method: "POST" });
+    } else {
+      await api("/mode/practice", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenario: val }),
+      });
+    }
+    await refreshModeBanner();
+    loadBoard(); refreshHeader(); loadLog();
+    document.getElementById("nominated-panel").classList.add("hidden");
+  } catch (e2) { toast("ERROR switching mode: " + e2.message); }
+});
+
 // ---- init ----
 refreshHeader();
+refreshModeBanner();
 loadBoard();
