@@ -63,14 +63,35 @@ def compute_governed_dollar_ceiling(
     open_slots: int,
     portfolio_feasible_at_price: bool = True,
     unsupported_extreme_price: bool = False,
+    team_specific_dollar_value: float | None = None,
 ) -> GovernedCeiling:
     """Returns the governing dollar ceiling for a recommendation, per V2
-    Part 2's exact rule: the LOWEST applicable limit among the exact
-    ceiling (when current and OPTIMAL), a conservative approximate
-    ceiling when exact is unavailable, the legal maximum after slot
-    reserves, and the frozen static emergency maximum -- NEVER a raw
-    points value, and never above the static maximum without a fresh
-    OPTIMAL exact result explicitly supporting it.
+    Part 2's exact rule (extended by the V3 repair's Part 7): the LOWEST
+    applicable limit among the exact ceiling (when current and OPTIMAL),
+    a conservative approximate ceiling when exact is unavailable, the
+    legal maximum after slot reserves, the frozen static emergency
+    maximum, and -- new in this pass -- the player's TEAM-SPECIFIC
+    dollar value (a real point-to-dollar conversion of how much this
+    player is actually worth to Sam's current roster right now, distinct
+    from what the market is expected to pay) -- NEVER a raw points
+    value, and never above the static maximum without a fresh OPTIMAL
+    exact result explicitly supporting it.
+
+    V3 REPAIR NOTE (Part 7): before this pass, a `marginal_value_points`
+    parameter existed on the CLI-side wrapper (_governed_ceiling) but was
+    never actually forwarded into this function -- meaning roster-aware
+    team-specific value never governed the recommended stop at all; the
+    stop was driven almost entirely by live_expected_price x a fixed
+    multiplier and the frozen static max. This was the core correctness
+    gap the whole repair exists to close: a player's market price is not
+    proof of their value to Sam, and Sam's own roster saturation must be
+    able to pull the stop DOWN even when the market stays expensive.
+    `team_specific_dollar_value` is now a real candidate in the min()
+    below -- when the caller supplies it (see live_auction_cli.py's
+    `_governed_ceiling`, which computes it from the player's own
+    market-calibrated dollars-per-point ratio applied to their CURRENT
+    marginal lineup points), it can only ever LOWER the stop, never raise
+    it above what the other constraints already allow.
     """
     candidates = []
     label_parts = []
@@ -88,6 +109,10 @@ def compute_governed_dollar_ceiling(
     if static_hard_max is not None:
         candidates.append(static_hard_max)
         label_parts.append("SAFETY_ADJUSTED_HARD_MAXIMUM(static)")
+
+    if team_specific_dollar_value is not None:
+        candidates.append(max(1.0, team_specific_dollar_value))
+        label_parts.append("TEAM_SPECIFIC_DOLLAR_VALUE(dynamic)")
 
     candidates.append(legal_max_bid)
     label_parts.append("LEGAL_MAX_BID")

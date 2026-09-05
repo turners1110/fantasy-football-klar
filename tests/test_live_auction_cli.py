@@ -104,6 +104,54 @@ def test_targets_and_paths_return_strings(cli):
     assert "roster paths" in paths_out.lower()
 
 
+def test_governed_stop_declines_as_sam_becomes_rb_overloaded(cli):
+    """V3 Part 7: dynamic team-specific dollar value must actually govern
+    the recommended stop -- not just live market price / static caps.
+    Buying several RBs for Sam should make a remaining RB's stop DROP,
+    proportionally more than the live market price itself drops,
+    because the player's marginal contribution to Sam's roster is
+    genuinely falling (declining marginal utility), not merely because
+    the market got cheaper."""
+    board = cli.api_board()
+    rbs_on_board = [p["player"] for p in board if p["position"] == "RB"]
+    assert len(rbs_on_board) >= 6
+    test_candidate = rbs_on_board[0]
+
+    check_before = cli.api_check(test_candidate)
+    stop_before = check_before["recommended_stop"]
+    price_before = check_before["live_expected_price"]
+
+    for rb in rbs_on_board[1:5]:
+        cli.cmd_sale(rb, "Sam", "5", confirmed=True)
+
+    check_after = cli.api_check(test_candidate)
+    stop_after = check_after["recommended_stop"]
+    price_after = check_after["live_expected_price"]
+
+    assert stop_after < stop_before, (
+        f"recommended stop did not decline after RB overload: {stop_before} -> {stop_after}"
+    )
+    # The stop must fall by MORE than the market price alone fell --
+    # proof that team-specific value (not just a cheaper market) is
+    # doing real work in the governing min().
+    price_drop_ratio = (price_before - price_after) / max(1.0, price_before)
+    stop_drop_ratio = (stop_before - stop_after) / max(1.0, stop_before)
+    assert stop_drop_ratio > price_drop_ratio, (
+        f"stop drop ({stop_drop_ratio:.2f}) should exceed price drop ({price_drop_ratio:.2f}) "
+        "-- team-specific value should decline faster than market price alone"
+    )
+
+
+def test_governed_stop_never_exceeds_team_specific_value_candidate(cli):
+    """The team-specific dollar value can only ever LOWER the governed
+    stop, never raise it above the other constraints (legal max bid,
+    static hard max, exact ceiling when current)."""
+    sam = cli._sam()
+    for p in cli.api_board():
+        governed = cli._governed_ceiling(p["player"], p["position"], 999999.0, p["expected_role"], 1.0)
+        assert governed.dollar_ceiling <= sam.legal_max_bid + 1e-6
+
+
 def test_targets_team_specific_value_is_dollars_not_raw_points(cli):
     """Official data / V3 repair, Part 6: _scored_targets used to pass
     r.marginal_value (fantasy POINTS, per compute_live_sam_values' own

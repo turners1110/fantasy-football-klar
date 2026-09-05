@@ -135,20 +135,66 @@ class AuctionCLI:
         except Exception:
             return {}
 
+    def _points_to_dollars_rate(self, player: str, position: str) -> float:
+        """V3 Part 7: a transparent, per-player, market-calibrated
+        dollars-per-point conversion rate -- reuses the player's OWN
+        base_value/projected_points ratio (base_value already comes from
+        the real, market-anchored pricing model in
+        output_mock_draft_snapshot/veteran_auction_price_sheet.csv, not a
+        fabricated scalar) rather than one fixed universal points-to-
+        dollars constant applied to every player alike. Falls back to a
+        position-average rate across the remaining pool when the
+        player's own points/base_value are unavailable or degenerate
+        (e.g. already sold, or a zero-projection edge case), and to a
+        small fixed floor only if the pool itself has no usable data --
+        never silently returns 0."""
+        pool = self.store.state.available_pool
+        info = pool.get(player)
+        if info and info.get("projected_points", 0) > 1 and info.get("base_value", 0) > 0:
+            return info["base_value"] / info["projected_points"]
+        # Fallback: position-average rate across the remaining live pool.
+        same_pos = [v for v in pool.values() if v["position"] == position
+                    and v.get("projected_points", 0) > 1 and v.get("base_value", 0) > 0]
+        if same_pos:
+            return sum(v["base_value"] / v["projected_points"] for v in same_pos) / len(same_pos)
+        return 0.20  # documented, conservative last-resort floor (~$1 per 5 points)
+
     def _governed_ceiling(self, player: str, position: str, marginal_value_points: float, expected_role: str,
                           live_price: float, exact_ceiling: float | None = None, exact_status: str | None = None,
-                          exact_is_current: bool = False):
+                          exact_is_current: bool = False, precomputed_team_specific_dollar_value: float | None = None):
         """THE fix for the Josh Jacobs anomaly: never pass raw points
         (marginal_value) to compute_recommended_bid as a dollar ceiling.
         Every recommendation call site in this file must route through
-        this method (or api_check/api_board, which also call it) instead."""
+        this method (or api_check/api_board, which also call it) instead.
+
+        V3 REPAIR (Part 7): marginal_value_points used to be accepted
+        here but never forwarded to compute_governed_dollar_ceiling --
+        meaning Sam's own roster-aware marginal value never actually
+        governed the recommended stop. Now it is converted to a real,
+        transparent team-specific DOLLAR value (via
+        _points_to_dollars_rate, a per-player market-calibrated
+        conversion, not a fixed universal scalar) and passed through as
+        a genuine candidate in the governing min() -- it can only ever
+        LOWER the stop, never raise it. `precomputed_team_specific_dollar_value`
+        lets a caller that has ALREADY computed a dollar-denominated
+        team-specific value (e.g. api_targets, which reuses
+        _scored_targets' own governed conversion) skip re-deriving it
+        from a stale/mismatched points figure -- passing dollars into
+        marginal_value_points directly would otherwise silently
+        double-convert."""
         sam = self._sam()
+        if precomputed_team_specific_dollar_value is not None:
+            team_specific_dollar_value = precomputed_team_specific_dollar_value
+        else:
+            rate = self._points_to_dollars_rate(player, position)
+            team_specific_dollar_value = marginal_value_points * rate
         return compute_governed_dollar_ceiling(
             player=player, position=position, live_expected_price=max(1.0, live_price),
             legal_max_bid=sam.legal_max_bid, static_hard_max=self._static_hard_max.get(player),
             exact_ceiling=exact_ceiling, exact_status=exact_status, exact_is_current=exact_is_current,
             expected_role=expected_role, sam_position_count=sam.position_counts.get(position, 0),
             sam_budget_remaining=sam.budget_remaining, open_slots=sam.open_slots,
+            team_specific_dollar_value=team_specific_dollar_value,
         )
         if self.log_path is not None:
             DEFAULT_INITIAL_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -385,7 +431,13 @@ class AuctionCLI:
             live_px = max(1.0, s.team_specific_value - s.expected_surplus_at_price)
             expected_role_full = "required starter" if s.starting_lineup_gain == s.team_specific_value and s.team_specific_value > 0 else (
                 "bench depth" if s.bench_probability > 0.5 else "FLEX starter")
-            governed = self._governed_ceiling(s.player, s.position, s.team_specific_value, expected_role_full, live_px)
+            # s.team_specific_value is ALREADY a dollar-denominated governed
+            # ceiling (see _scored_targets above) -- pass it through
+            # precomputed_team_specific_dollar_value, never as
+            # marginal_value_points, or it would be silently
+            # double-converted from a dollar figure as if it were points.
+            governed = self._governed_ceiling(s.player, s.position, 0.0, expected_role_full, live_px,
+                                               precomputed_team_specific_dollar_value=s.team_specific_value)
             rec = compute_recommended_bid(
                 player=s.player, safety_adjusted_ceiling=governed.dollar_ceiling, legal_max_bid=sam.legal_max_bid,
                 portfolio_feasibility_limit=None, confidence=6, live_expected_price=live_px,
@@ -548,7 +600,12 @@ class AuctionCLI:
         # conservative live-price multiple), never from points arithmetic.
         real_role_rows = compute_live_sam_values(sam.roster, {player: info})
         expected_role_guess = real_role_rows[0].expected_role if real_role_rows else "unknown"
-        governed = self._governed_ceiling(player, info["position"], 0.0, expected_role_guess,
+        # V3 Part 7 fix: pass the REAL marginal points (not a 0.0
+        # sentinel) now that _governed_ceiling actually converts and uses
+        # this value -- a 0.0 here would wrongly inject a $1
+        # team-specific-value candidate into the governing min().
+        real_marginal_points = real_role_rows[0].marginal_value if real_role_rows else 0.0
+        governed = self._governed_ceiling(player, info["position"], real_marginal_points, expected_role_guess,
                                           max(1.0, info.get("base_value", 1.0)))
         rec = compute_recommended_bid(
             player=player, safety_adjusted_ceiling=governed.dollar_ceiling,
@@ -616,6 +673,9 @@ class AuctionCLI:
         # found while wiring the website's exact endpoint.
         real_role_rows = compute_live_sam_values(sam.roster, {player: info})
         expected_role_guess = real_role_rows[0].expected_role if real_role_rows else "unknown"
+        # V3 Part 7 fix: real marginal points, not a 0.0 sentinel -- see
+        # the identical fix/comment in cmd_exact above.
+        real_marginal_points = real_role_rows[0].marginal_value if real_role_rows else 0.0
 
         # exact ceiling: binary search around test_price using the same
         # per-price solve method, so the panel can show a TRUE dollar
@@ -625,7 +685,7 @@ class AuctionCLI:
         exact_ceiling = self._binary_search_exact_ceiling(player, info["position"])
 
         governed = self._governed_ceiling(
-            player, info["position"], 0.0, expected_role_guess, max(1.0, info.get("base_value", 1.0)),
+            player, info["position"], real_marginal_points, expected_role_guess, max(1.0, info.get("base_value", 1.0)),
             exact_ceiling=exact_ceiling, exact_status="OPTIMAL", exact_is_current=not stale,
         )
         rec = compute_recommended_bid(
