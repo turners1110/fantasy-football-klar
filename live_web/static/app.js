@@ -91,7 +91,9 @@ async function loadLeague() {
     tr.innerHTML = `<td>${t.team}${t.is_sam ? " (Sam)" : ""}</td><td>$${t.budget_remaining.toFixed(0)}</td>
       <td>${t.open_slots}</td><td>$${t.min_reserve.toFixed(0)}</td><td>$${t.legal_max_bid.toFixed(0)}</td>
       <td>${t.position_counts.QB || 0}</td><td>${t.position_counts.RB || 0}</td>
-      <td>${t.position_counts.WR || 0}</td><td>${t.position_counts.TE || 0}</td><td>${needs}</td>`;
+      <td>${t.position_counts.WR || 0}</td><td>${t.position_counts.TE || 0}</td><td>${needs}</td>
+      <td>${t.flex_capacity}</td><td>${t.latest_purchase || "--"}</td>
+      <td>${t.current_nominee_demand || "--"}</td>`;
     tr.style.cursor = "pointer";
     tr.addEventListener("click", () => loadTeamDetail(t.team));
     tbody.appendChild(tr);

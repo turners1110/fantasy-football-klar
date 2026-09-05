@@ -203,6 +203,34 @@ def test_league_endpoint_includes_sam(client):
     assert sam["keeper_count"] == 6
 
 
+# ---------------------------------------------------------------------------
+# V2.1 Part 8: League Room field re-verification
+# ---------------------------------------------------------------------------
+
+def test_league_endpoint_includes_v21_required_fields(client):
+    data = client.get("/api/league").json()["teams"]
+    row = data[0]
+    for field in ("flex_capacity", "latest_purchase", "current_nominee_demand"):
+        assert field in row
+
+
+def test_league_endpoint_current_nominee_demand_uses_spec_label_set(client):
+    board = client.get("/api/board").json()["players"]
+    player = next(p["player"] for p in board if p.get("player"))
+    client.post("/api/nominate", json={"player": player})
+    data = client.get("/api/league").json()["teams"]
+    valid_labels = {"HIGH_REQUIRED_NEED", "MEDIUM_FLEX_OR_DEPTH", "LOW_POSITION_FILLED", "NO_LEGAL_BID", "UNKNOWN"}
+    for row in data:
+        assert row["current_nominee_demand"] in valid_labels
+    client.post("/api/nominate", json={"player": None})
+
+
+def test_league_endpoint_demand_is_none_when_nothing_nominated(client):
+    client.post("/api/nominate", json={"player": None})
+    data = client.get("/api/league").json()["teams"]
+    assert all(row["current_nominee_demand"] is None for row in data)
+
+
 def test_team_detail_endpoint(client):
     r = client.get("/api/league/Sam")
     assert r.status_code == 200

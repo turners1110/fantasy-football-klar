@@ -1022,19 +1022,29 @@ class AuctionCLI:
                            "team": p["winning_owner"], "price": p["sale_price"]})
         return out
 
-    def api_league(self) -> list[dict]:
-        """V2 Part 4: all-team auction room. Reads the SAME live
-        auction_engine state as everything else -- reflects real sales
-        immediately, not a static pre-draft snapshot."""
+    def api_league(self, nominee: str | None = None) -> list[dict]:
+        """V2 Part 4 / V2.1 Part 8: all-team auction room. Reads the SAME
+        live auction_engine state as everything else -- reflects real
+        sales immediately, not a static pre-draft snapshot. When
+        `nominee` is given, each row also carries that team's demand
+        label for the current nominee and its FLEX capacity, per the
+        V2.1 spec's required League Room field list."""
+        demand = self.api_nominee_demand(nominee) if nominee else None
         out = []
         for team_id, t in self.store.state.teams.items():
             needs = t.legal_starting_needs()
-            out.append({
+            purchases = [p for p in t.roster if not p.get("is_keeper")]
+            latest = purchases[-1] if purchases else None
+            row = {
                 "team": team_id, "budget_remaining": t.budget_remaining, "open_slots": t.open_slots,
                 "min_reserve": t.min_reserve, "legal_max_bid": t.legal_max_bid,
                 "position_counts": t.position_counts, "position_needs": needs,
+                "flex_capacity": needs.get("FLEX", 0),
                 "keeper_count": len(t.keeper_ids), "is_sam": team_id == self.store.state.sam_team_id,
-            })
+                "latest_purchase": (latest["display_name"] if latest else None),
+                "current_nominee_demand": (demand["demand_by_team"].get(team_id) if demand else None),
+            }
+            out.append(row)
         return out
 
     def api_team_detail(self, team_id: str) -> dict | None:
@@ -1061,17 +1071,22 @@ class AuctionCLI:
         out = {}
         credible = 0
         for team_id, t in self.store.state.teams.items():
-            needs = t.legal_starting_needs()
-            has_cash = t.legal_max_bid > 1
-            if not has_cash:
-                label = "NO_LEGAL_BID"
-            elif needs.get(pos, 0) > 0:
-                label = "HIGH_REQUIRED_STARTER_NEED"
-            elif needs.get("FLEX", 0) > 0 and pos in ("RB", "WR", "TE"):
-                label = "MEDIUM_FLEX_OR_DEPTH_NEED"
-            else:
-                label = "LOW_POSITION_FILLED"
-            if label in ("HIGH_REQUIRED_STARTER_NEED", "MEDIUM_FLEX_OR_DEPTH_NEED"):
+            try:
+                needs = t.legal_starting_needs()
+                has_cash = t.legal_max_bid > 1
+                if not has_cash:
+                    label = "NO_LEGAL_BID"
+                elif needs.get(pos, 0) > 0:
+                    label = "HIGH_REQUIRED_NEED"
+                elif needs.get("FLEX", 0) > 0 and pos in ("RB", "WR", "TE"):
+                    label = "MEDIUM_FLEX_OR_DEPTH"
+                else:
+                    label = "LOW_POSITION_FILLED"
+            except Exception:
+                # Roster/budget facts unavailable for some reason -- never
+                # guess at manager psychology, just say so honestly.
+                label = "UNKNOWN"
+            if label in ("HIGH_REQUIRED_NEED", "MEDIUM_FLEX_OR_DEPTH"):
                 credible += 1
             out[team_id] = label
         return {"player": player, "position": pos, "demand_by_team": out, "credible_bidder_count": credible}

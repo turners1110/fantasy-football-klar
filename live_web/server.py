@@ -140,7 +140,11 @@ def get_log():
 
 @app.get("/api/league")
 def get_league():
-    return {"teams": _active().api_league()}
+    # V2.1 Part 8: automatically include current-nominee demand per team
+    # when something is nominated, reusing the same per-mode nomination
+    # tracker the bid panel uses (no separate practice/production leak).
+    nominee = _nominated_by_mode[_RUNTIME["mode"]]
+    return {"teams": _active().api_league(nominee=nominee)}
 
 
 @app.get("/api/league/{team_id}")
