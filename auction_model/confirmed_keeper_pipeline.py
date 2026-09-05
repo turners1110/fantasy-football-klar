@@ -25,6 +25,32 @@ SHEET_REPORTED_BUDGET = {
     "CJ": 264, "Shane": 324,
 }
 
+# GATE A CLOSURE (V3 repair): the official commissioner table's per-team
+# starting budget and TOTAL protected-player count, transcribed directly
+# from the commissioner's own table (see
+# outputs/auction_rebuild/official_repair_v1/commissioner_data_transcription.csv).
+# starting_budget is independently reconciled -- it always equals
+# keeper_spend + the winning remaining-budget value above, for every
+# team, confirmed by the assertion in compute_team_states below.
+# official_protected_count is the authoritative total (6-8 per team);
+# n_veteran_keepers + n_college_rights_holds from keepers_2026_confirmed.csv
+# only sums to 6 for EVERY team in that file (it has no college-rights
+# rows for Brad or Reid), which is 1 short of the official 7 for each of
+# those two teams -- the identity of that 7th protected player is
+# UNKNOWN (the commissioner has not supplied per-team protected-player
+# NAMES, only counts). unidentified_protected_count below tracks that
+# gap explicitly and honestly rather than silently under-counting it.
+OFFICIAL_STARTING_BUDGET = {
+    "Brandon": 405, "Brad": 400, "Travis": 420, "Coby": 400, "Shane": 400,
+    "James": 400, "CJ": 400, "Ryan J": 393, "Jason": 395, "Evan": 390,
+    "Sam": 387, "Reid": 410,
+}
+OFFICIAL_PROTECTED_COUNT = {
+    "Brandon": 6, "Brad": 7, "Travis": 8, "Coby": 6, "Shane": 7,
+    "James": 6, "CJ": 6, "Ryan J": 6, "Jason": 6, "Evan": 6,
+    "Sam": 8, "Reid": 7,
+}
+
 # Explicit, user-stated overrides -- highest priority per the source
 # hierarchy (explicit manual override > commissioner sheet). Only Sam's
 # values are directly user-confirmed; every other team relies on the
@@ -171,6 +197,19 @@ def compute_team_states(keepers: pd.DataFrame, adjustments: pd.DataFrame) -> tup
                 })
 
         keeper_status = "CONFIRMED" if team == "Sam" else "PARTIALLY_CONFIRMED"
+        official_starting_budget = OFFICIAL_STARTING_BUDGET.get(team)
+        official_protected = OFFICIAL_PROTECTED_COUNT.get(team)
+        unidentified_protected = max(0, (official_protected or 0) - n_keepers - n_holds)
+        # Gate A hard assertion (Part 4 of the spec): each team's official
+        # starting budget must equal keeper_spend + the winning remaining
+        # budget value, exactly -- this is the "starting budget - keeper
+        # salaries = remaining budget" reconciliation the spec requires,
+        # checked per-team at data-build time rather than only in a test.
+        if official_starting_budget is not None:
+            assert abs(official_starting_budget - (keeper_spend + primary_budget)) < 0.01, (
+                f"{team}: official starting budget {official_starting_budget} != "
+                f"keeper_spend {keeper_spend} + remaining {primary_budget}"
+            )
         state_rows.append({
             "season": 2026, "team_id": team, "team_name": team,
             "n_veteran_keepers": n_keepers, "n_college_rights_holds": n_holds,
@@ -180,6 +219,9 @@ def compute_team_states(keepers: pd.DataFrame, adjustments: pd.DataFrame) -> tup
             "conversions_scenario_auction_budget": conversions_budget,
             "budget_source": winning_source,
             "keeper_state_status": keeper_status,
+            "official_starting_budget": official_starting_budget,
+            "official_protected_count": official_protected,
+            "unidentified_protected_count": unidentified_protected,
             "notes": "College-rights conversions scenario only defined for Sam (2 x $1)" if team != "Sam" else "",
         })
 

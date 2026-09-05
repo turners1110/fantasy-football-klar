@@ -1,13 +1,13 @@
-season,team_id,team_name,n_veteran_keepers,n_college_rights_holds,keeper_spend,cash_adjustments,sheet_reported_remaining_budget,primary_auction_budget,conversions_scenario_auction_budget,budget_source,keeper_state_status,notes
-2026,Brad,Brad,6,0,119.0,0,281,281,281,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
-2026,Brandon,Brandon,6,0,221.0,15,184,184,184,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
-2026,CJ,CJ,6,0,136.0,0,264,264,264,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
-2026,Coby,Coby,6,0,126.0,0,274,274,274,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
-2026,Evan,Evan,6,0,206.0,0,184,184,184,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
-2026,James,James,6,0,103.0,0,297,297,297,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
-2026,Jason,Jason,6,0,186.0,0,209,209,209,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
-2026,Reid,Reid,6,0,150.0,0,260,260,260,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
-2026,Ryan J,Ryan J,6,0,136.0,0,257,257,257,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
-2026,Sam,Sam,6,2,162.0,-15,225,225,225,user_direct_statement,CONFIRMED,
-2026,Shane,Shane,6,1,76.0,0,324,324,324,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
-2026,Travis,Travis,6,2,113.0,0,307,307,307,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,College-rights conversions scenario only defined for Sam (2 x $1)
+season,team_id,team_name,n_veteran_keepers,n_college_rights_holds,keeper_spend,cash_adjustments,sheet_reported_remaining_budget,primary_auction_budget,conversions_scenario_auction_budget,budget_source,keeper_state_status,official_starting_budget,official_protected_count,unidentified_protected_count,notes
+2026,Brad,Brad,6,0,119.0,0,281,281,281,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,400,7,1,College-rights conversions scenario only defined for Sam (2 x $1)
+2026,Brandon,Brandon,6,0,221.0,15,184,184,184,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,405,6,0,College-rights conversions scenario only defined for Sam (2 x $1)
+2026,CJ,CJ,6,0,136.0,0,264,264,264,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,400,6,0,College-rights conversions scenario only defined for Sam (2 x $1)
+2026,Coby,Coby,6,0,126.0,0,274,274,274,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,400,6,0,College-rights conversions scenario only defined for Sam (2 x $1)
+2026,Evan,Evan,6,0,206.0,0,184,184,184,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,390,6,0,College-rights conversions scenario only defined for Sam (2 x $1)
+2026,James,James,6,0,103.0,0,297,297,297,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,400,6,0,College-rights conversions scenario only defined for Sam (2 x $1)
+2026,Jason,Jason,6,0,186.0,0,209,209,209,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,395,6,0,College-rights conversions scenario only defined for Sam (2 x $1)
+2026,Reid,Reid,6,0,150.0,0,260,260,260,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,410,7,1,College-rights conversions scenario only defined for Sam (2 x $1)
+2026,Ryan J,Ryan J,6,0,136.0,0,257,257,257,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,393,6,0,College-rights conversions scenario only defined for Sam (2 x $1)
+2026,Sam,Sam,6,2,162.0,-15,225,225,225,user_direct_statement,CONFIRMED,387,8,0,
+2026,Shane,Shane,6,1,76.0,0,324,324,324,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,400,7,0,College-rights conversions scenario only defined for Sam (2 x $1)
+2026,Travis,Travis,6,2,113.0,0,307,307,307,google_sheet_reported_budget_column,PARTIALLY_CONFIRMED,420,8,0,College-rights conversions scenario only defined for Sam (2 x $1)

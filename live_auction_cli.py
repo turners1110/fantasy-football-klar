@@ -33,6 +33,7 @@ from auction_engine.live_target_scoring import compute_target_score
 from auction_engine.recommendation_guardrails import compute_governed_dollar_ceiling
 from auction_model import exact_roster_solver
 from auction_model.roster_optimizer import assign_lineup
+from auction_model.confirmed_keeper_pipeline import OFFICIAL_PROTECTED_COUNT
 import pandas as pd
 from mock_draft.data import load_confirmed_pool_and_teams
 
@@ -208,11 +209,30 @@ class AuctionCLI:
             # College-rights holds (Mendoza, Bond for Sam) occupy a real
             # 16-man roster slot per the official commissioner data, but
             # are never added to `roster` itself -- see TeamState's
-            # college_rights_count docstring. Only Sam holds any today.
-            n_college_rights = len(COLLEGE_RIGHTS) if team_id == "Sam" else 0
+            # college_rights_count docstring.
+            #
+            # GATE A CLOSURE (V3 repair): this field also now covers the
+            # remaining Brad/Reid gap -- the official commissioner table
+            # says each has 7 total protected players, but
+            # keepers_2026_confirmed.csv only names 6 for either (no
+            # college-rights row for them). The 7th player's identity is
+            # UNKNOWN (commissioner has not supplied per-team protected
+            # NAMES, only counts -- see
+            # outputs/auction_rebuild/official_repair_v1/protected_eligibility_audit.md).
+            # Rather than leave every team-level slot/reconciliation
+            # total silently short by 1 for those two teams, the correct
+            # SLOT COUNT is reflected here (computed from
+            # OFFICIAL_PROTECTED_COUNT minus named veteran keepers, the
+            # SAME mechanism Sam's college-rights count already uses) --
+            # this affects only open_slots/legal_max_bid math, never adds
+            # a fake named player to the visible roster or auction pool.
+            official_total = OFFICIAL_PROTECTED_COUNT.get(team_id)
+            n_named_keepers = len(t.roster)
+            additional_protected = max(0, official_total - n_named_keepers) if official_total is not None else (
+                len(COLLEGE_RIGHTS) if team_id == "Sam" else 0)
             st.teams[team_id] = TeamState(team_id=team_id, budget_remaining=t.budget_remaining, roster=roster,
                                            keeper_ids={n for n, p, pr, pts in t.roster},
-                                           college_rights_count=n_college_rights)
+                                           college_rights_count=additional_protected)
         st.available_pool = {name: {"display_name": name, "position": p.position, "projected_points": p.projected_points,
                                      "base_value": p.base_value} for name, p in self.players.items()}
         st.college_rights_excluded = set(COLLEGE_RIGHTS)
