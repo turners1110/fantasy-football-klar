@@ -282,3 +282,75 @@ def test_distribution_insufficient_sales_labeled(client):
     insufficient = [p for p in data if p["status"] == "INSUFFICIENT_SIMULATED_SALES"]
     assert len(insufficient) > 0
     assert all(p["p50"] in ("", None) for p in insufficient)
+
+
+# ---------------------------------------------------------------------------
+# V2.1 Part 4: exact/ladder website endpoints
+# ---------------------------------------------------------------------------
+
+def test_exact_endpoint_matches_cli(client):
+    import live_web.server as server_module
+    rb = _first_available(client, "RB")
+    r = client.post("/api/exact", json={"player": rb})
+    assert r.status_code == 200
+    data = r.json()
+    cli_result = server_module.cli.api_exact(rb)
+    # both should reflect the same underlying solve for a fresh call
+    assert data["exact_ceiling"] == cli_result["exact_ceiling"] or abs(data["exact_ceiling"] - cli_result["exact_ceiling"]) <= 1
+
+
+def test_exact_endpoint_candidate_in_purchase_absent_from_pass(client):
+    rb = _first_available(client, "RB")
+    r = client.post("/api/exact", json={"player": rb})
+    data = r.json()
+    assert rb in data["purchase_roster"]
+    assert rb not in data["pass_roster"]
+
+
+def test_exact_endpoint_requires_optimal(client):
+    r = client.post("/api/exact", json={"player": "Not_A_Real_Player_Xyz"})
+    assert r.status_code == 400
+
+
+def test_exact_endpoint_stale_sequence_rejected(client):
+    rb = _first_available(client, "RB")
+    r = client.post("/api/exact", json={"player": rb, "expected_sequence": 999})
+    assert r.status_code == 400
+    assert "STALE" in r.json()["detail"]
+
+
+def test_ladder_endpoint_matches_cli_shape(client):
+    rb = _first_available(client, "RB")
+    r = client.post("/api/ladder", json={"player": rb})
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data["ladder"]) >= 3
+    assert all("recommended_action" in row for row in data["ladder"])
+
+
+def test_exact_status_endpoint_reflects_cache(client):
+    rb = _first_available(client, "RB")
+    r0 = client.get(f"/api/exact-status/{rb}")
+    assert r0.json()["has_current_exact"] is False
+    client.post("/api/exact", json={"player": rb})
+    r1 = client.get(f"/api/exact-status/{rb}")
+    assert r1.json()["has_current_exact"] is True
+
+
+def test_exact_cache_invalidates_after_sale_via_website(client):
+    rb = _first_available(client, "RB")
+    client.post("/api/exact", json={"player": rb})
+    other_wr = _first_available(client, "WR")
+    client.post("/api/sale", json={"player": other_wr, "team": "Brad", "price": 10, "confirm": True})
+    r = client.get(f"/api/exact-status/{rb}")
+    assert r.json()["has_current_exact"] is False
+
+
+def test_jacobs_role_not_misclassified_as_bench_depth_via_exact(client):
+    """Regression for the expected_role_guess bug found while wiring this
+    endpoint: Josh Jacobs (a real required starter) must not get a false
+    BENCH_DEPTH_STOP_OVER_25 critical warning from the exact endpoint."""
+    r = client.post("/api/exact", json={"player": "Josh Jacobs"})
+    if r.status_code == 200:
+        data = r.json()
+        assert "BENCH_DEPTH_STOP_OVER_25" not in data.get("critical_reasons", [])

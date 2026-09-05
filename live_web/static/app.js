@@ -176,20 +176,120 @@ document.getElementById("nom-clear").addEventListener("click", async () => {
   document.getElementById("nominated-panel").classList.add("hidden");
 });
 
+let nomState = { player: null, check: null, exact: null };
+
 async function showNominated(player) {
   const panel = document.getElementById("nominated-panel");
   panel.classList.remove("hidden");
   document.getElementById("nom-name").textContent = player;
   document.getElementById("nom-detail").textContent = "loading...";
+  document.getElementById("nom-current-bid").value = "";
+  document.getElementById("nom-exact-result").classList.add("hidden");
+  document.getElementById("nom-ladder-result").classList.add("hidden");
+  nomState = { player, check: null, exact: null };
   try {
     const c = await api("/check/" + encodeURIComponent(player));
+    nomState.check = c;
     document.getElementById("nom-detail").innerHTML =
       `Expected: $${c.live_expected_price.toFixed(0)} | Conservative: $${c.conservative_price.toFixed(0)} | ` +
-      `Marginal value: $${c.marginal_value.toFixed(0)} [${c.calculation_label}] | ` +
-      `<b>RECOMMENDED STOP: $${c.recommended_stop.toFixed(0)} [${c.recommendation}]</b><br>${c.reason}`;
+      `Marginal value (fantasy points): ${c.marginal_value.toFixed(1)}pts, role: ${c.expected_role} [${c.calculation_label}] | ` +
+      `<b>RECOMMENDED STOP: $${c.recommended_stop.toFixed(0)} [${c.recommendation}]</b> -- Limiting factor: ${(c.governed_calculation_label||"").split("->")[0].trim()}<br>${c.reason}`;
+    renderVerdict();
   } catch (e) {
     document.getElementById("nom-detail").textContent = "SOLVER_FAILURE / unavailable: " + e.message;
   }
+}
+
+function governingCeiling() {
+  // Prefer a CURRENT exact result over the fast approximate check, per
+  // the spec's own rule -- exact ceiling always wins when fresh.
+  if (nomState.exact && nomState.exact.stale_status === "CURRENT") {
+    return { ceiling: nomState.exact.safety_adjusted_maximum, source: "exact (current)", critical: nomState.exact.critical_review_required };
+  }
+  if (nomState.check) {
+    return { ceiling: nomState.check.recommended_stop, source: "approximate (no current exact)", critical: nomState.check.critical_review_required };
+  }
+  return null;
+}
+
+function renderVerdict() {
+  const bidInput = document.getElementById("nom-current-bid");
+  const bid = parseFloat(bidInput.value);
+  const box = document.getElementById("nom-verdict");
+  const g = governingCeiling();
+  if (!g) { box.textContent = "Loading recommendation..."; return; }
+  if (isNaN(bid)) { box.textContent = `Enter a current bid. Recommended stop: $${g.ceiling.toFixed(0)} (${g.source}).`; box.className = "verdict-box"; return; }
+
+  let verdict, reason;
+  if (g.critical) {
+    verdict = "RUN_EXACT_FIRST";
+    reason = `Critical warning active${nomState.exact ? "" : " (approximate result only)"} -- run Exact before trusting this recommendation.`;
+  } else if (bid > 20 && (!nomState.exact || nomState.exact.stale_status !== "CURRENT")) {
+    verdict = "RUN_EXACT_FIRST";
+    reason = `Bid $${bid} exceeds $20 and no current exact result exists -- run Exact first.`;
+  } else if (bid > g.ceiling) {
+    verdict = "PASS";
+    reason = `Bid $${bid} exceeds the recommended stop $${g.ceiling.toFixed(0)} (${g.source}).`;
+  } else if (g.ceiling - bid <= 2) {
+    verdict = "FINAL_BID";
+    reason = `Bid $${bid} is within $2 of the stop $${g.ceiling.toFixed(0)} (${g.source}) -- this should be your final bid.`;
+  } else if (g.ceiling - bid >= 3) {
+    verdict = "BID";
+    reason = `Bid $${bid} is safely below the stop $${g.ceiling.toFixed(0)} (${g.source}) -- go ahead.`;
+  } else {
+    verdict = "BID_WITH_CAUTION";
+    reason = `Bid $${bid} is close to the stop $${g.ceiling.toFixed(0)} (${g.source}) -- proceed cautiously.`;
+  }
+  box.textContent = `${verdict} -- ${reason}`;
+  box.className = "verdict-box verdict-" + verdict.toLowerCase();
+}
+
+document.getElementById("nom-current-bid").addEventListener("input", renderVerdict);
+document.querySelectorAll(".quick-bid").forEach(btn => btn.addEventListener("click", () => {
+  const input = document.getElementById("nom-current-bid");
+  const cur = parseFloat(input.value) || 0;
+  input.value = cur + parseInt(btn.dataset.inc);
+  renderVerdict();
+}));
+document.getElementById("nom-pass").addEventListener("click", () => { toast(`Passed on ${nomState.player}.`); });
+
+document.getElementById("nom-run-exact").addEventListener("click", async () => {
+  const resultDiv = document.getElementById("nom-exact-result");
+  resultDiv.classList.remove("hidden");
+  resultDiv.textContent = "Running exact solve (a few seconds)...";
+  try {
+    const bid = parseFloat(document.getElementById("nom-current-bid").value);
+    const testPrice = isNaN(bid) ? undefined : bid;
+    const e = await api("/exact", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ player: nomState.player, test_price: testPrice }) });
+    nomState.exact = e;
+    resultDiv.innerHTML = `<b>EXACT [${e.stale_status}]</b>: test price $${e.test_price} -- surplus ${e.exact_surplus.toFixed(2)} | ` +
+      `Exact ceiling: $${e.exact_ceiling} | Safety max: $${e.safety_adjusted_maximum} | Displaced: ${e.displaced_player || "none"} | ` +
+      `Solver: ${e.solver_status} (${e.cache_status}) | Runtime: ${e.runtime}s | Sequence: ${e.state_sequence}`;
+    renderVerdict();
+  } catch (err) {
+    resultDiv.textContent = "SOLVER_FAILURE: " + err.message;
+  }
+});
+
+document.getElementById("nom-run-ladder").addEventListener("click", async () => {
+  const resultDiv = document.getElementById("nom-ladder-result");
+  resultDiv.classList.remove("hidden");
+  resultDiv.textContent = "Running ladder...";
+  try {
+    const l = await api("/ladder", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ player: nomState.player }) });
+    resultDiv.innerHTML = "<b>LADDER:</b> " + l.ladder.map(r => `$${r.price}: ${r.exact_surplus !== null ? r.exact_surplus.toFixed(1) : "?"} (${r.recommended_action})`).join(" | ");
+  } catch (err) {
+    resultDiv.textContent = "SOLVER_FAILURE: " + err.message;
+  }
+});
+
+document.getElementById("nom-mark-sold-sam").addEventListener("click", () => openSaleModalPrefill(nomState.player, "Sam"));
+document.getElementById("nom-mark-sold-other").addEventListener("click", () => openSaleModal(nomState.player));
+function openSaleModalPrefill(player, team) {
+  openSaleModal(player);
+  document.getElementById("modal-team").value = team;
 }
 
 // ---- Sale modal ----

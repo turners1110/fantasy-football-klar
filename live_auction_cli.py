@@ -494,7 +494,8 @@ class AuctionCLI:
         # beats pass at this price" signal now; the actual dollar ceiling
         # always comes from the governed helper (static max / legal max /
         # conservative live-price multiple), never from points arithmetic.
-        expected_role_guess = "required starter" if surplus > 0 else "bench depth"
+        real_role_rows = compute_live_sam_values(sam.roster, {player: info})
+        expected_role_guess = real_role_rows[0].expected_role if real_role_rows else "unknown"
         governed = self._governed_ceiling(player, info["position"], 0.0, expected_role_guess,
                                           max(1.0, info.get("base_value", 1.0)))
         rec = compute_recommended_bid(
@@ -517,6 +518,157 @@ class AuctionCLI:
             f"Runtime: {runtime:.2f}s  State sequence: {solved_at_sequence}  (cached={was_cached})",
         ]
         return "\n".join(lines)
+
+    def api_exact(self, player: str, test_price: float | None = None, expected_sequence: int | None = None) -> dict:
+        """V2.1 Part 4: JSON version of cmd_exact -- calls the IDENTICAL
+        _run_exact_purchase_vs_pass method (the same solver call cmd_exact
+        uses), just returns structured data instead of text."""
+        info = self.store.state.available_pool.get(player)
+        if info is None:
+            return {"error": f"unknown or unavailable player {player!r}", "player": player}
+        if test_price is None:
+            test_price = max(1.0, info.get("base_value", 1.0))
+        if expected_sequence is not None and expected_sequence != self.store.state.sequence_number:
+            return {"error": "STALE_REQUEST -- auction state has moved on since this request was built; refresh and retry.",
+                   "player": player, "current_sequence": self.store.state.sequence_number}
+        try:
+            payload, was_cached = self._run_exact_purchase_vs_pass(player, test_price)
+        except Exception as e:
+            self._log_error("api_exact", e)
+            return {"error": f"SOLVER_FAILURE: {e}", "player": player, "solver_status": "ERROR"}
+        result_purchase, result_pass, runtime, solved_at_sequence = payload
+        stale = solved_at_sequence != self.store.state.sequence_number
+        both_optimal = result_purchase.status in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL") and \
+                       result_pass.status in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL")
+        if not both_optimal:
+            return {"error": "SOLVER_FAILURE_NONOPTIMAL", "player": player,
+                   "purchase_status": result_purchase.status, "pass_status": result_pass.status}
+
+        purchase_names = set(result_purchase.selected["player"]) if not result_purchase.selected.empty else set()
+        pass_names = set(result_pass.selected["player"]) if not result_pass.selected.empty else set()
+        assert player in purchase_names, "exact-check invariant violated: candidate absent from purchase roster"
+        assert player not in pass_names, "exact-check invariant violated: candidate present in pass roster"
+        displaced = sorted(pass_names - purchase_names - {player})
+        surplus = round(result_purchase.starting_points - result_pass.starting_points, 2)
+        bench_change = round(result_purchase.bench_points - result_pass.bench_points, 2)
+        cash_change = round(result_purchase.unused_cash - result_pass.unused_cash, 2)
+        sam = self._sam()
+        # BUG FIX (V2.1): the expected role must come from the real
+        # lineup-competition computation (compute_live_sam_values), never
+        # guessed from the surplus sign at one arbitrary test price -- a
+        # negative surplus at an overpriced test price does NOT mean the
+        # player is bench depth; it can mean the player is a legitimate
+        # starter who's simply not worth THAT price. Guessing from surplus
+        # sign caused a real false-positive BENCH_DEPTH_STOP_OVER_25
+        # critical warning for Josh Jacobs (a true required starter) --
+        # found while wiring the website's exact endpoint.
+        real_role_rows = compute_live_sam_values(sam.roster, {player: info})
+        expected_role_guess = real_role_rows[0].expected_role if real_role_rows else "unknown"
+
+        # exact ceiling: binary search around test_price using the same
+        # per-price solve method, so the panel can show a TRUE dollar
+        # ceiling, not just a pass/fail at one price (addresses the
+        # Josh Jacobs post-fix finding: the fast $78 approximation
+        # differed from the true $66 exact ceiling by $12).
+        exact_ceiling = self._binary_search_exact_ceiling(player, info["position"])
+
+        governed = self._governed_ceiling(
+            player, info["position"], 0.0, expected_role_guess, max(1.0, info.get("base_value", 1.0)),
+            exact_ceiling=exact_ceiling, exact_status="OPTIMAL", exact_is_current=not stale,
+        )
+        rec = compute_recommended_bid(
+            player=player, safety_adjusted_ceiling=governed.dollar_ceiling,
+            legal_max_bid=sam.legal_max_bid, portfolio_feasibility_limit=None, confidence=9,
+            live_expected_price=max(1.0, info.get("base_value", 1.0)),
+        )
+        rec_type = "CRITICAL_REVIEW_REQUIRED" if governed.critical_review_required else rec.recommendation_type
+
+        return {
+            "player": player, "test_price": test_price, "purchase_objective": result_purchase.starting_points,
+            "pass_objective": result_pass.starting_points, "exact_surplus": surplus,
+            "exact_ceiling": exact_ceiling, "safety_adjusted_maximum": governed.dollar_ceiling,
+            "purchase_roster": sorted(purchase_names), "pass_roster": sorted(pass_names),
+            "starting_lineup_change": surplus, "bench_change": bench_change, "cash_change": cash_change,
+            "displaced_player": displaced[0] if displaced else None, "displaced_players": displaced,
+            "solver_status": result_purchase.status, "runtime": round(runtime, 3),
+            "state_sequence": solved_at_sequence, "current_sequence": self.store.state.sequence_number,
+            "cache_status": "CACHED" if was_cached else "FRESH",
+            "stale_status": "STALE_EXACT_RESULT" if stale else "CURRENT",
+            "recommended_stop": rec.recommended_final_bid, "recommendation": rec_type,
+            "critical_review_required": governed.critical_review_required, "critical_reasons": governed.critical_reasons,
+        }
+
+    def _binary_search_exact_ceiling(self, player: str, position: str) -> int | None:
+        """Real integer-dollar binary search for the TRUE exact ceiling,
+        using the same _run_exact_purchase_vs_pass solver calls as every
+        other exact check. Cached implicitly through that method's own
+        (sequence, player, price) cache."""
+        sam = self._sam()
+
+        def ok_at(price):
+            payload, _ = self._run_exact_purchase_vs_pass(player, float(price))
+            rp, rpass, rt, seq = payload
+            if rp.status not in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL") or rpass.status not in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL"):
+                return None
+            return (rp.starting_points - rpass.starting_points) >= 0
+
+        hi_bound = int(min(sam.budget_remaining, 400))
+        ok0 = ok_at(1)
+        if ok0 is None:
+            return None
+        if not ok0:
+            return 0
+        lo, step, price = 1, 1, 1
+        while price < hi_bound:
+            nxt = min(price + step, hi_bound)
+            res = ok_at(nxt)
+            if res is None:
+                break
+            if not res:
+                break
+            price = nxt
+            step *= 2
+        lo, hi = price, min(price + max(step, 1), hi_bound)
+        res_hi = ok_at(hi)
+        if res_hi:
+            return hi
+        while hi - lo > 1:
+            mid = (lo + hi) // 2
+            res = ok_at(mid)
+            if res is None:
+                hi = mid
+                continue
+            if res:
+                lo = mid
+            else:
+                hi = mid
+        return lo
+
+    def api_ladder(self, player: str) -> dict:
+        info = self.store.state.available_pool.get(player)
+        if info is None:
+            return {"error": f"unknown or unavailable player {player!r}", "player": player}
+        base = max(1.0, info.get("base_value", 1.0))
+        prices = sorted(set(max(1, round(base * m)) for m in (0.7, 0.85, 1.0, 1.15, 1.3)))
+        rows = []
+        for p in prices:
+            try:
+                payload, was_cached = self._run_exact_purchase_vs_pass(player, float(p))
+            except Exception as e:
+                self._log_error("api_ladder", e)
+                rows.append({"price": p, "exact_surplus": None, "purchase_status": "ERROR", "pass_status": "ERROR",
+                            "roster_feasible": False, "recommended_action": "SOLVER_FAILURE"})
+                continue
+            rp, rpass, rt, seq = payload
+            both_ok = rp.status in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL") and rpass.status in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL")
+            surplus = round(rp.starting_points - rpass.starting_points, 2) if both_ok else None
+            rows.append({
+                "price": p, "exact_surplus": surplus, "purchase_status": rp.status, "pass_status": rpass.status,
+                "roster_feasible": both_ok and len(rp.selected) == 15 and len(rpass.selected) == 15,
+                "recommended_action": ("BUY" if surplus is not None and surplus >= 0 else
+                                       "PASS" if surplus is not None else "SOLVER_FAILURE"),
+            })
+        return {"player": player, "ladder": rows, "state_sequence": self.store.state.sequence_number}
 
     def cmd_ladder(self, player: str) -> str:
         info = self.store.state.available_pool.get(player)

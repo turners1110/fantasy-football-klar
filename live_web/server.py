@@ -67,6 +67,16 @@ class NominateRequest(BaseModel):
     player: str | None = None
 
 
+class ExactRequest(BaseModel):
+    player: str
+    test_price: float | None = None
+    expected_sequence: int | None = None
+
+
+class LadderRequest(BaseModel):
+    player: str
+
+
 @app.get("/api/status")
 def get_status():
     return cli.api_status()
@@ -161,6 +171,32 @@ def get_all_distributions():
 @app.get("/api/emergency", response_class=PlainTextResponse)
 def get_emergency():
     return cli.cmd_emergency()
+
+
+@app.post("/api/exact")
+def post_exact(req: ExactRequest):
+    result = cli.api_exact(req.player, req.test_price, req.expected_sequence)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.post("/api/ladder")
+def post_ladder(req: LadderRequest):
+    result = cli.api_ladder(req.player)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.get("/api/exact-status/{player}")
+def get_exact_status(player: str):
+    cache_key_prefix = (cli.store.state.sequence_number, player)
+    cached = [v for k, v in cli._exact_cache.items() if k[0] == cache_key_prefix[0] and k[1] == cache_key_prefix[1]]
+    if not cached:
+        return {"player": player, "has_current_exact": False, "state_sequence": cli.store.state.sequence_number}
+    return {"player": player, "has_current_exact": True, "state_sequence": cli.store.state.sequence_number,
+           "cached_prices": [k[2] for k in cli._exact_cache if k[0] == cache_key_prefix[0] and k[1] == cache_key_prefix[1]]}
 
 
 @app.post("/api/nominate")

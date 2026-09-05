@@ -27,6 +27,17 @@ tr.rec-critical { background: #ffddaa; border-left: 4px solid #cc6600; font-weig
   max-height: 300px; overflow-y: auto; z-index: 150; min-width: 260px; padding: 6px; }
 .search-row { padding: 4px; border-bottom: 1px solid #eee; }
 .search-row:hover { background: #f0f0f0; }
+.bid-workflow { margin-top: 8px; padding-top: 8px; border-top: 1px solid #b38f00; }
+.bid-workflow input, .bid-workflow button { margin: 3px; }
+#nom-current-bid { width: 80px; padding: 5px; }
+.verdict-box { margin-top: 8px; padding: 8px; border-radius: 4px; font-weight: bold; background: #eee; }
+.verdict-bid { background: #c8f7c5; }
+.verdict-bid_with_caution { background: #fff3cd; }
+.verdict-final_bid { background: #ffe0a3; }
+.verdict-pass { background: #f8d0d0; }
+.verdict-run_exact_first { background: #ffddaa; border: 2px solid #cc6600; }
+.verdict-insufficient_evidence { background: #ddd; }
+.exact-result, .ladder-result { margin-top: 6px; padding: 6px; background: white; border: 1px solid #ccc; font-size: 0.85em; }
 .nominated-panel { background: #ffd166; padding: 10px 16px; position: sticky; top: 84px; z-index: 90; }
 .nominated-header { font-weight: bold; display: flex; justify-content: space-between; }
 .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }

@@ -29,6 +29,20 @@
 <div id="nominated-panel" class="nominated-panel hidden">
   <div class="nominated-header">CURRENTLY NOMINATED: <span id="nom-name"></span> <button id="nom-clear">clear</button></div>
   <div id="nom-detail">loading...</div>
+  <div class="bid-workflow">
+    <label>Current bid: <input id="nom-current-bid" type="number" placeholder="0"></label>
+    <button class="quick-bid" data-inc="1">+$1</button>
+    <button class="quick-bid" data-inc="2">+$2</button>
+    <button class="quick-bid" data-inc="5">+$5</button>
+    <button id="nom-pass">Pass</button>
+    <button id="nom-run-exact">Run Exact</button>
+    <button id="nom-run-ladder">Run Ladder</button>
+    <button id="nom-mark-sold-sam">Mark Sold to Sam</button>
+    <button id="nom-mark-sold-other">Mark Sold to Other</button>
+    <div id="nom-verdict" class="verdict-box">Enter a current bid for a verdict.</div>
+    <div id="nom-exact-result" class="exact-result hidden"></div>
+    <div id="nom-ladder-result" class="ladder-result hidden"></div>
+  </div>
 </div>
 
 <!-- DRAFT BOARD -->
