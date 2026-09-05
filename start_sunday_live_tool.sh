@@ -18,6 +18,7 @@ cd "$(dirname "$0")"
 
 LOG_PATH="outputs/auction_rebuild/live_mvp/cli_session.jsonl"
 MODE=""
+HOST="127.0.0.1"
 
 for arg in "$@"; do
   case "$arg" in
@@ -25,8 +26,27 @@ for arg in "$@"; do
     --mode=clean)  MODE="clean" ;;
     --mode=exit)   MODE="exit" ;;
     --mode=*) echo "Unknown --mode value in $arg (expected resume|clean|exit)" >&2; exit 2 ;;
+    --lan) HOST="0.0.0.0" ;;
   esac
 done
+
+if [ "$HOST" = "0.0.0.0" ]; then
+  LAN_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "")
+  echo "=============================================================="
+  echo " LAN ACCESS ENABLED (--lan): binding to 0.0.0.0:8010."
+  if [ -n "$LAN_IP" ]; then
+    echo " On another device on the SAME WiFi, open: http://$LAN_IP:8010"
+  else
+    echo " Could not auto-detect a LAN IP. Find it yourself with:"
+    echo "   ipconfig getifaddr en0   (or check System Settings > Network)"
+    echo " Then use http://<that-ip>:8010 on the other device."
+  fi
+  echo " If macOS prompts to allow incoming network connections for"
+  echo " Python, click Allow -- otherwise other devices cannot reach it"
+  echo " (System Settings > Network > Firewall > Options if you need to"
+  echo " check/change it after the fact)."
+  echo "=============================================================="
+fi
 
 EVENT_COUNT=0
 if [ -f "$LOG_PATH" ]; then
@@ -79,5 +99,5 @@ case "$MODE" in
     ;;
 esac
 
-echo "Launching Sunday Live Auction Tool on http://127.0.0.1:8010 ..."
-exec python3 run_live_web.py
+echo "Launching Sunday Live Auction Tool on http://$HOST:8010 ..."
+exec python3 run_live_web.py --host "$HOST"

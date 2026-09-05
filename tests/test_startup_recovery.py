@@ -140,6 +140,25 @@ def test_script_clean_mode_archives_old_log_before_reporting_launch(tmp_path):
     assert archived[0].read_text() == log_path.read_text()
 
 
+def test_script_lan_flag_binds_all_interfaces_and_reports_lan_ip(tmp_path):
+    fake_repo = tmp_path / "fake_repo_lan"
+    fake_repo.mkdir()
+    (fake_repo / "outputs" / "auction_rebuild" / "live_mvp").mkdir(parents=True)
+    script_copy = fake_repo / "start_sunday_live_tool.sh"
+    script_copy.write_text(SCRIPT.read_text())
+    script_copy.chmod(0o755)
+
+    result = subprocess.run(
+        ["bash", str(script_copy), "--lan", "--mode=exit"],
+        cwd=fake_repo, capture_output=True, text=True, timeout=15,
+    )
+    assert "LAN ACCESS ENABLED" in result.stdout
+    assert "0.0.0.0:8010" in result.stdout
+    assert "firewall" in result.stdout.lower()
+    # --mode=exit must still be honored even with --lan present.
+    assert "Exiting without starting" in result.stdout
+
+
 def test_script_no_existing_log_skips_prompt_and_defaults_clean(tmp_path):
     fake_repo = tmp_path / "fake_repo3"
     fake_repo.mkdir()
