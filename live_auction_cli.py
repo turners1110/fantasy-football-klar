@@ -29,6 +29,7 @@ from auction_engine.live_roster_paths import compute_live_roster_paths
 from auction_engine.market_adjustments import MarketAdjustmentState, live_expected_price
 from auction_engine.live_recommendations import compute_recommended_bid
 from auction_engine.live_target_scoring import compute_target_score
+from auction_engine.recommendation_guardrails import compute_governed_dollar_ceiling
 from auction_model import exact_roster_solver
 import pandas as pd
 from mock_draft.data import load_confirmed_pool_and_teams
@@ -86,6 +87,46 @@ class AuctionCLI:
         # has moved on (Stage 2 STALE_EXACT_RESULT requirement).
         self._exact_cache: dict = {}
         self._exact_cache_sequence: int = self.store.state.sequence_number
+        self._static_hard_max = self._load_static_hard_max()
+
+    def _load_static_hard_max(self) -> dict:
+        """Loads Phase 3G's per-player 'Safety-adjusted hard maximum'
+        (real dollar figures, individually audited for ~21 players) --
+        used as the frozen ceiling floor by the V2 recommendation
+        guardrail (auction_engine/recommendation_guardrails.py). Most of
+        the ~340-player pool is NOT in this sheet; those players fall
+        back to the guardrail's conservative live-price multiplier
+        instead, never to a raw points value."""
+        sheet_path = SUNDAY_FINAL_DIR / "sam_final_auction_sheet.csv"
+        if not sheet_path.exists():
+            return {}
+        try:
+            import pandas as pd
+            df = pd.read_csv(sheet_path)
+            out = {}
+            for _, row in df.iterrows():
+                val = row.get("Safety-adjusted hard maximum")
+                if pd.notna(val):
+                    out[row["Player"]] = float(val)
+            return out
+        except Exception:
+            return {}
+
+    def _governed_ceiling(self, player: str, position: str, marginal_value_points: float, expected_role: str,
+                          live_price: float, exact_ceiling: float | None = None, exact_status: str | None = None,
+                          exact_is_current: bool = False):
+        """THE fix for the Josh Jacobs anomaly: never pass raw points
+        (marginal_value) to compute_recommended_bid as a dollar ceiling.
+        Every recommendation call site in this file must route through
+        this method (or api_check/api_board, which also call it) instead."""
+        sam = self._sam()
+        return compute_governed_dollar_ceiling(
+            player=player, position=position, live_expected_price=max(1.0, live_price),
+            legal_max_bid=sam.legal_max_bid, static_hard_max=self._static_hard_max.get(player),
+            exact_ceiling=exact_ceiling, exact_status=exact_status, exact_is_current=exact_is_current,
+            expected_role=expected_role, sam_position_count=sam.position_counts.get(position, 0),
+            sam_budget_remaining=sam.budget_remaining, open_slots=sam.open_slots,
+        )
         if self.log_path is not None:
             DEFAULT_INITIAL_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
             DEFAULT_INITIAL_STATE_PATH.write_text(json.dumps(self.initial_state.to_dict()))
@@ -230,10 +271,14 @@ class AuctionCLI:
             calc_label = "SOLVER_FAILURE"
 
         sam = self._sam()
+        governed = self._governed_ceiling(player, pos, marginal_value, expected_role, market["live_expected_price"])
         rec = compute_recommended_bid(
-            player=player, safety_adjusted_ceiling=max(1.0, marginal_value), legal_max_bid=sam.legal_max_bid,
+            player=player, safety_adjusted_ceiling=governed.dollar_ceiling, legal_max_bid=sam.legal_max_bid,
             portfolio_feasibility_limit=None, confidence=6, live_expected_price=market["live_expected_price"],
         )
+        if governed.critical_review_required:
+            rec.recommendation_type = "CRITICAL_REVIEW_REQUIRED"
+            rec.reason = f"CRITICAL_REVIEW_REQUIRED ({', '.join(governed.critical_reasons)}). " + rec.reason
 
         lines = [
             f"{player} ({pos})",
@@ -285,13 +330,21 @@ class AuctionCLI:
         sam = self._sam()
         out = []
         for s in self._scored_targets(n):
+            live_px = max(1.0, s.team_specific_value - s.expected_surplus_at_price)
+            expected_role_full = "required starter" if s.starting_lineup_gain == s.team_specific_value and s.team_specific_value > 0 else (
+                "bench depth" if s.bench_probability > 0.5 else "FLEX starter")
+            governed = self._governed_ceiling(s.player, s.position, s.team_specific_value, expected_role_full, live_px)
             rec = compute_recommended_bid(
-                player=s.player, safety_adjusted_ceiling=max(1.0, s.team_specific_value), legal_max_bid=sam.legal_max_bid,
-                portfolio_feasibility_limit=None, confidence=6, live_expected_price=s.team_specific_value - s.expected_surplus_at_price,
+                player=s.player, safety_adjusted_ceiling=governed.dollar_ceiling, legal_max_bid=sam.legal_max_bid,
+                portfolio_feasibility_limit=None, confidence=6, live_expected_price=live_px,
             )
+            if governed.critical_review_required:
+                rec.recommendation_type = "CRITICAL_REVIEW_REQUIRED"
             out.append({
                 "player": s.player, "position": s.position, "total_score": s.total_score,
-                "recommendation_class": s.recommendation_class, "recommended_stop": rec.recommended_final_bid,
+                "recommendation_class": s.recommendation_class if not governed.critical_review_required else "CRITICAL_REVIEW_REQUIRED",
+                "critical_review_required": governed.critical_review_required, "critical_reasons": governed.critical_reasons,
+                "recommended_stop": rec.recommended_final_bid,
                 "expected_surplus_at_price": s.expected_surplus_at_price, "starting_lineup_gain": s.starting_lineup_gain,
                 "team_specific_value": s.team_specific_value, "role_probability_score": s.role_probability_score,
                 "scarcity_score": s.scarcity_score, "tier_cliff_bonus": s.tier_cliff_bonus,
@@ -302,23 +355,20 @@ class AuctionCLI:
         return out
 
     def cmd_targets(self, n: int = 10) -> str:
-        scored_sorted = self._scored_targets(n)
-        sam = self._sam()
-        if not scored_sorted:
+        rows = self.api_targets(n)
+        if not rows:
             return "No remaining players in the pool."
-        lines = [f"Top {len(scored_sorted)} live targets by decision score (not raw marginal value):"]
-        for s in scored_sorted:
-            rec = compute_recommended_bid(
-                player=s.player, safety_adjusted_ceiling=max(1.0, s.team_specific_value), legal_max_bid=sam.legal_max_bid,
-                portfolio_feasibility_limit=None, confidence=6, live_expected_price=s.team_specific_value - s.expected_surplus_at_price,
-            )
-            lines.append(f"  {s.player:20s} {s.position:3s} score={s.total_score:.3f} [{s.recommendation_class}] stop=${rec.recommended_final_bid:.0f}")
-            lines.append(f"      surplus=${s.expected_surplus_at_price:.2f} start_gain=${s.starting_lineup_gain:.2f} "
-                        f"team_value=${s.team_specific_value:.2f} role_prob={s.role_probability_score} "
-                        f"scarcity={s.scarcity_score} tier_cliff_bonus={s.tier_cliff_bonus} "
-                        f"alts_left={s.remaining_alternatives_count} price_conf={s.price_confidence} "
-                        f"need_contrib={s.position_need_score} price_evid={s.price_evidence_score} "
-                        f"bench_prob={s.bench_probability}")
+        lines = [f"Top {len(rows)} live targets by decision score (not raw marginal value):"]
+        for t in rows:
+            lines.append(f"  {t['player']:20s} {t['position']:3s} score={t['total_score']:.3f} "
+                        f"[{t['recommendation_class']}] stop=${t['recommended_stop']:.0f}")
+            lines.append(f"      surplus=${t['expected_surplus_at_price']:.2f} start_gain=${t['starting_lineup_gain']:.2f} "
+                        f"team_value=${t['team_specific_value']:.2f} role_prob={t['role_probability_score']} "
+                        f"scarcity={t['scarcity_score']} tier_cliff_bonus={t['tier_cliff_bonus']} "
+                        f"alts_left={t['remaining_alternatives_count']} price_conf={t['price_confidence']} "
+                        f"need_contrib={t['position_need_score']} price_evid={t['price_evidence_score']} "
+                        f"bench_prob={t['bench_probability']}"
+                        + (f"  ** {'/'.join(t['critical_reasons'])} **" if t.get("critical_review_required") else ""))
         return "\n".join(lines)
 
     def cmd_paths(self) -> str:
@@ -438,12 +488,22 @@ class AuctionCLI:
         surplus = round(result_purchase.starting_points - result_pass.starting_points, 2)
         bench_change = round(result_purchase.bench_points - result_pass.bench_points, 2)
         sam = self._sam()
-
+        # NOTE (V2 fix): the old formula here mixed STARTING-POINTS surplus
+        # with a DOLLAR test_price -- the same units-bug class as the Josh
+        # Jacobs anomaly. `surplus > 0` is used only as a boolean "purchase
+        # beats pass at this price" signal now; the actual dollar ceiling
+        # always comes from the governed helper (static max / legal max /
+        # conservative live-price multiple), never from points arithmetic.
+        expected_role_guess = "required starter" if surplus > 0 else "bench depth"
+        governed = self._governed_ceiling(player, info["position"], 0.0, expected_role_guess,
+                                          max(1.0, info.get("base_value", 1.0)))
         rec = compute_recommended_bid(
-            player=player, safety_adjusted_ceiling=max(1.0, surplus + test_price if surplus > 0 else test_price * 0.7),
+            player=player, safety_adjusted_ceiling=governed.dollar_ceiling,
             legal_max_bid=sam.legal_max_bid, portfolio_feasibility_limit=None, confidence=8,
             live_expected_price=max(1.0, info.get("base_value", 1.0)),
         )
+        if governed.critical_review_required:
+            rec.recommendation_type = "CRITICAL_REVIEW_REQUIRED"
 
         lines = [
             f"{player} -- EXACT purchase-vs-pass at test price ${test_price:.0f}{stale_label}",
@@ -595,10 +655,14 @@ class AuctionCLI:
         pre_draft_price = max(1.0, info.get("base_value", 1.0))
         market = live_expected_price(pre_draft_price, info["position"], "t1", self.market_state, 0, 0, 6, 10)
         sam = self._sam()
+        governed = self._governed_ceiling(player, info["position"], r.marginal_value, r.expected_role, market["live_expected_price"])
         rec = compute_recommended_bid(
-            player=player, safety_adjusted_ceiling=max(1.0, r.marginal_value), legal_max_bid=sam.legal_max_bid,
+            player=player, safety_adjusted_ceiling=governed.dollar_ceiling, legal_max_bid=sam.legal_max_bid,
             portfolio_feasibility_limit=None, confidence=6, live_expected_price=market["live_expected_price"],
         )
+        if governed.critical_review_required:
+            rec.recommendation_type = "CRITICAL_REVIEW_REQUIRED"
+            rec.reason = f"CRITICAL_REVIEW_REQUIRED ({', '.join(governed.critical_reasons)}). " + rec.reason
         return "\n".join([
             f"WHY {player} ({info['position']}):",
             f"  Projected points: {info['projected_points']:.1f}",
@@ -700,16 +764,19 @@ class AuctionCLI:
             except Exception:
                 live_price = pre_draft_price
                 calc_label = "SOLVER_FAILURE_FALLBACK"
+            governed = self._governed_ceiling(r.player, r.position, r.marginal_value, r.expected_role, live_price)
             rec = compute_recommended_bid(
-                player=r.player, safety_adjusted_ceiling=max(1.0, r.marginal_value), legal_max_bid=sam.legal_max_bid,
+                player=r.player, safety_adjusted_ceiling=governed.dollar_ceiling, legal_max_bid=sam.legal_max_bid,
                 portfolio_feasibility_limit=None, confidence=6, live_expected_price=live_price,
             )
+            rec_type = "CRITICAL_REVIEW_REQUIRED" if governed.critical_review_required else rec.recommendation_type
             out.append({
                 "player": r.player, "position": r.position, "projected_points": r.projected_points,
                 "live_expected_price": round(live_price, 1), "conservative_price": round(live_price * 1.15, 1),
                 "marginal_value": r.marginal_value, "expected_role": r.expected_role,
-                "recommended_stop": rec.recommended_final_bid, "recommendation": rec.recommendation_type,
-                "calculation_label": calc_label, "position_need": needs.get(r.position, 0),
+                "recommended_stop": rec.recommended_final_bid, "recommendation": rec_type,
+                "critical_review_required": governed.critical_review_required, "critical_reasons": governed.critical_reasons,
+                "calculation_label": calc_label + " | " + governed.calculation_label, "position_need": needs.get(r.position, 0),
             })
         return out
 
@@ -731,16 +798,21 @@ class AuctionCLI:
         rows = compute_live_sam_values(sam.roster, {player: info})
         marginal_value = rows[0].marginal_value if rows else 0.0
         expected_role = rows[0].expected_role if rows else "unknown"
+        governed = self._governed_ceiling(player, pos, marginal_value, expected_role, market["live_expected_price"])
         rec = compute_recommended_bid(
-            player=player, safety_adjusted_ceiling=max(1.0, marginal_value), legal_max_bid=sam.legal_max_bid,
+            player=player, safety_adjusted_ceiling=governed.dollar_ceiling, legal_max_bid=sam.legal_max_bid,
             portfolio_feasibility_limit=None, confidence=6, live_expected_price=market["live_expected_price"],
         )
+        rec_type = "CRITICAL_REVIEW_REQUIRED" if governed.critical_review_required else rec.recommendation_type
         return {
             "player": player, "position": pos, "live_expected_price": round(market["live_expected_price"], 1),
             "conservative_price": round(market["live_expected_price"] * 1.15, 1),
+            "critical_review_required": governed.critical_review_required, "critical_reasons": governed.critical_reasons,
+            "governed_calculation_label": governed.calculation_label,
             "marginal_value": marginal_value, "expected_role": expected_role,
-            "recommended_stop": rec.recommended_final_bid, "recommendation": rec.recommendation_type,
-            "reason": rec.reason, "legal_max_bid": sam.legal_max_bid,
+            "recommended_stop": rec.recommended_final_bid, "recommendation": rec_type,
+            "reason": (f"CRITICAL_REVIEW_REQUIRED ({', '.join(governed.critical_reasons)}). " if governed.critical_review_required else "") + rec.reason,
+            "legal_max_bid": sam.legal_max_bid,
             "calculation_label": market.get("calculation_label", "APPROXIMATE_LIVE_ROSTER_VALUE"),
         }
 
