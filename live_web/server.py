@@ -20,6 +20,7 @@ exists in this file.
 from __future__ import annotations
 
 import sys
+import threading
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.parent
@@ -66,6 +67,26 @@ cli = AuctionCLI(log_path=DEFAULT_LOG_PATH)
 # from anything that happens in practice mode.
 _RUNTIME: dict = {"mode": "production", "cli": cli, "scenario": None, "proof": {}}
 
+# V3 Gate D (Part 4 concurrency): a single process-wide lock serializes
+# every STATE-MUTATING endpoint (sale, undo, correct, mode switch). This
+# is a real, minimal fix for the "laptop and phone submit nearly
+# simultaneously" race the spec describes -- Python's GIL already makes
+# individual operations atomic, but WITHOUT this lock two concurrent
+# requests could both read the same pre-mutation state, both decide
+# their action is legal, and both apply it (e.g. two near-simultaneous
+# sales of the same player racing past each other's "already sold"
+# check). This does NOT hold the lock during long exact solves (those
+# already snapshot state and solve outside any shared mutable object),
+# only around the fast, in-memory mutation itself.
+_mutation_lock = threading.Lock()
+
+# Idempotency cache for /api/sale: {idempotency_key: response_dict}. A
+# retried request with the SAME key (e.g. a phone that timed out waiting
+# for a response and retries automatically) replays the cached result
+# instead of risking a duplicate sale. Deliberately unbounded-but-tiny
+# for a single Sunday session; not intended to survive a restart.
+_sale_idempotency_cache: dict = {}
+
 # UI-only "currently nominated" tracker -- explicitly NOT auction state
 # (nominating a player never touches auction_engine; only a sale does).
 # Kept per-mode so a practice nomination can never leak into production.
@@ -85,6 +106,16 @@ class SaleRequest(BaseModel):
     team: str
     price: float
     confirm: bool = False
+    # V3 Gate D (Part 4 concurrency): optional optimistic-concurrency
+    # check -- if the caller knows what sequence they last saw, they can
+    # assert it here so a stale client (e.g. a phone that hasn't
+    # refreshed since a laptop recorded a sale) gets a clear rejection
+    # instead of silently acting on outdated information.
+    expected_sequence: int | None = None
+    # Optional idempotency key: a retried request with the SAME key
+    # (e.g. a phone that times out waiting for a response and retries)
+    # replays the cached result instead of risking a duplicate sale.
+    idempotency_key: str | None = None
 
 
 class CorrectRequest(BaseModel):
@@ -265,31 +296,54 @@ def post_nominate(req: NominateRequest):
 
 @app.post("/api/sale")
 def post_sale(req: SaleRequest):
-    # Same underlying call the CLI's `sale` command makes -- goes through
-    # the real auction_engine event log, real keeper/college-rights
-    # rejection, and the real large-sale confirmation gate.
-    message = _active().cmd_sale(req.player, req.team, str(req.price), confirmed=req.confirm)
-    if message.startswith("REFUSED") or message.startswith("ERROR"):
-        raise HTTPException(status_code=400, detail=message)
-    if message.startswith("CONFIRM:"):
-        return {"needs_confirmation": True, "message": message}
-    if _nominated_by_mode[_RUNTIME["mode"]] == req.player:
-        _nominated_by_mode[_RUNTIME["mode"]] = None
-    return {"needs_confirmation": False, "message": message, "status": _active().api_status()}
+    with _mutation_lock:
+        # Idempotency replay: a retried request with the same key gets
+        # the SAME cached result rather than being re-applied.
+        if req.idempotency_key is not None and req.idempotency_key in _sale_idempotency_cache:
+            return _sale_idempotency_cache[req.idempotency_key]
+
+        # Optimistic concurrency: if the caller told us what sequence
+        # they expected, reject a stale request cleanly rather than
+        # letting it act on state that has since moved on (e.g. a phone
+        # that hasn't refreshed since a laptop already recorded a sale).
+        current_seq = _active().store.state.sequence_number
+        if req.expected_sequence is not None and req.expected_sequence != current_seq:
+            raise HTTPException(
+                status_code=409,
+                detail=f"STALE_STATE: client expected sequence {req.expected_sequence}, "
+                       f"but current state is at sequence {current_seq} -- refresh and retry.",
+            )
+
+        # Same underlying call the CLI's `sale` command makes -- goes through
+        # the real auction_engine event log, real keeper/college-rights
+        # rejection, and the real large-sale confirmation gate.
+        message = _active().cmd_sale(req.player, req.team, str(req.price), confirmed=req.confirm)
+        if message.startswith("REFUSED") or message.startswith("ERROR"):
+            raise HTTPException(status_code=400, detail=message)
+        if message.startswith("CONFIRM:"):
+            return {"needs_confirmation": True, "message": message}
+        if _nominated_by_mode[_RUNTIME["mode"]] == req.player:
+            _nominated_by_mode[_RUNTIME["mode"]] = None
+        result = {"needs_confirmation": False, "message": message, "status": _active().api_status()}
+        if req.idempotency_key is not None:
+            _sale_idempotency_cache[req.idempotency_key] = result
+        return result
 
 
 @app.post("/api/undo")
 def post_undo():
-    message = _active().cmd_undo()
-    return {"message": message, "status": _active().api_status()}
+    with _mutation_lock:
+        message = _active().cmd_undo()
+        return {"message": message, "status": _active().api_status()}
 
 
 @app.post("/api/correct")
 def post_correct(req: CorrectRequest):
-    message = _active().cmd_correct(req.player, req.team, str(req.price))
-    if message.startswith("REFUSED") or message.startswith("ERROR"):
-        raise HTTPException(status_code=400, detail=message)
-    return {"message": message, "status": _active().api_status()}
+    with _mutation_lock:
+        message = _active().cmd_correct(req.player, req.team, str(req.price))
+        if message.startswith("REFUSED") or message.startswith("ERROR"):
+            raise HTTPException(status_code=400, detail=message)
+        return {"message": message, "status": _active().api_status()}
 
 
 @app.post("/api/save")
