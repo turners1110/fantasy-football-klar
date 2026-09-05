@@ -38,6 +38,7 @@ SNAPSHOT_DIR = LIVE_MVP_DIR / "cli_snapshots"
 DEFAULT_LOG_PATH = LIVE_MVP_DIR / "cli_session.jsonl"
 DEFAULT_INITIAL_STATE_PATH = LIVE_MVP_DIR / "cli_initial_state.json"
 ERROR_LOG_PATH = LIVE_MVP_DIR / "cli_error.log"
+SUNDAY_FINAL_DIR = BASE_DIR / "outputs" / "auction_rebuild" / "sunday_final"
 
 COLLEGE_RIGHTS = {"Fernando Mendoza", "Isaiah Bond"}
 
@@ -52,6 +53,13 @@ COMMANDS = {
     "undo": "Undo the last recorded sale.",
     "save <name>": "Save a named snapshot of the current auction state.",
     "load <name>": "Restore a named snapshot.",
+    "search <partial_name>": "Find available players matching a partial name.",
+    "last": "Show the last recorded sale.",
+    "correct <player> <team> <price>": "Correct a previously recorded sale (reverses old accounting first).",
+    "market": "Show league-wide and per-position observed-market spending ratios.",
+    "position <QB|RB|WR|TE>": "List remaining players at one position by marginal value.",
+    "why <player>": "Full explanation: points, role, value change, prior, adjustments, stop, confidence.",
+    "prior": "Show which market prior is currently active (static or evolved).",
     "emergency": "Print the static emergency bid sheet / Sunday plan.",
     "help": "List all commands.",
     "quit / exit": "Exit the tool.",
@@ -129,7 +137,7 @@ class AuctionCLI:
                          f"{'  (keeper)' if p.get('is_keeper') else ''}")
         return "\n".join(lines)
 
-    def cmd_sale(self, player: str, team: str, price: str) -> str:
+    def cmd_sale(self, player: str, team: str, price: str, confirmed: bool = False) -> str:
         # Check keeper/college-rights status BEFORE the "unknown player"
         # check -- keepers and college-rights players are deliberately
         # excluded from self.players / the available pool, so an
@@ -146,6 +154,13 @@ class AuctionCLI:
             price_f = float(price)
         except ValueError:
             return f"ERROR: price must be a number, got {price!r}."
+
+        if not confirmed:
+            reason = self._needs_large_sale_confirmation(player, team, price_f)
+            if reason:
+                return (f"CONFIRM: {player} to {team} for ${price_f:.0f} -- {reason}. "
+                       f"Re-run the same command with 'confirm' appended to proceed, "
+                       f"e.g. `sale {player.replace(' ', '_')} {team} {price} confirm`.")
 
         before_avg = None
         pos = self.players[player].position if player in self.players else self.store.state.available_pool.get(player, {}).get("position")
@@ -463,6 +478,142 @@ class AuctionCLI:
         self._invalidate_exact_cache()
         return f"Loaded snapshot '{name}'.\n\n" + self.cmd_status()
 
+    # ---- Stage 9: additional commands ----
+
+    def _resolve_name(self, partial: str, pool: dict | None = None) -> tuple[str | None, list[str]]:
+        """Case-insensitive exact/partial name resolution. Returns
+        (resolved_name_or_None, list_of_candidates). If exactly one
+        candidate matches, resolved_name is set; if multiple match,
+        resolved_name is None and candidates lists all of them (for a
+        numbered disambiguation message)."""
+        pool = pool if pool is not None else self.store.state.available_pool
+        if partial in pool:
+            return partial, [partial]
+        lowered = partial.lower()
+        exact_ci = [n for n in pool if n.lower() == lowered]
+        if len(exact_ci) == 1:
+            return exact_ci[0], exact_ci
+        substr = [n for n in pool if lowered in n.lower()]
+        if len(substr) == 1:
+            return substr[0], substr
+        return None, substr
+
+    def cmd_search(self, partial: str) -> str:
+        _, candidates = self._resolve_name(partial)
+        if not candidates:
+            return f"No available players matching {partial!r}."
+        lines = [f"{i+1}. {name} ({self.store.state.available_pool[name]['position']})" for i, name in enumerate(candidates)]
+        return "\n".join(lines)
+
+    def cmd_last(self) -> str:
+        real_sales = [e for e in self.store.events if e.event_type == "PLAYER_SOLD"]
+        undone_ids = {e.payload.get("undone_event_id") for e in self.store.events if e.event_type == "EVENT_UNDONE"}
+        real_sales = [e for e in real_sales if e.event_id not in undone_ids]
+        if not real_sales:
+            return "No sales recorded yet."
+        last = real_sales[-1]
+        p = last.payload
+        return (f"Last sale: {p['display_name']} ({p['position']}) to {p['winning_owner']} "
+               f"for ${p['sale_price']:.0f}  [sequence {last.sequence_number}]")
+
+    def cmd_correct(self, player: str, team: str, price: str) -> str:
+        try:
+            price_f = float(price)
+        except ValueError:
+            return f"ERROR: price must be a number, got {price!r}."
+        old = self.store.state.sold_players.get(player)
+        if old is None:
+            return f"ERROR: {player!r} has no recorded sale to correct."
+        pos = None
+        for t in self.store.state.teams.values():
+            for p in t.roster:
+                if p["player_id"] == player:
+                    pos = p["position"]
+        try:
+            self.store.correct_sale(player, player, pos or "UNKNOWN", team, price_f, None)
+        except IllegalEventError as e:
+            return f"REFUSED: {e}"
+        self._invalidate_exact_cache()
+        return f"Corrected: {player} now sold to {team} for ${price_f:.0f}.\n\n" + self.cmd_status()
+
+    def cmd_market(self) -> str:
+        league_ratio, league_n = self.market_state.league_ratio()
+        lines = [f"League-wide spending ratio: {league_ratio:.3f} (n={league_n} observed sales)",
+                 "Active market prior: STATIC_PRE_DRAFT_MARKET_PRIOR" + (
+                     " (see sunday_release_manifest.json for whether an evolved prior was ever validated)"),
+                 "Position spending ratios:"]
+        for pos in ("QB", "RB", "WR", "TE"):
+            ratio, n = self.market_state.position_ratio(pos)
+            lines.append(f"  {pos}: {ratio:.3f} (n={n})")
+        return "\n".join(lines)
+
+    def cmd_position(self, position: str) -> str:
+        position = position.upper()
+        pool = {n: v for n, v in self.store.state.available_pool.items() if v["position"] == position}
+        if not pool:
+            return f"No remaining players at position {position!r}."
+        rows = compute_live_sam_values(self._sam().roster, pool)
+        rows_sorted = sorted(rows, key=lambda r: -r.marginal_value)[:15]
+        lines = [f"Remaining {position}s ({len(pool)} total), top {len(rows_sorted)} by marginal value:"]
+        for r in rows_sorted:
+            lines.append(f"  {r.player:22s} marginal=${r.marginal_value:6.2f} role={r.expected_role}")
+        return "\n".join(lines)
+
+    def cmd_why(self, player: str) -> str:
+        info = self.store.state.available_pool.get(player)
+        if info is None:
+            return f"ERROR: unknown or unavailable player {player!r}."
+        rows = compute_live_sam_values(self._sam().roster, {player: info})
+        r = rows[0]
+        pre_draft_price = max(1.0, info.get("base_value", 1.0))
+        market = live_expected_price(pre_draft_price, info["position"], "t1", self.market_state, 0, 0, 6, 10)
+        sam = self._sam()
+        rec = compute_recommended_bid(
+            player=player, safety_adjusted_ceiling=max(1.0, r.marginal_value), legal_max_bid=sam.legal_max_bid,
+            portfolio_feasibility_limit=None, confidence=6, live_expected_price=market["live_expected_price"],
+        )
+        return "\n".join([
+            f"WHY {player} ({info['position']}):",
+            f"  Projected points: {info['projected_points']:.1f}",
+            f"  Expected role: {r.expected_role}",
+            f"  Fast roster-value change (marginal): ${r.marginal_value:.2f}  [APPROXIMATE_LIVE_ROSTER_VALUE]",
+            f"  Exact result: not run this call -- use `exact {player.replace(' ', '_')}` for a fresh HiGHS solve",
+            f"  Pre-draft market prior: ${pre_draft_price:.0f}  [STATIC_PRE_DRAFT_MARKET_PRIOR]",
+            f"  Observed-market adjustment: league_ratio={market['league_spending_ratio']} tier_ratio={market['tier_spending_ratio']} "
+            f"demand_mult={market['demand_multiplier']}",
+            f"  Live expected price: ${market['live_expected_price']:.0f}  [{market['calculation_label']}]",
+            f"  Legal max bid: ${sam.legal_max_bid:.2f}",
+            f"  RECOMMENDED STOP: ${rec.recommended_final_bid:.0f}  [{rec.recommendation_type}]",
+            f"  Confidence deductions: price is PRELIMINARY_NOT_FINAL / uncalibrated; roster value is fast-approximate, not exact-solved this call.",
+        ])
+
+    def cmd_prior(self) -> str:
+        manifest_path = SUNDAY_FINAL_DIR / "sunday_release_manifest.json"
+        if manifest_path.exists():
+            try:
+                manifest = json.loads(manifest_path.read_text())
+                return (f"Active market prior source: {manifest.get('active_market_prior_source', 'STATIC_PRE_DRAFT_MARKET_PRIOR')}\n"
+                       f"Evolved ensemble version: {manifest.get('evolved_ensemble_version', 'NONE')}")
+            except Exception:
+                pass
+        return "Active market prior source: STATIC_PRE_DRAFT_MARKET_PRIOR (no evolved prior integrated)."
+
+    def _needs_large_sale_confirmation(self, player: str, team: str, price_f: float) -> str | None:
+        reasons = []
+        if price_f > 50:
+            reasons.append(f"price ${price_f:.0f} is above $50")
+        info = self.store.state.available_pool.get(player)
+        if info is not None:
+            pre_draft_price = max(1.0, info.get("base_value", 1.0))
+            p75 = pre_draft_price * 1.15
+            if price_f > p75 + 10:
+                reasons.append(f"price exceeds live P75 (~${p75:.0f}) by more than $10")
+        if team == "Sam":
+            reasons.append("winning team is Sam")
+        if not reasons:
+            return None
+        return "; ".join(reasons)
+
     def cmd_emergency(self) -> str:
         parts = []
         sheet_path = LIVE_MVP_DIR / "static_emergency_bid_sheet.csv"
@@ -499,10 +650,20 @@ class AuctionCLI:
             if cmd == "status":
                 return self.cmd_status()
             if cmd == "sale":
+                confirmed = False
+                if args and args[-1].lower() == "confirm":
+                    confirmed = True
+                    args = args[:-1]
                 if len(args) != 3:
-                    return "Usage: sale <player> <team> <price>  (player name may need quotes if it has spaces -- use underscores if unsure, e.g. Josh_Allen)"
+                    return "Usage: sale <player> <team> <price> [confirm]  (player name may need quotes if it has spaces -- use underscores if unsure, e.g. Josh_Allen)"
                 player = args[0].replace("_", " ")
-                return self.cmd_sale(player, args[1], args[2])
+                resolved, candidates = self._resolve_name(player)
+                if resolved is None and len(candidates) > 1:
+                    return "Multiple players match -- be more specific:\n" + "\n".join(
+                        f"  {i+1}. {c}" for i, c in enumerate(candidates))
+                if resolved:
+                    player = resolved
+                return self.cmd_sale(player, args[1], args[2], confirmed=confirmed)
             if cmd == "check":
                 if len(args) < 1:
                     return "Usage: check <player>"
@@ -532,6 +693,28 @@ class AuctionCLI:
                 if len(args) != 1:
                     return "Usage: load <name>"
                 return self.cmd_load(args[0])
+            if cmd == "search":
+                if len(args) < 1:
+                    return "Usage: search <partial_name>"
+                return self.cmd_search(" ".join(args).replace("_", " "))
+            if cmd == "last":
+                return self.cmd_last()
+            if cmd == "correct":
+                if len(args) != 3:
+                    return "Usage: correct <player> <team> <price>"
+                return self.cmd_correct(args[0].replace("_", " "), args[1], args[2])
+            if cmd == "market":
+                return self.cmd_market()
+            if cmd == "position":
+                if len(args) != 1:
+                    return "Usage: position <QB|RB|WR|TE>"
+                return self.cmd_position(args[0])
+            if cmd == "why":
+                if len(args) < 1:
+                    return "Usage: why <player>"
+                return self.cmd_why(" ".join(args).replace("_", " "))
+            if cmd == "prior":
+                return self.cmd_prior()
             if cmd == "emergency":
                 return self.cmd_emergency()
             if cmd == "help":
