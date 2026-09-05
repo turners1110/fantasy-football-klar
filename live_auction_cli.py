@@ -246,19 +246,21 @@ class AuctionCLI:
         ]
         return "\n".join(lines)
 
-    def cmd_targets(self, n: int = 10) -> str:
-        """Stage 1 hardened ranking: a multi-factor decision score
-        (auction_engine.live_target_scoring), not raw marginal value.
-        Position need is capped so it cannot alone outrank a stronger,
-        cheaper player -- see live_target_scoring.py's docstring."""
+    def _scored_targets(self, n: int = 10):
+        """Shared computation for cmd_targets() (CLI text) and api_targets()
+        (website JSON) -- both call this SAME method, so the two surfaces
+        can never disagree about ranking. Stage 1 hardened ranking: a
+        multi-factor decision score (auction_engine.live_target_scoring),
+        not raw marginal value. Position need is capped so it cannot alone
+        outrank a stronger, cheaper player -- see live_target_scoring.py's
+        docstring."""
         pool = self._remaining_pool()
         if not pool:
-            return "No remaining players in the pool."
+            return []
         rows = compute_live_sam_values(self._sam().roster, pool)
         sam = self._sam()
         needs = sam.legal_starting_needs()
 
-        # remaining alternatives per position (for scarcity / tier-cliff detection)
         pos_supply = {}
         for v in pool.values():
             pos_supply[v["position"]] = pos_supply.get(v["position"], 0) + 1
@@ -277,8 +279,33 @@ class AuctionCLI:
                 price_confidence=0.5, position_need_score=raw_need, portfolio_paths_broken_if_missed=0,
             )
             scored.append(score)
+        return sorted(scored, key=lambda s: -s.total_score)[:n]
 
-        scored_sorted = sorted(scored, key=lambda s: -s.total_score)[:n]
+    def api_targets(self, n: int = 25) -> list[dict]:
+        sam = self._sam()
+        out = []
+        for s in self._scored_targets(n):
+            rec = compute_recommended_bid(
+                player=s.player, safety_adjusted_ceiling=max(1.0, s.team_specific_value), legal_max_bid=sam.legal_max_bid,
+                portfolio_feasibility_limit=None, confidence=6, live_expected_price=s.team_specific_value - s.expected_surplus_at_price,
+            )
+            out.append({
+                "player": s.player, "position": s.position, "total_score": s.total_score,
+                "recommendation_class": s.recommendation_class, "recommended_stop": rec.recommended_final_bid,
+                "expected_surplus_at_price": s.expected_surplus_at_price, "starting_lineup_gain": s.starting_lineup_gain,
+                "team_specific_value": s.team_specific_value, "role_probability_score": s.role_probability_score,
+                "scarcity_score": s.scarcity_score, "tier_cliff_bonus": s.tier_cliff_bonus,
+                "remaining_alternatives_count": s.remaining_alternatives_count, "price_confidence": s.price_confidence,
+                "position_need_score": s.position_need_score, "price_evidence_score": s.price_evidence_score,
+                "bench_probability": s.bench_probability,
+            })
+        return out
+
+    def cmd_targets(self, n: int = 10) -> str:
+        scored_sorted = self._scored_targets(n)
+        sam = self._sam()
+        if not scored_sorted:
+            return "No remaining players in the pool."
         lines = [f"Top {len(scored_sorted)} live targets by decision score (not raw marginal value):"]
         for s in scored_sorted:
             rec = compute_recommended_bid(
@@ -625,6 +652,129 @@ class AuctionCLI:
         if not parts:
             return "ERROR: no emergency sheet found on disk."
         return "\n\n".join(parts)
+
+    # ---- Website API data methods (Live Auction Website) ----
+    # These call the SAME underlying engine functions the CLI's own text
+    # commands call (compute_live_sam_values, live_expected_price,
+    # compute_recommended_bid, compute_live_roster_paths) -- they only
+    # differ in returning structured dicts instead of formatted text, so
+    # the website and the CLI can never disagree about a number.
+
+    def api_status(self) -> dict:
+        sam = self._sam()
+        return {
+            "budget_remaining": sam.budget_remaining, "open_slots": sam.open_slots,
+            "min_reserve": sam.min_reserve, "legal_max_bid": sam.legal_max_bid,
+            "position_needs": sam.legal_starting_needs(), "position_counts": sam.position_counts,
+            "roster": [{"position": p["position"], "display_name": p["display_name"], "price": p["price"],
+                       "is_keeper": bool(p.get("is_keeper"))} for p in sam.roster],
+            "sequence_number": self.store.state.sequence_number,
+        }
+
+    def api_board(self) -> list[dict]:
+        pool = self._remaining_pool()
+        if not pool:
+            return []
+        sam = self._sam()
+        rows = compute_live_sam_values(sam.roster, pool)
+        needs = sam.legal_starting_needs()
+        # one live_expected_price computation per POSITION (not per player) for speed --
+        # same function the CLI's `check`/`market` commands call.
+        pos_market = {}
+        for pos in ("QB", "RB", "WR", "TE"):
+            open_starter = sum(1 for t in self.store.state.teams.values() if t.legal_starting_needs().get(pos, 0) > 0)
+            open_flex = sum(1 for t in self.store.state.teams.values() if t.legal_starting_needs().get("FLEX", 0) > 0)
+            cash_teams = sum(1 for t in self.store.state.teams.values() if t.legal_max_bid > 10)
+            supply = sum(1 for v in pool.values() if v["position"] == pos)
+            pos_market[pos] = (open_starter, open_flex, cash_teams, supply)
+
+        out = []
+        for r in rows:
+            info = next((v for v in pool.values() if v["display_name"] == r.player), None)
+            pre_draft_price = max(1.0, info.get("base_value", 1.0)) if info else 1.0
+            os_, of_, ct_, sup_ = pos_market.get(r.position, (0, 0, 6, 1))
+            try:
+                market = live_expected_price(pre_draft_price, r.position, "t1", self.market_state, os_, of_, ct_, sup_)
+                live_price = market["live_expected_price"]
+                calc_label = market["calculation_label"]
+            except Exception:
+                live_price = pre_draft_price
+                calc_label = "SOLVER_FAILURE_FALLBACK"
+            rec = compute_recommended_bid(
+                player=r.player, safety_adjusted_ceiling=max(1.0, r.marginal_value), legal_max_bid=sam.legal_max_bid,
+                portfolio_feasibility_limit=None, confidence=6, live_expected_price=live_price,
+            )
+            out.append({
+                "player": r.player, "position": r.position, "projected_points": r.projected_points,
+                "live_expected_price": round(live_price, 1), "conservative_price": round(live_price * 1.15, 1),
+                "marginal_value": r.marginal_value, "expected_role": r.expected_role,
+                "recommended_stop": rec.recommended_final_bid, "recommendation": rec.recommendation_type,
+                "calculation_label": calc_label, "position_need": needs.get(r.position, 0),
+            })
+        return out
+
+    def api_check(self, player: str) -> dict | None:
+        info = self.store.state.available_pool.get(player)
+        if info is None:
+            return None
+        pos = info["position"]
+        pre_draft_price = max(1.0, info.get("base_value", 1.0))
+        sam = self._sam()
+        try:
+            open_starter = sum(1 for t in self.store.state.teams.values() if t.legal_starting_needs().get(pos, 0) > 0)
+            open_flex = sum(1 for t in self.store.state.teams.values() if t.legal_starting_needs().get("FLEX", 0) > 0)
+            cash_teams = sum(1 for t in self.store.state.teams.values() if t.legal_max_bid > 10)
+            supply = sum(1 for v in self.store.state.available_pool.values() if v["position"] == pos)
+            market = live_expected_price(pre_draft_price, pos, "t1", self.market_state, open_starter, open_flex, cash_teams, supply)
+        except Exception:
+            market = {"live_expected_price": pre_draft_price, "calculation_label": "SOLVER_FAILURE_FALLBACK"}
+        rows = compute_live_sam_values(sam.roster, {player: info})
+        marginal_value = rows[0].marginal_value if rows else 0.0
+        expected_role = rows[0].expected_role if rows else "unknown"
+        rec = compute_recommended_bid(
+            player=player, safety_adjusted_ceiling=max(1.0, marginal_value), legal_max_bid=sam.legal_max_bid,
+            portfolio_feasibility_limit=None, confidence=6, live_expected_price=market["live_expected_price"],
+        )
+        return {
+            "player": player, "position": pos, "live_expected_price": round(market["live_expected_price"], 1),
+            "conservative_price": round(market["live_expected_price"] * 1.15, 1),
+            "marginal_value": marginal_value, "expected_role": expected_role,
+            "recommended_stop": rec.recommended_final_bid, "recommendation": rec.recommendation_type,
+            "reason": rec.reason, "legal_max_bid": sam.legal_max_bid,
+            "calculation_label": market.get("calculation_label", "APPROXIMATE_LIVE_ROSTER_VALUE"),
+        }
+
+    def api_paths(self) -> dict:
+        pool = self._remaining_pool()
+        remaining_for_paths = {n: {"display_name": n, "position": v["position"], "projected_points": v["projected_points"],
+                                    "expected_price": max(1.0, v.get("base_value", 1.0)),
+                                    "conservative_price": max(1.0, v.get("base_value", 1.0) * 1.15)}
+                                for n, v in pool.items()}
+        try:
+            paths = compute_live_roster_paths(self._sam(), remaining_for_paths)
+        except Exception as e:
+            self._log_error("api_paths", e)
+            return {"error": "SOLVER_FAILURE -- roster paths unavailable right now."}
+        return paths
+
+    def api_market(self) -> dict:
+        league_ratio, league_n = self.market_state.league_ratio()
+        positions = {}
+        for pos in ("QB", "RB", "WR", "TE"):
+            ratio, n = self.market_state.position_ratio(pos)
+            positions[pos] = {"ratio": ratio, "n": n}
+        return {"league_ratio": league_ratio, "league_n": league_n, "positions": positions,
+                "active_prior": "STATIC_PRE_DRAFT_MARKET_PRIOR"}
+
+    def api_log(self) -> list[dict]:
+        undone_ids = {e.payload.get("undone_event_id") for e in self.store.events if e.event_type == "EVENT_UNDONE"}
+        out = []
+        for e in self.store.events:
+            if e.event_type == "PLAYER_SOLD" and e.event_id not in undone_ids:
+                p = e.payload
+                out.append({"sequence": e.sequence_number, "player": p["display_name"], "position": p["position"],
+                           "team": p["winning_owner"], "price": p["sale_price"]})
+        return out
 
     def cmd_help(self) -> str:
         lines = ["Commands:"]
