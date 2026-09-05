@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SUNDAY LIVE AUCTION TOOL</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="header">
+  <div class="hdr-title">SUNDAY LIVE AUCTION TOOL <span class="hdr-badge">2026 -- NOT draft_ui</span></div>
+  <div class="hdr-stats">
+    <span>Budget: <b id="hdr-budget">--</b></span>
+    <span>Open slots: <b id="hdr-slots">--</b></span>
+    <span>Legal max bid: <b id="hdr-maxbid" class="hdr-maxbid">--</b></span>
+  </div>
+</div>
+
+<div id="tabs">
+  <button class="tab-btn active" data-tab="board">Draft Board</button>
+  <button class="tab-btn" data-tab="roster">My Roster</button>
+  <button class="tab-btn" data-tab="targets">Targets</button>
+  <button class="tab-btn" data-tab="paths">Roster Paths</button>
+  <button class="tab-btn" data-tab="log">Log / Controls</button>
+</div>
+
+<div id="nominated-panel" class="nominated-panel hidden">
+  <div class="nominated-header">CURRENTLY NOMINATED: <span id="nom-name"></span> <button id="nom-clear">clear</button></div>
+  <div id="nom-detail">loading...</div>
+</div>
+
+<!-- DRAFT BOARD -->
+<div id="tab-board" class="tab-content">
+  <div class="filters">
+    <select id="f-position"><option value="">All positions</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option></select>
+    <select id="f-rec"><option value="">All recommendations</option></select>
+    <input id="f-maxprice" type="number" placeholder="Max price">
+    <label><input type="checkbox" id="f-starting"> Starting candidates only</label>
+    <select id="f-sort">
+      <option value="recommended_stop">Sort: Recommended stop</option>
+      <option value="marginal_value">Sort: Marginal value</option>
+      <option value="live_expected_price">Sort: Expected price</option>
+      <option value="position_need">Sort: Position need</option>
+      <option value="player">Sort: Alphabetical</option>
+    </select>
+    <button id="refresh-board">Refresh</button>
+    <span id="board-count"></span>
+  </div>
+  <table id="board-table">
+    <thead><tr>
+      <th>Player</th><th>Pos</th><th>Proj</th><th>Expected $</th><th>Marginal Value</th>
+      <th>Stop</th><th>Rec</th><th>Conf</th><th>Actions</th>
+    </tr></thead>
+    <tbody id="board-body"></tbody>
+  </table>
+</div>
+
+<!-- MY ROSTER -->
+<div id="tab-roster" class="tab-content hidden">
+  <div id="roster-summary"></div>
+  <h3>Needs</h3>
+  <div id="roster-needs"></div>
+  <h3>Slots</h3>
+  <div id="roster-slots-visual"></div>
+  <h3>Current Roster</h3>
+  <table><thead><tr><th>Pos</th><th>Player</th><th>Price</th><th>Keeper?</th></tr></thead><tbody id="roster-body"></tbody></table>
+</div>
+
+<!-- TARGETS -->
+<div id="tab-targets" class="tab-content hidden">
+  <button id="refresh-targets">Refresh</button>
+  <table id="targets-table">
+    <thead><tr>
+      <th>Player</th><th>Pos</th><th>Score</th><th>Class</th><th>Stop</th>
+      <th>Surplus</th><th>Start Gain</th><th>Team Value</th><th>Role Prob</th>
+      <th>Scarcity</th><th>Tier Cliff</th><th>Alts Left</th><th>Price Conf</th><th>Need</th><th>Price Evid</th><th>Bench Prob</th>
+    </tr></thead>
+    <tbody id="targets-body"></tbody>
+  </table>
+</div>
+
+<!-- ROSTER PATHS -->
+<div id="tab-paths" class="tab-content hidden">
+  <button id="refresh-paths">Refresh (slower -- exact solves)</button>
+  <div id="paths-container">Click Refresh to compute (takes a few seconds).</div>
+</div>
+
+<!-- LOG / CONTROLS -->
+<div id="tab-log" class="tab-content hidden">
+  <h3>Sale Log</h3>
+  <table><thead><tr><th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>Price</th></tr></thead><tbody id="log-body"></tbody></table>
+
+  <h3>Controls</h3>
+  <button id="btn-undo" class="danger">Undo Last Event</button>
+
+  <h4>Correct a Sale</h4>
+  <input id="correct-player" placeholder="player">
+  <input id="correct-team" placeholder="corrected team">
+  <input id="correct-price" type="number" placeholder="corrected price">
+  <button id="btn-correct">Correct</button>
+
+  <h4>Snapshot</h4>
+  <input id="snapshot-name" placeholder="snapshot name">
+  <button id="btn-save">Save</button>
+  <button id="btn-load">Load</button>
+
+  <h4>Market Summary</h4>
+  <div id="market-summary"></div>
+
+  <h4 class="danger-heading">Emergency</h4>
+  <button id="btn-emergency" class="danger">Show Static Emergency Plan</button>
+  <pre id="emergency-content" class="hidden"></pre>
+</div>
+
+<!-- SALE MODAL -->
+<div id="sale-modal" class="modal hidden">
+  <div class="modal-box">
+    <h3>Mark Sold: <span id="modal-player"></span></h3>
+    <label>Winning team: <input id="modal-team"></label>
+    <label>Sale price: <input id="modal-price" type="number"></label>
+    <div id="modal-confirm-msg" class="confirm-msg hidden"></div>
+    <button id="modal-submit">Record Sale</button>
+    <button id="modal-cancel">Cancel</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+body { font-family: -apple-system, Helvetica, Arial, sans-serif; margin: 0; background: #f4f4f4; color: #222; }
+#header { background: #1b1b2f; color: white; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; }
+.hdr-title { font-weight: bold; font-size: 1.1em; }
+.hdr-badge { background: #7a1f1f; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; margin-left: 8px; }
+.hdr-stats span { margin-left: 18px; }
+.hdr-maxbid { color: #ffd166; font-size: 1.2em; }
+#tabs { display: flex; background: #2b2b45; }
+.tab-btn { flex: 1; padding: 12px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 1em; }
+.tab-btn.active { background: #f4f4f4; color: #111; font-weight: bold; }
+.tab-content { padding: 14px; }
+.hidden { display: none !important; }
+table { border-collapse: collapse; width: 100%; background: white; font-size: 0.85em; }
+th, td { border: 1px solid #ddd; padding: 5px 7px; text-align: left; }
+th { background: #eee; position: sticky; top: 96px; }
+.filters { margin-bottom: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filters input, .filters select { padding: 4px; }
+button { padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px solid #999; background: white; }
+button.danger { background: #7a1f1f; color: white; border: none; }
+.danger-heading { color: #7a1f1f; }
+tr.rec-green { background: #e6ffe6; }
+tr.rec-yellow { background: #fffbe6; }
+tr.rec-red { background: #ffe6e6; }
+tr.rec-gray { background: #eee; color: #999; }
+.nominated-panel { background: #ffd166; padding: 10px 16px; position: sticky; top: 84px; z-index: 90; }
+.nominated-header { font-weight: bold; display: flex; justify-content: space-between; }
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
+.modal-box { background: white; padding: 20px; border-radius: 8px; min-width: 320px; }
+.modal-box label { display: block; margin: 8px 0; }
+.modal-box input { width: 100%; padding: 6px; }
+.confirm-msg { background: #fff3cd; padding: 8px; margin: 8px 0; border-radius: 4px; }
+.toast { position: fixed; bottom: 20px; right: 20px; background: #1b1b2f; color: white; padding: 12px 18px; border-radius: 6px; z-index: 300; }
+#roster-slots-visual span { display: inline-block; width: 22px; height: 22px; margin: 2px; border-radius: 4px; text-align: center; line-height: 22px; font-size: 0.75em; }
+.slot-filled { background: #4caf50; color: white; }
+.slot-open { background: #ddd; }
+pre { white-space: pre-wrap; background: white; padding: 10px; border: 1px solid #ccc; max-height: 500px; overflow-y: auto; }
+h3, h4 { margin-top: 18px; }
