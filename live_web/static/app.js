@@ -595,6 +595,63 @@ async function refreshOperationalStatus() {
 }
 setInterval(refreshOperationalStatus, 5000);
 
+// ---- V3 Gate F: true, interactive Practice Draft ----
+let pdSessionId = null;
+try { pdSessionId = localStorage.getItem("sunday_practice_draft_session_id"); } catch (e) {}
+
+function renderPracticeDraftPending(pending) {
+  const panel = document.getElementById("pd-nomination");
+  if (!pending) { panel.classList.add("hidden"); return; }
+  panel.classList.remove("hidden");
+  document.getElementById("pd-player").textContent = pending.player;
+  document.getElementById("pd-position").textContent = pending.position;
+  document.getElementById("pd-nominator").textContent = pending.nominator;
+  document.getElementById("pd-ai-price").textContent = pending.ai_current_price;
+  document.getElementById("pd-ai-leader").textContent = pending.ai_leading_team || "nobody (uncontested)";
+  document.getElementById("pd-stop").textContent = pending.sam_recommended_stop;
+  document.getElementById("pd-legal-max").textContent = pending.sam_legal_max_bid;
+}
+
+document.getElementById("pd-start").addEventListener("click", async () => {
+  pdSessionId = "practice-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+  try { localStorage.setItem("sunday_practice_draft_session_id", pdSessionId); } catch (e) {}
+  const seed = parseInt(document.getElementById("pd-seed").value) || 909001;
+  const r = await api("/practice-draft/start", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: pdSessionId, seed }) });
+  document.getElementById("pd-status").textContent = "Practice draft started (session " + pdSessionId + ").";
+  renderPracticeDraftPending(r.pending);
+});
+
+document.getElementById("pd-pass-btn").addEventListener("click", async () => {
+  const r = await api(`/practice-draft/${pdSessionId}/pass`, { method: "POST" });
+  document.getElementById("pd-status").textContent = "Status: " + r.status;
+  renderPracticeDraftPending(r.pending);
+});
+
+document.getElementById("pd-bid-btn").addEventListener("click", async () => {
+  const amount = parseFloat(document.getElementById("pd-bid-amount").value);
+  if (isNaN(amount)) { toast("Enter a bid amount."); return; }
+  const r = await api(`/practice-draft/${pdSessionId}/bid`, { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount }) });
+  document.getElementById("pd-status").textContent = "Status: " + r.status;
+  document.getElementById("pd-bid-amount").value = "";
+  renderPracticeDraftPending(r.pending);
+});
+
+document.getElementById("pd-undo-btn").addEventListener("click", async () => {
+  const r = await api(`/practice-draft/${pdSessionId}/undo`, { method: "POST" });
+  document.getElementById("pd-status").textContent = r.message;
+  renderPracticeDraftPending(r.pending);
+});
+
+document.getElementById("pd-review-btn").addEventListener("click", async () => {
+  if (!pdSessionId) { toast("Start a practice draft first."); return; }
+  const r = await api(`/practice-draft/${pdSessionId}/review`);
+  const out = document.getElementById("pd-review-output");
+  out.textContent = JSON.stringify(r, null, 2);
+  out.classList.remove("hidden");
+});
+
 // ---- init ----
 refreshHeader();
 refreshModeBanner();

@@ -438,4 +438,91 @@ def post_mode_production():
     return {"mode": "production"}
 
 
+# ---------------------------------------------------------------------------
+# V3 Gate F (Part 13): true, interactive Practice Mode.
+#
+# Completely separate from BOTH the production `cli` above and the
+# existing scenario-sandbox `_RUNTIME["cli"]` practice mechanism --
+# sessions live in their own registry, keyed by a session_id the client
+# generates and keeps in its own browser session (localStorage), so one
+# device starting a practice draft can never switch any other connected
+# client into practice. Each session has its own AuctionCLI instance
+# with its own isolated log path (auction_engine.practice_draft_session's
+# PRACTICE_DRAFT_LOG_DIR) -- never the production log, never the
+# scenario-sandbox log.
+# ---------------------------------------------------------------------------
+_practice_draft_sessions: dict = {}
+
+
+class PracticeDraftStartRequest(BaseModel):
+    session_id: str
+    seed: int = 909001
+
+
+class PracticeDraftBidRequest(BaseModel):
+    amount: float
+
+
+def _get_practice_draft_session(session_id: str):
+    sess = _practice_draft_sessions.get(session_id)
+    if sess is None:
+        raise HTTPException(status_code=404, detail=f"No practice draft session {session_id!r} -- start one first.")
+    return sess
+
+
+@app.post("/api/practice-draft/start", dependencies=[Depends(require_lan_token)])
+def post_practice_draft_start(req: PracticeDraftStartRequest):
+    from auction_engine.practice_draft_session import PracticeDraftSession
+    sess = PracticeDraftSession(session_id=req.session_id, seed=req.seed)
+    _practice_draft_sessions[req.session_id] = sess
+    return {"session_id": req.session_id, "status": sess.status, "pending": sess.pending_nomination()}
+
+
+@app.get("/api/practice-draft/{session_id}/pending")
+def get_practice_draft_pending(session_id: str):
+    sess = _get_practice_draft_session(session_id)
+    return {"status": sess.status, "pending": sess.pending_nomination()}
+
+
+@app.get("/api/practice-draft/{session_id}/status")
+def get_practice_draft_status(session_id: str):
+    sess = _get_practice_draft_session(session_id)
+    return sess.cli.api_status()
+
+
+@app.post("/api/practice-draft/{session_id}/pass", dependencies=[Depends(require_lan_token)])
+def post_practice_draft_pass(session_id: str):
+    sess = _get_practice_draft_session(session_id)
+    result = sess.sam_pass()
+    result["pending"] = sess.pending_nomination()
+    return result
+
+
+@app.post("/api/practice-draft/{session_id}/bid", dependencies=[Depends(require_lan_token)])
+def post_practice_draft_bid(session_id: str, req: PracticeDraftBidRequest):
+    sess = _get_practice_draft_session(session_id)
+    result = sess.sam_bid(req.amount)
+    result["pending"] = sess.pending_nomination()
+    return result
+
+
+@app.post("/api/practice-draft/{session_id}/undo", dependencies=[Depends(require_lan_token)])
+def post_practice_draft_undo(session_id: str):
+    sess = _get_practice_draft_session(session_id)
+    msg = sess.undo()
+    return {"message": msg, "status": sess.status, "pending": sess.pending_nomination()}
+
+
+@app.get("/api/practice-draft/{session_id}/review")
+def get_practice_draft_review(session_id: str):
+    sess = _get_practice_draft_session(session_id)
+    return sess.post_draft_review()
+
+
+@app.delete("/api/practice-draft/{session_id}", dependencies=[Depends(require_lan_token)])
+def delete_practice_draft_session(session_id: str):
+    _practice_draft_sessions.pop(session_id, None)
+    return {"deleted": session_id}
+
+
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

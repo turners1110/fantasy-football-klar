@@ -46,6 +46,30 @@
   <button class="tab-btn" data-tab="paths">Roster Paths</button>
   <button class="tab-btn" data-tab="league">League Room</button>
   <button class="tab-btn" data-tab="log">Log / Controls</button>
+  <button class="tab-btn" data-tab="practice-draft">Practice Draft</button>
+</div>
+
+<div id="tab-practice-draft" class="tab-content hidden">
+  <h3>True Practice Mode -- a real 12-team, 113-sale mock auction</h3>
+  <p>Runs entirely separately from production and from the scenario-sandbox Practice Mode dropdown above --
+     this session lives only in this browser tab (session ID stored in localStorage) and never touches
+     the production event log.</p>
+  <div>
+    Seed: <input id="pd-seed" type="number" value="909001" style="width:100px">
+    <button id="pd-start">Start New Practice Draft</button>
+    <button id="pd-review-btn">View Post-Draft Review</button>
+  </div>
+  <div id="pd-nomination" class="nominated-panel hidden">
+    <h4>Nominated: <span id="pd-player"></span> (<span id="pd-position"></span>) -- nominated by <span id="pd-nominator"></span></h4>
+    <div>Current AI price: $<span id="pd-ai-price"></span> (leading: <span id="pd-ai-leader"></span>)</div>
+    <div>Your recommended stop: $<span id="pd-stop"></span> | Your legal max bid: $<span id="pd-legal-max"></span></div>
+    <input id="pd-bid-amount" type="number" placeholder="Your bid">
+    <button id="pd-bid-btn">Bid</button>
+    <button id="pd-pass-btn">Pass</button>
+    <button id="pd-undo-btn">Undo Last Sale</button>
+  </div>
+  <div id="pd-status"></div>
+  <pre id="pd-review-output" class="hidden"></pre>
 </div>
 
 <div id="nominated-panel" class="nominated-panel hidden">
