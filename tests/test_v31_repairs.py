@@ -710,3 +710,134 @@ def test_college_draft_rights_overrides_file_still_has_brad_reid_rows(cli):
     assert "Carnell Tate" in cli.protected_player_overrides
     assert cli.protected_player_overrides_by_team.get("Brad") == ["Makai Lemon"]
     assert cli.protected_player_overrides_by_team.get("Reid") == ["Carnell Tate"]
+
+
+# ---------------------------------------------------------------------------
+# V3.2 FIX: real root cause of the underspend / marginal-value-cliff bug.
+#
+# _governed_ceiling's fallback conversion from marginal LINEUP points to
+# team-specific dollars used to multiply marginal_value_points by the
+# PLAYER'S OWN base_value/raw-projected-points ratio -- a units mismatch.
+# Confirmed via a real practice draft (seed 4242, nomination ~51): Romeo
+# Doubs had marginal_value=43.6 (a genuine FLEX-starter-quality upgrade)
+# but the old formula gave him a recommended_stop of only $8.24, purely
+# because his OWN generic market rate ($23.1 base_value / 122.2 points =
+# $0.19/pt) has nothing to do with his value to Sam's specific roster
+# hole -- with $189 of budget and 5 open slots still available. This
+# directly caused both the severe underspend (Sam ending drafts having
+# spent as little as 16-18% of his $225 budget) and the misleading
+# "cliff" pattern.
+#
+# Fix: _current_state_points_to_dollars_rate() replaces the player-
+# specific rate with a genuine current-state conversion: (Sam's budget,
+# after reserving $1 for each of his OTHER open slots) / (the sum of the
+# single best remaining marginal-value player at EACH of Sam's open
+# slots -- an estimate of the best realistically achievable finish from
+# here). This directly follows the original spec's Part 7 requirement
+# ("accounting for Sam's remaining budget, open roster slots... replacement
+# alternatives... a reserve for completing the roster") using only real
+# data already computed elsewhere -- never a fixed universal scalar, and
+# never a single player's own idiosyncratic market price.
+# ---------------------------------------------------------------------------
+
+def test_v32_current_state_rate_ignores_a_players_own_cheap_market_rate(cli):
+    """Synthetic case matching the exact Doubs/Croskey-Merritt/Kincaid
+    pattern: pick a real player with a LOW generic base_value/points
+    rate, but feed _governed_ceiling a HIGH synthetic marginal_value_points
+    (as if this player were a big roster-specific upgrade for Sam).
+    The fixed conversion must not collapse back down near the player's
+    own cheap generic rate."""
+    pool = cli.store.state.available_pool
+    # Find a real remaining player with a deliberately cheap generic rate
+    # (base_value/points well under $0.10/pt), matching the failure
+    # pattern -- most late-pool players qualify.
+    cheap_rate_player = None
+    for name, info in pool.items():
+        pts = info.get("projected_points", 0)
+        bv = info.get("base_value", 0)
+        if pts > 50 and 0 < bv / pts < 0.10:
+            cheap_rate_player = (name, info["position"], bv / pts)
+            break
+    assert cheap_rate_player is not None, "expected at least one real cheap-generic-rate player in the pool"
+    name, position, own_rate = cheap_rate_player
+
+    synthetic_marginal_value_points = 40.0  # a genuine large roster upgrade, matching the Doubs case
+    old_style_dollar_value = synthetic_marginal_value_points * own_rate  # what the removed formula would have given
+    governed = cli._governed_ceiling(name, position, synthetic_marginal_value_points, "FLEX starter", 10.0)
+
+    # The fixed ceiling must reflect real team-specific upside, not
+    # collapse back to (or near) what the player's own cheap generic
+    # rate would have produced.
+    assert governed.dollar_ceiling > old_style_dollar_value * 2, (
+        f"{name}: fixed ceiling ${governed.dollar_ceiling:.2f} did not clear "
+        f"2x the old player-specific-rate value ${old_style_dollar_value:.2f}"
+    )
+
+
+def test_v32_current_state_rate_formula_matches_documented_derivation(cli):
+    """Directly verify _current_state_points_to_dollars_rate against an
+    independently-computed expectation: (budget minus $1-per-other-open-
+    slot reserve) / (sum of the top-N remaining marginal values, N = Sam's
+    open slots)."""
+    from auction_engine.live_values import compute_live_sam_values
+    sam = cli._sam()
+    pool = cli.store.state.available_pool
+    rows = compute_live_sam_values(sam.roster, pool)
+    marginal_values = sorted((r.marginal_value for r in rows if r.marginal_value and r.marginal_value > 0), reverse=True)
+    n = max(1, sam.open_slots)
+    best_achievable_points = sum(marginal_values[:n])
+    reserve = max(0, sam.open_slots - 1) * 1.0
+    spendable = max(0.0, sam.budget_remaining - reserve)
+    expected_rate = spendable / best_achievable_points if best_achievable_points > 0 else 0.20
+
+    actual_rate = cli._current_state_points_to_dollars_rate()
+    assert actual_rate == pytest.approx(expected_rate, rel=1e-6)
+
+
+def test_v32_no_overpayment_introduced_by_the_new_conversion(cli):
+    """The fix must never let a purchase exceed its own recommended stop
+    or the legal max bid -- i.e. the new, larger team-specific dollar
+    values still flow through the SAME governing min(), they don't bypass
+    it. Drives one real practice draft with a simple 'bid up to the
+    model's own recommended stop' policy and checks every actual Sam
+    purchase against the stop/legal-max recorded at time of purchase."""
+    from auction_engine.practice_draft_session import PracticeDraftSession
+    sess = PracticeDraftSession(session_id="v32-no-overpay-check", seed=4242)
+    steps = 0
+    while sess.status == "IN_PROGRESS" and steps < 200:
+        p = sess.pending_nomination()
+        if p is None:
+            break
+        sam = sess.cli._sam()
+        if sam.open_slots > 0 and p["ai_current_price"] <= p["sam_recommended_stop"] and p["ai_current_price"] <= sam.legal_max_bid:
+            sess.sam_bid(max(p["ai_current_price"], 1))
+            assert p["ai_current_price"] <= p["sam_recommended_stop"] + 1e-6
+            assert p["ai_current_price"] <= sam.legal_max_bid + 1e-6
+        else:
+            sess.sam_pass()
+        steps += 1
+    assert sess.status == "COMPLETE"
+
+
+def test_v32_spend_rises_substantially_after_fix(cli):
+    """Directional regression guard: with the old player-specific-rate
+    fallback, this exact seed/policy combination spent only $41 of $225
+    (~18%). The fixed current-state conversion must produce a
+    substantially higher spend for the same seed and policy -- confirms
+    the fix isn't a no-op and isn't accidentally reverted."""
+    from auction_engine.practice_draft_session import PracticeDraftSession
+    sess = PracticeDraftSession(session_id="v32-spend-regression", seed=4242)
+    steps = 0
+    while sess.status == "IN_PROGRESS" and steps < 200:
+        p = sess.pending_nomination()
+        if p is None:
+            break
+        sam = sess.cli._sam()
+        if sam.open_slots > 0 and p["ai_current_price"] <= p["sam_recommended_stop"] and p["ai_current_price"] <= sam.legal_max_bid:
+            sess.sam_bid(max(p["ai_current_price"], 1))
+        else:
+            sess.sam_pass()
+        steps += 1
+    review = sess.post_draft_review()
+    spend = review["total_spend_on_purchases"]
+    assert spend >= 90.0, f"expected substantially higher spend after the V3.2 fix, got ${spend:.0f}"

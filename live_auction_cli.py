@@ -249,29 +249,72 @@ class AuctionCLI:
         except Exception:
             return {}
 
-    def _points_to_dollars_rate(self, player: str, position: str) -> float:
-        """V3 Part 7: a transparent, per-player, market-calibrated
-        dollars-per-point conversion rate -- reuses the player's OWN
-        base_value/projected_points ratio (base_value already comes from
-        the real, market-anchored pricing model in
-        output_mock_draft_snapshot/veteran_auction_price_sheet.csv, not a
-        fabricated scalar) rather than one fixed universal points-to-
-        dollars constant applied to every player alike. Falls back to a
-        position-average rate across the remaining pool when the
-        player's own points/base_value are unavailable or degenerate
-        (e.g. already sold, or a zero-projection edge case), and to a
-        small fixed floor only if the pool itself has no usable data --
-        never silently returns 0."""
+    def _current_state_points_to_dollars_rate(self) -> float:
+        """V3.2 REPAIR (real root cause of the underspend / marginal-
+        value-cliff bug): the ONE shared fallback conversion from
+        marginal LINEUP points (a roster-aware, incremental quantity)
+        to team-specific dollars, used by _governed_ceiling whenever a
+        caller has not already computed a real dollar value. This
+        REPLACES the old _points_to_dollars_rate approach, which
+        multiplied marginal_value_points by a player's own (or the
+        position-average) base_value/RAW-projected-points ratio -- a
+        units mismatch: marginal_value_points measures incremental
+        LINEUP improvement, not a player's overall season-long market
+        price, so dividing by raw projected points silently deflated
+        any player whose value TO SAM specifically (a strong FLEX
+        upgrade after nominal needs are met) exceeded what their
+        generic market price implied. Confirmed directly: Romeo Doubs
+        had marginal_value=43.6 (a real FLEX-starter-quality upgrade)
+        but the old formula gave him a $8.24 recommended stop, because
+        his own market rate (base_value=23.1 / points=122.2 = $0.19/pt)
+        has nothing to do with how valuable he is to SAM's specific
+        roster hole right now. Verified this was not a practice-mode-
+        only bug -- cmd_check/api_check (the human-facing, gate-tested
+        recommended_stop) used the identical fallback path.
+
+        This conversion instead follows the ORIGINAL v3 spec's Part 7
+        requirement directly: 'build a transparent current-state
+        conversion from marginal lineup points to team-specific
+        dollars, accounting for Sam's remaining budget, Sam's open
+        roster slots, the remaining eligible player pool... replacement
+        alternatives... a reserve for completing the roster.' Concretely:
+        rate = (budget Sam can actually spend, after reserving $1 for
+        each of his OTHER open roster slots) / (the sum of the single
+        best remaining marginal-value player at EACH of Sam's open
+        slots -- an estimate of the best realistically achievable
+        finish from here, using only real data already computed
+        elsewhere, no new solve). This directly answers "what should a
+        marginal point cost me, given what's left to spend and what's
+        left to get" -- never a fixed universal scalar, and never a
+        single player's own idiosyncratic market price.
+
+        Cached per (sequence_number, open_slots) so a caller that
+        scores many candidates in one board/targets pass (api_board,
+        _scored_targets) does not repeat this pool-wide computation
+        once per candidate -- the underlying inputs (Sam's roster and
+        the remaining pool) only change when the auction state
+        actually changes."""
+        sam = self._sam()
+        cache_key = (self.store.state.sequence_number, sam.open_slots, sam.budget_remaining)
+        cache = getattr(self, "_current_state_rate_cache", None)
+        if cache is not None and cache[0] == cache_key:
+            return cache[1]
         pool = self.store.state.available_pool
-        info = pool.get(player)
-        if info and info.get("projected_points", 0) > 1 and info.get("base_value", 0) > 0:
-            return info["base_value"] / info["projected_points"]
-        # Fallback: position-average rate across the remaining live pool.
-        same_pos = [v for v in pool.values() if v["position"] == position
-                    and v.get("projected_points", 0) > 1 and v.get("base_value", 0) > 0]
-        if same_pos:
-            return sum(v["base_value"] / v["projected_points"] for v in same_pos) / len(same_pos)
-        return 0.20  # documented, conservative last-resort floor (~$1 per 5 points)
+        try:
+            rows = compute_live_sam_values(sam.roster, pool) if pool else []
+            marginal_values = sorted((r.marginal_value for r in rows if r.marginal_value and r.marginal_value > 0), reverse=True)
+        except Exception:
+            marginal_values = []
+        n = max(1, sam.open_slots)
+        best_achievable_points = sum(marginal_values[:n])
+        reserve_for_other_slots = max(0, sam.open_slots - 1) * 1.0
+        spendable = max(0.0, sam.budget_remaining - reserve_for_other_slots)
+        # Same documented conservative floor as the old formula's last
+        # resort (~$1 per 5 points) for the degenerate case where no
+        # remaining player has any positive marginal value at all.
+        rate = spendable / best_achievable_points if best_achievable_points > 0 else 0.20
+        self._current_state_rate_cache = (cache_key, rate)
+        return rate
 
     def _governed_ceiling(self, player: str, position: str, marginal_value_points: float, expected_role: str,
                           live_price: float, exact_ceiling: float | None = None, exact_status: str | None = None,
@@ -285,22 +328,34 @@ class AuctionCLI:
         here but never forwarded to compute_governed_dollar_ceiling --
         meaning Sam's own roster-aware marginal value never actually
         governed the recommended stop. Now it is converted to a real,
-        transparent team-specific DOLLAR value (via
-        _points_to_dollars_rate, a per-player market-calibrated
-        conversion, not a fixed universal scalar) and passed through as
-        a genuine candidate in the governing min() -- it can only ever
+        transparent team-specific DOLLAR value and passed through as a
+        genuine candidate in the governing min() -- it can only ever
         LOWER the stop, never raise it. `precomputed_team_specific_dollar_value`
         lets a caller that has ALREADY computed a dollar-denominated
         team-specific value (e.g. api_targets, which reuses
         _scored_targets' own governed conversion) skip re-deriving it
         from a stale/mismatched points figure -- passing dollars into
         marginal_value_points directly would otherwise silently
-        double-convert."""
+        double-convert.
+
+        V3.2 REPAIR: the fallback conversion (when no precomputed
+        dollar value is supplied) used to multiply marginal_value_points
+        by the PLAYER'S OWN base_value/raw-projected-points ratio -- a
+        units mismatch that silently deflated a player's true value to
+        Sam specifically whenever it exceeded his generic market price
+        (the root cause of the V3.2 underspend/marginal-value-cliff
+        bug: real FLEX-starter-quality upgrades were getting $6-10
+        recommended stops with $180+ of budget still unspent). Now uses
+        _current_state_points_to_dollars_rate(), a genuine current-state
+        conversion accounting for Sam's actual remaining budget, open
+        slots, and realistic best-achievable alternatives across the
+        remaining pool -- see that method's docstring for the full
+        derivation and evidence."""
         sam = self._sam()
         if precomputed_team_specific_dollar_value is not None:
             team_specific_dollar_value = precomputed_team_specific_dollar_value
         else:
-            rate = self._points_to_dollars_rate(player, position)
+            rate = self._current_state_points_to_dollars_rate()
             team_specific_dollar_value = marginal_value_points * rate
         return compute_governed_dollar_ceiling(
             player=player, position=position, live_expected_price=max(1.0, live_price),
