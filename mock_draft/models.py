@@ -57,6 +57,15 @@ class Team:
     # len(roster) alone; the caller (e.g. PracticeDraftSession) must set
     # it explicitly from the real TeamState.college_rights_count.
     protected_but_unlisted: int = 0
+    # Live league-wide reference for the budget-state signal: total
+    # remaining cash across ALL teams divided by total open slots, at the
+    # moment this Team object was built. None (the default) falls back to
+    # the static BUDGET_PER_TEAM / REQUIRED_ROSTER_SIZE reference, which
+    # is wrong for a keeper-depleted league (real openings run ~$27/slot
+    # at the start and drift as teams spend) -- the caller who knows the
+    # whole league (PracticeDraftSession) sets this explicitly so a team
+    # that is cash-rich RELATIVE TO THE ACTUAL MARKET reads as such.
+    league_cash_per_open_slot: float | None = None
 
     @property
     def strategy(self) -> Archetype:

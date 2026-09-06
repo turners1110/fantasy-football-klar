@@ -138,7 +138,22 @@ class PracticeDraftSession:
             name=team_id, budget_remaining=t.budget_remaining, roster=roster,
             archetype=self.archetype_by_team.get(team_id, "value_purist"),
             protected_but_unlisted=t.college_rights_count,
+            league_cash_per_open_slot=self._league_cash_per_open_slot(),
         )
+
+    def _league_cash_per_open_slot(self) -> float | None:
+        """Live league-wide reference for the AI budget-state signal:
+        every team's remaining cash / every team's remaining open slots,
+        right now. Makes 'cash-rich' mean rich relative to the actual
+        market -- so as the rest of the league spends down, the team
+        still holding cash and open slots reads as increasingly able
+        to pay up (and does)."""
+        teams = self.cli.store.state.teams.values()
+        open_slots = sum(max(0, 16 - len(t.roster) - t.college_rights_count) for t in teams)
+        if open_slots <= 0:
+            return None
+        cash = sum(t.budget_remaining for t in teams)
+        return cash / open_slots
 
     def _build_md_pool(self) -> dict[str, MDPlayer]:
         # V3.1 GATE 6 FIX: was hardcoded tier=1 for every player

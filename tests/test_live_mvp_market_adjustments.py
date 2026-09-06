@@ -13,8 +13,12 @@ def test_one_overpriced_rb_sale_moves_price_only_slightly():
     state = MarketAdjustmentState()
     state.add_observation("RB", "tier1", actual_price=60.0, expected_price=40.0)  # 1.5x overpriced
     ratio, n = state.position_ratio("RB")
-    # heavily shrunk toward 1.0 (league prior) with n=1
-    assert 1.0 < ratio < 1.15
+    # Still meaningfully shrunk toward 1.0 (league prior) with n=1 -- one
+    # sale shouldn't dominate -- but strengthened recalibration (prior
+    # weight halved) intentionally lets more of the signal through than
+    # before (was <1.15, now <1.25) so real observed sales move
+    # expectations faster during the live draft.
+    assert 1.0 < ratio < 1.25
 
 
 def test_five_overpriced_rb_sales_move_price_more_than_one():
@@ -90,8 +94,11 @@ def test_total_multiplier_capped_at_bounds():
         pre_draft_price=20.0, position="TE", tier="t1", market_state=state,
         teams_open_starter=10, teams_open_flex=5, teams_with_cash=10, remaining_supply=1,
     )
-    assert result["combined_multiplier_capped"] <= 1.40 + 1e-9
-    assert result["combined_multiplier_capped"] >= 0.70 - 1e-9
+    # Cap widened (0.70-1.40 -> 0.60-1.60) alongside the strengthened
+    # recalibration so a genuinely hot/cold market can move the multiplier
+    # meaningfully instead of flattening at the old, tighter bound.
+    assert result["combined_multiplier_capped"] <= 1.60 + 1e-9
+    assert result["combined_multiplier_capped"] >= 0.60 - 1e-9
 
 
 def test_whole_dollar_live_price():
@@ -110,8 +117,10 @@ def test_tier_signal_shrinks_toward_position_signal_not_raw_ratio():
     state.add_observation("WR", "t2", actual_price=44.0, expected_price=40.0)
     tier1_ratio, n = state.tier_ratio("WR", "t1")
     position_ratio, _ = state.position_ratio("WR")
-    # tier1's single 2.0x sale must be heavily pulled back toward the position signal, not sit near 2.0
-    assert tier1_ratio < 1.5
+    # tier1's single 2.0x sale must be pulled back toward the position signal,
+    # not sit near 2.0 -- strengthened recalibration (tier prior weight
+    # halved) intentionally lets more through than before (was <1.5, now <1.65)
+    assert tier1_ratio < 1.65
     assert n == 1
 
 

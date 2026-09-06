@@ -11,15 +11,23 @@ from dataclasses import dataclass, field
 
 # Prior weight = "how many sales' worth of evidence" the prior (1.00, i.e.
 # no adjustment) is worth before real sales start moving the signal.
-# Documented per spec Part 3's explicit instruction. Chosen so a single
-# early sale barely moves anything (1/(8+1) ~ 11% of the observed
-# deviation leaks through) while 5+ sales move it meaningfully.
-LEAGUE_PRIOR_WEIGHT = 8.0
-POSITION_PRIOR_WEIGHT = 5.0
-TIER_PRIOR_WEIGHT = 3.0
+# Strengthened per Sam's explicit "we need strong recalibration" request
+# for draft night -- halved from the original conservative values (8/5/3)
+# so real observed sales move expected prices meaningfully faster. One
+# early sale still leaks through partially (1/(4+1) = 20% of the observed
+# deviation, vs. 11% before), and 3-4 consistent sales now move a
+# position/tier signal close to the fully observed ratio, rather than
+# needing 5+.
+LEAGUE_PRIOR_WEIGHT = 4.0
+POSITION_PRIOR_WEIGHT = 2.5
+TIER_PRIOR_WEIGHT = 1.5
 
-MIN_MULTIPLIER = 0.70
-MAX_MULTIPLIER = 1.40
+# Widened alongside the faster shrinkage above so a genuinely hot or cold
+# market (several consecutive sales well above/below expectation) can
+# actually move the final multiplier meaningfully, not flatten out at the
+# old +/-40% ceiling. Still a hard bound -- cannot run away indefinitely.
+MIN_MULTIPLIER = 0.60
+MAX_MULTIPLIER = 1.60
 
 
 @dataclass

@@ -125,9 +125,42 @@ def _budget_state_adjustment(team: Team) -> float:
     if team.slots_needed <= 0:
         return 0.0
     budget_per_slot = team.budget_remaining / team.slots_needed
-    reference_per_slot = cfg.BUDGET_PER_TEAM / max(1, cfg.REQUIRED_ROSTER_SIZE)
+    # Prefer the LIVE league-wide cash-per-open-slot when the caller
+    # supplied it (see Team.league_cash_per_open_slot); the static config
+    # reference is only a fallback for callers with no league context.
+    if team.league_cash_per_open_slot is not None and team.league_cash_per_open_slot > 0:
+        reference_per_slot = team.league_cash_per_open_slot
+    else:
+        reference_per_slot = cfg.BUDGET_PER_TEAM / max(1, cfg.REQUIRED_ROSTER_SIZE)
     signal = max(-1.0, min(1.0, (budget_per_slot - reference_per_slot) / reference_per_slot))
     return cfg.MAX_BUDGET_STATE_ADJUSTMENT * signal
+
+
+def _position_need_count(position: str) -> float:
+    """How many players at this position a single team can realistically
+    use: dedicated starters + this position's share of the FLEX spots +
+    typical bench demand. Derived from the league's own roster config
+    rather than a new hand-picked table."""
+    return (
+        cfg.STARTING_LINEUP.get(position, 0)
+        + cfg.STARTING_LINEUP.get("FLEX", 0) * cfg.FLEX_SHARE.get(position, 0.0)
+        + cfg.BENCH_DEMAND_PER_TEAM.get(position, 0.0)
+    )
+
+
+def _position_saturation_adjustment(team: Team, player: Player) -> float:
+    """Negative (discount) once this team already holds as many players at
+    the candidate's position as it can use (see _position_need_count);
+    zero while the position is still open. Ramps in over roughly two
+    surplus players so the effect is not a cliff. Applies to EVERY
+    archetype -- this is roster-state awareness, not a personality trait
+    -- and exists specifically so the strengthened budget-state premium
+    cannot push a cash-rich team into stacking a 6th RB it can't start."""
+    need = _position_need_count(player.position)
+    would_hold = team.position_count(player.position) + 1  # if it won this player
+    surplus = would_hold - need
+    signal = max(0.0, min(1.0, surplus / 2.0))
+    return -cfg.MAX_POSITION_SATURATION_ADJUSTMENT * signal
 
 
 def _future_alternatives_adjustment(player: Player, available: dict[str, Player] | None) -> float:
@@ -217,8 +250,9 @@ def compute_willingness(
     scarcity = _scarcity_adjustment(player, available)
     tier = _tier_adjustment(player, archetype)
     budget_state = _budget_state_adjustment(team)
+    position_saturation = _position_saturation_adjustment(team, player)
     future_alternatives = _future_alternatives_adjustment(player, available)
-    team_adjustment = roster_fit + scarcity + tier + budget_state + future_alternatives
+    team_adjustment = roster_fit + scarcity + tier + budget_state + position_saturation + future_alternatives
 
     archetype_adj = _archetype_adjustment(archetype)
     noise_adj = get_noise_adjustment(team, player, rng)
@@ -288,8 +322,19 @@ def compute_willingness(
     # this once" overpay) -- same discipline the old strict_value_ceiling
     # branch enforced, expressed additively: no positive adjustment ever
     # pushes them above their own base_market_anchor.
+    #
+    # One exception, per Sam's draft-night request that the team left
+    # holding the most cash and open slots must eventually start winning
+    # players: a positive budget_state signal (this team is cash-rich
+    # relative to the LIVE league cash-per-open-slot) is allowed to lift a
+    # Value Purist above their anchor by exactly that amount -- and no
+    # more. Economically this is still "value" discipline: when the
+    # market has less cash per slot than this team, each point is worth
+    # more of THIS team's dollars. Without it, a strict-ceiling team
+    # (e.g. CJ, $264 / 10 open slots) finished practice drafts with
+    # $110-180 stranded while everyone else was at $0-16.
     if archetype.strict_value_ceiling:
-        willingness = min(willingness, base_market_anchor)
+        willingness = min(willingness, base_market_anchor + max(0.0, budget_state))
         willingness = max(willingness, cfg.MIN_PRICE)
 
     if diagnostics is not None:
@@ -298,6 +343,7 @@ def compute_willingness(
         diagnostics["scarcity_adjustment"] = scarcity
         diagnostics["tier_adjustment"] = tier
         diagnostics["budget_state_adjustment"] = budget_state
+        diagnostics["position_saturation_adjustment"] = position_saturation
         diagnostics["future_alternatives_adjustment"] = future_alternatives
         diagnostics["team_adjustment"] = team_adjustment
         diagnostics["archetype_adjustment"] = archetype_adj

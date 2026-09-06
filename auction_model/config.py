@@ -204,11 +204,31 @@ BASE_ANCHOR_WEIGHT_PROJECTION_NEUTRAL = 0.65
 MAX_ROSTER_FIT_ADJUSTMENT = 15.0
 MAX_SCARCITY_ADJUSTMENT = 25.0
 MAX_TIER_ADJUSTMENT = 8.0
-MAX_BUDGET_STATE_ADJUSTMENT = 10.0
+# Strengthened per Sam's request: a team sitting on much more cash-per-slot
+# than the league average should meaningfully outbid for players late in
+# the draft, not just nudge by a few dollars. $10 was too weak to visibly
+# change outcomes; $35 lets budget pressure actually swing a bidding war.
+MAX_BUDGET_STATE_ADJUSTMENT = 35.0
+# Counterweight to the stronger budget-state signal above: a team that is
+# already full at a position (starters + its FLEX share + typical bench
+# demand -- see mock_draft.valuation._position_saturation_adjustment)
+# should NOT be pushed into paying up for yet another player there just
+# because it is cash-rich per slot. Applies to every archetype (unlike
+# MAX_ROSTER_FIT_ADJUSTMENT, which only fires for the few archetypes with
+# rigid position_targets). Sized to be able to fully offset the budget
+# signal when a position is genuinely saturated.
+MAX_POSITION_SATURATION_ADJUSTMENT = 40.0
 MAX_FUTURE_ALTERNATIVES_ADJUSTMENT = 18.0
 MAX_ARCHETYPE_ADJUSTMENT = 10.0
 MAX_NOISE_ADJUSTMENT = 18.0
-MAX_TOTAL_PREMIUM_OVER_ANCHOR = 15.0
+# Raised alongside MAX_BUDGET_STATE_ADJUSTMENT: this is the OVERALL cap on
+# every additive component summed together (roster fit + scarcity + tier +
+# budget state + future alternatives + archetype + noise + tilt + early-draft),
+# so simply raising one component's own cap does nothing if the aggregate
+# ceiling still clips the total. 15 -> 45 gives the strengthened budget-state
+# signal room to actually move a cash-rich team's bid, without removing the
+# cap entirely (still bounded, still applies identically to every team).
+MAX_TOTAL_PREMIUM_OVER_ANCHOR = 45.0
 MAX_TOTAL_DISCOUNT_BELOW_ANCHOR = 70.0
 
 
