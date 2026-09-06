@@ -162,6 +162,11 @@ def get_status():
     return _active().api_status()
 
 
+@app.get("/api/draft-score")
+def get_draft_score():
+    return _active().api_draft_score()
+
+
 @app.get("/api/operational-status")
 def get_operational_status():
     """V3 Part 14: operational status area -- mode, sequence, active log

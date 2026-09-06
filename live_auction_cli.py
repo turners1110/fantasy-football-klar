@@ -46,6 +46,15 @@ ERROR_LOG_PATH = LIVE_MVP_DIR / "cli_error.log"
 SUNDAY_FINAL_DIR = BASE_DIR / "outputs" / "auction_rebuild" / "sunday_final"
 
 COLLEGE_RIGHTS = {"Fernando Mendoza", "Isaiah Bond"}
+# Position + $1 conversion fee for each, per data/college_holdings.csv and
+# data/college_prospect_projections.csv. The $1 is a flat college-rights
+# conversion fee, confirmed separate from and never charged against Sam's
+# $225 veteran-auction budget -- shown here purely for display so these
+# players don't render with blank position/price columns.
+COLLEGE_RIGHTS_INFO = {
+    "Fernando Mendoza": {"position": "QB", "conversion_fee": 1},
+    "Isaiah Bond": {"position": "WR", "conversion_fee": 1},
+}
 
 PROTECTED_PLAYER_OVERRIDES_PATH = BASE_DIR / "data" / "protected_player_overrides.csv"
 
@@ -1372,7 +1381,60 @@ class AuctionCLI:
             # keepers or auction purchases, so they don't live in
             # sam.roster -- surfaced separately here so the UI can show
             # them without implying they're auction-eligible.
-            "college_rights_holdings": sorted(COLLEGE_RIGHTS),
+            "college_rights_holdings": [
+                {"display_name": name, "position": COLLEGE_RIGHTS_INFO.get(name, {}).get("position"),
+                 "conversion_fee": COLLEGE_RIGHTS_INFO.get(name, {}).get("conversion_fee", 1)}
+                for name in sorted(COLLEGE_RIGHTS)
+            ],
+            "sequence_number": self.store.state.sequence_number,
+        }
+
+    def api_draft_score(self) -> dict:
+        """A live, comparative 0-100 draft score: Sam's current best legal
+        starting lineup (via the same greedy_best_lineup used for Sam's
+        own dynamic values) ranked against all 12 teams' current best
+        legal starting lineups, computed from their actual rosters at
+        this exact moment. This is a snapshot comparison -- every team is
+        measured at the SAME point in the draft, so it's fair regardless
+        of how many picks have happened so far. Recomputing this after
+        every real sale (whether Sam's or another team's) is what makes
+        it update live, since it always reflects current state, not a
+        cached value.
+
+        Deliberately does NOT reuse compute_live_sam_values (that's a
+        marginal-value-of-a-candidate function); this needs each team's
+        OWN current roster's absolute lineup strength, for every team,
+        not just Sam's marginal change from one candidate.
+        """
+        from auction_engine.live_values import greedy_best_lineup
+
+        team_scores: dict[str, float] = {}
+        for team_id, team in self.store.state.teams.items():
+            # Each roster dict already carries its own projected_points
+            # (baked in at draft/keeper time -- see TeamState.roster),
+            # same field greedy_best_lineup expects; no extra lookup
+            # needed, and this correctly covers keepers too (self.players
+            # only holds the AUCTION-ELIGIBLE pool, not keepers, so
+            # looking keepers up there would silently return 0).
+            starting_pts, _bench_pts, _roles = greedy_best_lineup(team.roster)
+            team_scores[team_id] = starting_pts
+
+        sam_id = self.store.state.sam_team_id
+        sorted_ids = sorted(team_scores, key=lambda t: team_scores[t])
+        n = len(sorted_ids)
+        sam_rank_from_bottom = sorted_ids.index(sam_id) + 1  # 1 = worst team right now
+        # Percentile score: 0 = tied for worst, 100 = best (or tied for best).
+        score_out_of_100 = round((sam_rank_from_bottom - 1) / (n - 1) * 100) if n > 1 else 100
+        rank_from_top = n - sam_rank_from_bottom + 1
+
+        return {
+            "score_out_of_100": score_out_of_100,
+            "rank": rank_from_top,
+            "teams_total": n,
+            "sam_starting_points": round(team_scores.get(sam_id, 0.0), 1),
+            "best_starting_points": round(max(team_scores.values()), 1) if team_scores else 0.0,
+            "worst_starting_points": round(min(team_scores.values()), 1) if team_scores else 0.0,
+            "all_teams": [{"team": t, "starting_points": round(team_scores[t], 1)} for t in sorted(team_scores, key=lambda t: -team_scores[t])],
             "sequence_number": self.store.state.sequence_number,
         }
 

@@ -176,8 +176,8 @@ async function loadBoard() {
   try {
     const s = await api("/status");
     renderPositionCountsTable("board-position-body", s);
-    renderDraftGrade("board-grade-badge", s);
   } catch (e) { /* summary bar is a convenience, not critical -- don't block the board on it */ }
+  renderDraftGrade("board-grade-badge");
 }
 
 // V2.2 Request 2: live, as-you-type table filtering. Pure client-side
@@ -223,10 +223,19 @@ function renderBoard() {
   rows.forEach(r => {
     const tr = document.createElement("tr");
     tr.className = recClass(r.recommendation);
+    let stopMinusExpected = "--";
+    let stopMinusExpectedClass = "";
+    if (r.live_expected_price != null) {
+      const diff = r.recommended_stop - r.live_expected_price;
+      stopMinusExpected = (diff >= 0 ? "+$" : "-$") + Math.abs(diff).toFixed(0);
+      stopMinusExpectedClass = diff >= 0 ? "stop-above-expected" : "stop-below-expected";
+    }
     tr.innerHTML = `
       <td>${r.player}</td><td>${r.position}</td><td>${r.projected_points.toFixed(0)}</td>
       <td>$${r.live_expected_price.toFixed(0)}</td><td>$${r.marginal_value.toFixed(0)}</td>
-      <td>$${r.recommended_stop.toFixed(0)}</td><td>${r.recommendation}</td>
+      <td>$${r.recommended_stop.toFixed(0)}</td>
+      <td class="${stopMinusExpectedClass}">${stopMinusExpected}</td>
+      <td>${r.recommendation}</td>
       <td>${r.calculation_label === "SOLVER_FAILURE_FALLBACK" ? "LOW" : "OK"}</td>
       <td>
         <button class="nominate-btn" data-player="${r.player}">Nominate</button>
@@ -433,7 +442,16 @@ function renderPositionCountsTable(tbodyId, s) {
   const posBody = document.getElementById(tbodyId);
   if (!posBody) return;
   posBody.innerHTML = "";
-  const counts = s.position_counts || {};
+  // Include college-rights holds (Mendoza/Bond) in the position tally --
+  // they occupy a real roster slot at their real position even though
+  // they aren't auction-eligible or currently lineup-eligible. "Status"
+  // (need/filled/extra) still derives from s.position_needs, which the
+  // backend computes from the true starting-eligible roster only, so a
+  // college-rights hold never masks a real starting need.
+  const counts = Object.assign({}, s.position_counts || {});
+  (s.college_rights_holdings || []).forEach(cr => {
+    if (cr.position) counts[cr.position] = (counts[cr.position] || 0) + 1;
+  });
   Object.keys(REQUIRED_STARTERS).forEach(pos => {
     const required = REQUIRED_STARTERS[pos];
     const current = counts[pos] || 0;
@@ -452,52 +470,38 @@ function renderPositionCountsTable(tbodyId, s) {
   posBody.appendChild(flexRow);
 }
 
-// Transparent, disclosed heuristic -- NOT the same thing as the
-// governed recommendation/policy engine (that logic is under separate
-// repair for a real underspend bug found in practice testing). This is
-// just a simple, honest scoreboard glance: how much of the $225 budget
-// has been deployed, and whether the roster is dangerously imbalanced.
-// Formula is intentionally visible via the tooltip rather than a black
-// box, exactly like the Stop-Expected column.
-function computeDraftGrade(s) {
-  if (s.open_slots > 0) {
-    const spent = 225 - s.budget_remaining; // Sam's fixed official auction budget
-    return { label: "IN PROGRESS", cls: "grade-pending",
-      detail: `${s.open_slots} open slot${s.open_slots > 1 ? "s" : ""} remaining, $${s.budget_remaining.toFixed(0)} left ($${spent.toFixed(0)} spent so far). Grade shown once drafting completes.` };
-  }
-  const spent = 225 - s.budget_remaining;
-  const spendPct = (spent / 225) * 100;
-  const counts = s.position_counts || {};
-  let imbalance = 0;
-  Object.keys(REQUIRED_STARTERS).forEach(pos => {
-    const surplus = (counts[pos] || 0) - REQUIRED_STARTERS[pos];
-    if (surplus > FLEX_SLOTS) imbalance += (surplus - FLEX_SLOTS); // more surplus at one position than all FLEX slots could ever use
-  });
-  let letter;
-  if (spendPct >= 85) letter = "A";
-  else if (spendPct >= 70) letter = "B";
-  else if (spendPct >= 55) letter = "C";
-  else if (spendPct >= 40) letter = "D";
-  else letter = "F";
-  const gradeOrder = ["A", "B", "C", "D", "F"];
-  if (imbalance > 0) {
-    const idx = Math.min(gradeOrder.indexOf(letter) + Math.ceil(imbalance / 2), gradeOrder.length - 1);
-    letter = gradeOrder[idx];
-  }
-  const cls = "grade-" + letter.toLowerCase();
-  const detail = `Budget used: ${spendPct.toFixed(0)}% ($${spent.toFixed(0)} of $225).` +
-    (imbalance > 0 ? ` Position imbalance detected (${imbalance} slot${imbalance > 1 ? "s" : ""} of surplus depth beyond usable FLEX capacity).` : " Position balance looks reasonable.") +
-    " Simple heuristic (budget utilization + position balance) -- not the same as the governed recommendation engine.";
-  return { label: letter, cls, detail };
-}
-
-function renderDraftGrade(elId, s) {
+// Real, comparative draft score (0-100): Sam's current best legal
+// starting lineup, ranked against all 12 teams' current best legal
+// starting lineups at THIS exact moment in the draft -- a fair snapshot
+// comparison since everyone is measured at the same point, regardless
+// of how many total picks have happened. Backed by /api/draft-score
+// (api_draft_score in live_auction_cli.py), which reuses the same
+// greedy_best_lineup lineup logic already proven for Sam's own values --
+// not a client-side guess. Recomputed fresh on every board refresh, so
+// it updates after every real sale (Sam's or any other team's).
+async function renderDraftGrade(elId) {
   const badge = document.getElementById(elId);
   if (!badge) return;
-  const g = computeDraftGrade(s);
-  badge.textContent = g.label;
-  badge.className = "grade-badge " + g.cls;
-  badge.title = g.detail;
+  try {
+    const d = await api("/draft-score");
+    badge.textContent = d.score_out_of_100;
+    let cls;
+    if (d.score_out_of_100 >= 80) cls = "grade-a";
+    else if (d.score_out_of_100 >= 60) cls = "grade-b";
+    else if (d.score_out_of_100 >= 40) cls = "grade-c";
+    else if (d.score_out_of_100 >= 20) cls = "grade-d";
+    else cls = "grade-f";
+    badge.className = "grade-badge " + cls;
+    badge.title = `Score ${d.score_out_of_100}/100 -- rank #${d.rank} of ${d.teams_total} teams right now. ` +
+      `Sam's current best legal starting lineup: ${d.sam_starting_points} pts ` +
+      `(league range: ${d.worst_starting_points}-${d.best_starting_points} pts). ` +
+      `Live comparison of current roster strength across all 12 teams at this exact point in the draft -- ` +
+      `not the same as the governed bid-recommendation engine.`;
+  } catch (e) {
+    badge.textContent = "--";
+    badge.className = "grade-badge grade-pending";
+    badge.title = "Draft score unavailable: " + (e && e.message ? e.message : e);
+  }
 }
 
 async function loadRoster() {
@@ -534,13 +538,15 @@ async function loadRoster() {
     tbody.appendChild(tr);
   });
   // College-rights holds (Mendoza/Bond): occupy a roster slot, already
-  // reflected in open_slots, but are NOT veteran keepers or auction
-  // purchases -- shown here for full visibility with a clearly distinct
-  // label rather than blank/missing price and keeper columns.
-  (s.college_rights_holdings || []).forEach(name => {
+  // reflected in open_slots, and count toward the 16-player roster during
+  // the draft, but are NOT veteran keepers or auction purchases. The $1
+  // shown is their flat conversion fee -- confirmed separate from and
+  // never charged against Sam's $225 veteran-auction budget.
+  (s.college_rights_holdings || []).forEach(cr => {
     const tr = document.createElement("tr");
     tr.className = "college-rights-row";
-    tr.innerHTML = `<td>--</td><td>${name}</td><td colspan="2">College-rights hold (not veteran keeper, not auction-eligible)</td>`;
+    tr.innerHTML = `<td>${cr.position || "--"}</td><td>${cr.display_name}</td><td>$${cr.conversion_fee}</td><td>College-rights</td>`;
+    tr.title = "College-rights hold: counts toward the 16-player roster, not a veteran keeper, not auction-eligible. The $1 conversion fee is separate from the $225 auction budget.";
     tbody.appendChild(tr);
   });
 }
