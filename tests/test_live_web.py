@@ -433,3 +433,84 @@ def test_jacobs_role_not_misclassified_as_bench_depth_via_exact(client):
     if r.status_code == 200:
         data = r.json()
         assert "BENCH_DEPTH_STOP_OVER_25" not in data.get("critical_reasons", [])
+
+
+# ---------------------------------------------------------------------------
+# Real Sunday-week usability bug: in LAN mode (--host 0.0.0.0), mutation
+# endpoints 401 without X-Auth-Token, but every mutation click handler in
+# live_web/static/app.js used to call `await api(...)` with no try/catch,
+# so a failed request threw an unhandled promise rejection with zero
+# visible feedback -- Sam hit this exactly, clicking "Start New Practice
+# Draft" and seeing nothing happen. Fixed by wrapping every such handler
+# in try/catch and showing a clear toast() (a specific "enter your LAN
+# token" message on 401, the real e.message otherwise).
+# ---------------------------------------------------------------------------
+
+def test_lan_mode_mutation_401_has_actionable_detail_message(client, monkeypatch):
+    """The backend's 401 detail is what the client's toastError() falls
+    back to displaying for any non-401-specific path, and is what a
+    developer reads when debugging -- it must actually say what's wrong
+    (LAN mode + missing/incorrect token), not a bare 'Unauthorized'."""
+    monkeypatch.setenv("SUNDAY_AUTH_TOKEN", "test-token-abc123")
+    r = client.post("/api/undo")  # no X-Auth-Token header at all
+    assert r.status_code == 401
+    detail = r.json()["detail"]
+    assert "X-Auth-Token" in detail
+    assert "LAN mode" in detail
+
+    # Wrong token also 401s...
+    r2 = client.post("/api/undo", headers={"X-Auth-Token": "wrong"})
+    assert r2.status_code == 401
+
+    # ...and the correct token clears the auth gate (may still 200 or
+    # fail for an unrelated business reason -- e.g. nothing to undo --
+    # but it must not be a 401 once the token matches).
+    r3 = client.post("/api/undo", headers={"X-Auth-Token": "test-token-abc123"})
+    assert r3.status_code != 401
+
+
+def _app_js_source():
+    from pathlib import Path
+    return (Path(__file__).parent.parent / "live_web" / "static" / "app.js").read_text()
+
+
+def test_app_js_defines_shared_401_toast_helper():
+    src = _app_js_source()
+    assert "function toastError(" in src
+    assert "Authentication required" in src
+    assert "LAN token" in src
+
+
+def _click_handler_blocks(src: str):
+    """Yields (line_number, block_body) for every
+    `addEventListener("click", async () => { ... })` block in app.js,
+    using simple brace-counting (matches how this same check was used
+    to verify the fix live, before writing this test)."""
+    import re
+    for m in re.finditer(r'addEventListener\("click", async[^{]*\{', src):
+        start = m.end()
+        depth = 1
+        i = start
+        while depth > 0 and i < len(src):
+            if src[i] == "{":
+                depth += 1
+            elif src[i] == "}":
+                depth -= 1
+            i += 1
+        line_no = src[: m.start()].count("\n") + 1
+        yield line_no, src[start:i]
+
+
+def test_no_unguarded_mutation_click_handlers_in_app_js():
+    """Structural regression guard for the exact silent-failure bug class:
+    any click handler that calls api(...) must wrap it in a try/catch (or
+    at minimum reference `try` somewhere in the block) so a rejected
+    promise always produces visible feedback instead of an unhandled
+    rejection. This is a coarse static check, not a JS test runner, but
+    it directly encodes the bug that shipped and was fixed."""
+    src = _app_js_source()
+    offenders = [
+        line_no for line_no, block in _click_handler_blocks(src)
+        if "api(" in block and "try" not in block
+    ]
+    assert offenders == [], f"click handler(s) call api() without a try/catch at line(s): {offenders}"

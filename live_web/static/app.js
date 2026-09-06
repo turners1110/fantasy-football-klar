@@ -33,10 +33,28 @@ async function api(path, opts) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (res.status === 401) { window.__connectionStatus = "AUTH_REQUIRED"; }
-    throw new Error(data.detail || res.statusText);
+    const err = new Error(data.detail || res.statusText);
+    err.status = res.status;  // preserved so callers can show a specific 401 message, without racing window.__connectionStatus against unrelated background polls
+    throw err;
   }
   window.__connectionStatus = "OK";
   return data;
+}
+
+// Usability fix (real Sunday-week bug): every mutation click handler
+// below now catches and shows the failure via toast() instead of
+// letting a rejected api() promise fail silently -- this is exactly
+// what happened to Sam when LAN mode (--host 0.0.0.0) required an
+// X-Auth-Token he hadn't entered yet: every click just did nothing
+// visible. On a 401 specifically, tell the user exactly what to do
+// (paste the token the server printed at startup into the LAN token
+// field above) rather than a bare "unauthorized."
+function toastError(e, actionLabel) {
+  if (e && e.status === 401) {
+    toast("Authentication required -- paste your LAN token (printed in the server's startup terminal output) into the LAN token field above, then try again.");
+  } else {
+    toast((actionLabel ? actionLabel + " failed: " : "ERROR: ") + (e && e.message ? e.message : e));
+  }
 }
 
 // ---- Header ----
@@ -223,12 +241,16 @@ document.getElementById("refresh-board").addEventListener("click", () => { loadB
 
 // ---- Nominated panel ----
 async function nominate(player) {
-  await api("/nominate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ player }) });
-  showNominated(player);
+  try {
+    await api("/nominate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ player }) });
+    showNominated(player);
+  } catch (e) { toastError(e, "Nominate"); }
 }
 document.getElementById("nom-clear").addEventListener("click", async () => {
-  await api("/nominate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ player: null }) });
-  document.getElementById("nominated-panel").classList.add("hidden");
+  try {
+    await api("/nominate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ player: null }) });
+    document.getElementById("nominated-panel").classList.add("hidden");
+  } catch (e) { toastError(e, "Clear nomination"); }
 });
 
 let nomState = { player: null, check: null, exact: null, leadingTeam: null, verdict: null };
@@ -385,7 +407,7 @@ document.getElementById("modal-submit").addEventListener("click", async () => {
     loadBoard();
     refreshHeader();
   } catch (e) {
-    toast("ERROR: " + e.message);
+    toastError(e, "Sale");
   }
 });
 
@@ -483,9 +505,11 @@ async function loadMarket() {
   document.getElementById("market-summary").innerHTML = html;
 }
 document.getElementById("btn-undo").addEventListener("click", async () => {
-  const r = await api("/undo", { method: "POST" });
-  toast(r.message.split("\n")[0]);
-  loadBoard(); refreshHeader(); loadLog();
+  try {
+    const r = await api("/undo", { method: "POST" });
+    toast(r.message.split("\n")[0]);
+    loadBoard(); refreshHeader(); loadLog();
+  } catch (e) { toastError(e, "Undo"); }
 });
 document.getElementById("btn-correct").addEventListener("click", async () => {
   const player = document.getElementById("correct-player").value.trim();
@@ -495,12 +519,14 @@ document.getElementById("btn-correct").addEventListener("click", async () => {
     const r = await api("/correct", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ player, team, price }) });
     toast(r.message.split("\n")[0]);
     loadBoard(); refreshHeader(); loadLog();
-  } catch (e) { toast("ERROR: " + e.message); }
+  } catch (e) { toastError(e, "Correct"); }
 });
 document.getElementById("btn-save").addEventListener("click", async () => {
   const name = document.getElementById("snapshot-name").value.trim();
-  const r = await api("/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
-  toast(r.message);
+  try {
+    const r = await api("/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
+    toast(r.message);
+  } catch (e) { toastError(e, "Save snapshot"); }
 });
 document.getElementById("btn-load").addEventListener("click", async () => {
   const name = document.getElementById("snapshot-name").value.trim();
@@ -508,7 +534,7 @@ document.getElementById("btn-load").addEventListener("click", async () => {
     const r = await api("/load", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
     toast("Loaded snapshot.");
     loadBoard(); refreshHeader(); loadLog();
-  } catch (e) { toast("ERROR: " + e.message); }
+  } catch (e) { toastError(e, "Load snapshot"); }
 });
 document.getElementById("btn-emergency").addEventListener("click", async () => {
   const text = await fetch(API + "/emergency").then(r => r.text());
@@ -552,7 +578,7 @@ document.getElementById("mode-select").addEventListener("change", async (e) => {
     await refreshModeBanner();
     loadBoard(); refreshHeader(); loadLog();
     document.getElementById("nominated-panel").classList.add("hidden");
-  } catch (e2) { toast("ERROR switching mode: " + e2.message); }
+  } catch (e2) { toastError(e2, "Switch mode"); }
 });
 
 // ---- V3 Part 14: official-team dropdown + operational status ----
@@ -624,43 +650,54 @@ function renderPracticeDraftPending(pending) {
 }
 
 document.getElementById("pd-start").addEventListener("click", async () => {
-  pdSessionId = "practice-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
-  try { localStorage.setItem("sunday_practice_draft_session_id", pdSessionId); } catch (e) {}
+  const newSessionId = "practice-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
   const seed = parseInt(document.getElementById("pd-seed").value) || 909001;
-  const r = await api("/practice-draft/start", { method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id: pdSessionId, seed }) });
-  document.getElementById("pd-status").textContent = "Practice draft started (session " + pdSessionId + ").";
-  renderPracticeDraftPending(r.pending);
+  try {
+    const r = await api("/practice-draft/start", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: newSessionId, seed }) });
+    pdSessionId = newSessionId;
+    try { localStorage.setItem("sunday_practice_draft_session_id", pdSessionId); } catch (e) {}
+    document.getElementById("pd-status").textContent = "Practice draft started (session " + pdSessionId + ").";
+    renderPracticeDraftPending(r.pending);
+  } catch (e) { toastError(e, "Start practice draft"); }
 });
 
 document.getElementById("pd-pass-btn").addEventListener("click", async () => {
-  const r = await api(`/practice-draft/${pdSessionId}/pass`, { method: "POST" });
-  document.getElementById("pd-status").textContent = "Status: " + r.status;
-  renderPracticeDraftPending(r.pending);
+  try {
+    const r = await api(`/practice-draft/${pdSessionId}/pass`, { method: "POST" });
+    document.getElementById("pd-status").textContent = "Status: " + r.status;
+    renderPracticeDraftPending(r.pending);
+  } catch (e) { toastError(e, "Pass"); }
 });
 
 document.getElementById("pd-bid-btn").addEventListener("click", async () => {
   const amount = parseFloat(document.getElementById("pd-bid-amount").value);
   if (isNaN(amount)) { toast("Enter a bid amount."); return; }
-  const r = await api(`/practice-draft/${pdSessionId}/bid`, { method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount }) });
-  document.getElementById("pd-status").textContent = "Status: " + r.status;
-  document.getElementById("pd-bid-amount").value = "";
-  renderPracticeDraftPending(r.pending);
+  try {
+    const r = await api(`/practice-draft/${pdSessionId}/bid`, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount }) });
+    document.getElementById("pd-status").textContent = "Status: " + r.status;
+    document.getElementById("pd-bid-amount").value = "";
+    renderPracticeDraftPending(r.pending);
+  } catch (e) { toastError(e, "Bid"); }
 });
 
 document.getElementById("pd-undo-btn").addEventListener("click", async () => {
-  const r = await api(`/practice-draft/${pdSessionId}/undo`, { method: "POST" });
-  document.getElementById("pd-status").textContent = r.message;
-  renderPracticeDraftPending(r.pending);
+  try {
+    const r = await api(`/practice-draft/${pdSessionId}/undo`, { method: "POST" });
+    document.getElementById("pd-status").textContent = r.message;
+    renderPracticeDraftPending(r.pending);
+  } catch (e) { toastError(e, "Undo"); }
 });
 
 document.getElementById("pd-review-btn").addEventListener("click", async () => {
   if (!pdSessionId) { toast("Start a practice draft first."); return; }
-  const r = await api(`/practice-draft/${pdSessionId}/review`);
-  const out = document.getElementById("pd-review-output");
-  out.textContent = JSON.stringify(r, null, 2);
-  out.classList.remove("hidden");
+  try {
+    const r = await api(`/practice-draft/${pdSessionId}/review`);
+    const out = document.getElementById("pd-review-output");
+    out.textContent = JSON.stringify(r, null, 2);
+    out.classList.remove("hidden");
+  } catch (e) { toastError(e, "Review"); }
 });
 
 // ---- init ----
