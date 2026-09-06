@@ -96,7 +96,7 @@ document.getElementById("global-search").addEventListener("input", (e) => {
       data.results.slice(0, 15).forEach(r => {
         const div = document.createElement("div");
         div.className = "search-row";
-        const statusTxt = r.status === "AVAILABLE" ? "" : ` [${r.status}${r.owner ? " -- " + r.owner : ""}]`;
+        const statusTxt = r.status === "AVAILABLE" ? "" : ` [${r.status}${r.owner ? " -- " + teamLabel(r.owner) : ""}]`;
         div.textContent = `${r.player} (${r.position})${statusTxt}`;
         if (r.status === "AVAILABLE") {
           div.addEventListener("click", () => { nominate(r.player); resultsDiv.classList.add("hidden"); document.getElementById("global-search").value = ""; });
@@ -118,7 +118,7 @@ async function loadLeague() {
     const needs = Object.entries(t.position_needs).filter(([k, v]) => v > 0).map(([k, v]) => `${k}:${v}`).join(",") || "none";
     const tr = document.createElement("tr");
     if (t.is_sam) tr.style.fontWeight = "bold";
-    tr.innerHTML = `<td>${t.team}${t.is_sam ? " (Sam)" : ""}</td><td>$${t.budget_remaining.toFixed(0)}</td>
+    tr.innerHTML = `<td>${teamLabel(t.team)}</td><td>$${t.budget_remaining.toFixed(0)}</td>
       <td>${t.open_slots}</td><td>$${t.min_reserve.toFixed(0)}</td><td>$${t.legal_max_bid.toFixed(0)}</td>
       <td>${t.position_counts.QB || 0}</td><td>${t.position_counts.RB || 0}</td>
       <td>${t.position_counts.WR || 0}</td><td>${t.position_counts.TE || 0}</td><td>${needs}</td>
@@ -144,7 +144,7 @@ async function loadTeamDetail(teamId) {
   const b = t.protected_breakdown || {};
   const unnamedNote = b.unnamed_protected_count > 0
     ? ` <b style="color:#a05a00">(${b.unnamed_protected_count} protected slot identity unknown -- see warning banner)</b>` : "";
-  div.innerHTML = `<h4>${teamId}</h4>Budget: $${t.budget_remaining.toFixed(2)} | Open slots: ${t.open_slots} | Legal max: $${t.legal_max_bid.toFixed(2)}<br>
+  div.innerHTML = `<h4>${teamLabel(teamId)}</h4>Budget: $${t.budget_remaining.toFixed(2)} | Open slots: ${t.open_slots} | Legal max: $${t.legal_max_bid.toFixed(2)}<br>
     <b>Protected breakdown:</b> veteran roster ${b.veteran_roster_count} + college-rights ${b.college_rights_count} + unnamed protected ${b.unnamed_protected_count} = ${b.total_occupied_count} occupied, ${b.open_auction_slots} open auction slots${unnamedNote}<br>
     <b>Roster (${t.roster_count}):</b><br>${rosterRows}<br><b>Auction purchases:</b> ${saleRows}${rightsNote}`;
 }
@@ -160,7 +160,7 @@ async function loadAllRosters() {
     const rightsNote = t.college_rights_holdings.length
       ? `<br><i>College-rights protected players occupy roster capacity but remain outside the veteran auction pool and do not consume veteran auction cash: ${t.college_rights_holdings.join(", ")}</i>` : "";
     return `<div class="team-roster-block">
-      <h4>${t.team} (${t.roster_count} players, $${t.budget_remaining.toFixed(0)} left)</h4>
+      <h4>${teamLabel(t.team)} — ${t.roster_count} players, $${t.budget_remaining.toFixed(0)} left</h4>
       ${rosterRows}${rightsNote}
     </div>`;
   }).join("");
@@ -637,7 +637,7 @@ async function loadLog() {
   tbody.innerHTML = "";
   data.events.forEach(e => {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${e.sequence}</td><td>${e.player}</td><td>${e.position}</td><td>${e.team}</td><td>$${e.price.toFixed(0)}</td>`;
+    tr.innerHTML = `<td>${e.sequence}</td><td>${e.player}</td><td>${e.position}</td><td>${teamLabel(e.team)}</td><td>$${e.price.toFixed(0)}</td>`;
     tbody.appendChild(tr);
   });
 }
@@ -724,16 +724,24 @@ document.getElementById("mode-select").addEventListener("change", async (e) => {
   } catch (e2) { toastError(e2, "Switch mode"); }
 });
 
+// ---- Team labels: "Yahoo team name (owner)" everywhere a team is shown ----
+let teamLabels = {};
+function teamLabel(teamId) {
+  if (!teamId) return teamId;
+  return teamLabels[teamId] || teamId;
+}
+
 // ---- V3 Part 14: official-team dropdown + operational status ----
 async function populateTeamDropdowns() {
   try {
     const data = await api("/teams");
+    teamLabels = data.labels || {};
     ["modal-team", "correct-team"].forEach(id => {
       const sel = document.getElementById(id);
       if (!sel) return;
       data.teams.forEach(t => {
         const o = document.createElement("option");
-        o.value = t; o.textContent = t;
+        o.value = t; o.textContent = teamLabel(t);
         sel.appendChild(o);
       });
     });
@@ -923,8 +931,11 @@ document.getElementById("pd-autosim-stop-btn").addEventListener("click", () => {
 });
 
 // ---- init ----
-refreshHeader();
-refreshModeBanner();
-populateTeamDropdowns();
-refreshOperationalStatus();
-loadBoard();
+// Team labels first so the board's "sold to" column and log render with
+// the Yahoo names on the very first paint, not only after a refresh.
+populateTeamDropdowns().then(() => {
+  refreshHeader();
+  refreshModeBanner();
+  refreshOperationalStatus();
+  loadBoard();
+});

@@ -56,6 +56,32 @@ COLLEGE_RIGHTS_INFO = {
     "Isaiah Bond": {"position": "WR", "conversion_fee": 1},
 }
 
+# Yahoo league team names -> internal owner ids (the event log, keeper
+# files and every API keep using the owner first names; this is display
+# only). Confirmed by Sam from the Yahoo standings page on draft day,
+# 2026-09-06.
+YAHOO_TEAM_NAMES = {
+    "Brad": "Bidding with One Second Left",
+    "Brandon": "Commissioner Crosshairs",
+    "CJ": "Justice for Paul",
+    "Coby": "Boobie Feaster",
+    "Evan": "The St. Louis Rams",
+    "James": "JDs Hogg",
+    "Jason": "Papa",
+    "Reid": "Taste My Pig Skin",
+    "Ryan J": "Mama",
+    "Sam": "Woody Johnson's D...efence",
+    "Shane": "Buncha Blockheads",
+    "Travis": "Bishop Sycamore",
+}
+
+
+def team_display_label(team_id: str) -> str:
+    """'Boobie Feaster (Coby)' when the Yahoo name is known, else the id."""
+    yahoo = YAHOO_TEAM_NAMES.get(team_id)
+    return f"{yahoo} ({team_id})" if yahoo else team_id
+
+
 PROTECTED_PLAYER_OVERRIDES_PATH = BASE_DIR / "data" / "protected_player_overrides.csv"
 
 
@@ -1916,7 +1942,8 @@ class AuctionCLI:
             purchases = [p for p in t.roster if not p.get("is_keeper")]
             latest = purchases[-1] if purchases else None
             row = {
-                "team": team_id, "budget_remaining": t.budget_remaining, "open_slots": t.open_slots,
+                "team": team_id, "yahoo_name": YAHOO_TEAM_NAMES.get(team_id),
+                "budget_remaining": t.budget_remaining, "open_slots": t.open_slots,
                 "min_reserve": t.min_reserve, "legal_max_bid": t.legal_max_bid,
                 "position_counts": t.position_counts, "position_needs": needs,
                 "flex_capacity": needs.get("FLEX", 0),
@@ -1984,7 +2011,8 @@ class AuctionCLI:
             "open_auction_slots": t.open_slots,
         }
         return {
-            "team": team_id, "budget_remaining": t.budget_remaining, "open_slots": t.open_slots,
+            "team": team_id, "yahoo_name": YAHOO_TEAM_NAMES.get(team_id),
+            "budget_remaining": t.budget_remaining, "open_slots": t.open_slots,
             "legal_max_bid": t.legal_max_bid, "position_counts": t.position_counts,
             "position_needs": t.legal_starting_needs(),
             "roster": self._roster_with_roles(t.roster),

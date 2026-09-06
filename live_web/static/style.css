@@ -101,3 +101,6 @@ h3, h4 { margin-top: 18px; }
 #board-position-table { font-size: 12px; }
 #board-position-table th, #board-position-table td { padding: 2px 8px; }
 tr.college-rights-row { color: #666; font-style: italic; }
+
+/* Yahoo league team name shown under/beside the internal owner id */
+.yahoo-name { font-size: 0.85em; opacity: 0.7; font-style: italic; }

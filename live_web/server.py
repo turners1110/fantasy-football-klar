@@ -184,7 +184,13 @@ def get_operational_status():
 def get_teams():
     """V3 Part 14: the 12 official commissioner team names, for a
     validated dropdown/autocomplete -- replaces free-text team entry."""
-    return {"teams": sorted(_active().store.state.teams.keys())}
+    from live_auction_cli import YAHOO_TEAM_NAMES, team_display_label
+    ids = sorted(_active().store.state.teams.keys())
+    return {
+        "teams": ids,
+        "labels": {t: team_display_label(t) for t in ids},
+        "yahoo_names": {t: YAHOO_TEAM_NAMES.get(t) for t in ids},
+    }
 
 
 @app.get("/api/board")
