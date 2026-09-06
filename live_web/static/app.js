@@ -828,6 +828,68 @@ document.getElementById("pd-review-btn").addEventListener("click", async () => {
   } catch (e) { toastError(e, "Review"); }
 });
 
+// ---- Auto-Simulate: on every nomination, bid $1 above the current AI
+// price whenever Sam's own recommended stop is still above that price,
+// otherwise pass -- exactly the simple rule Sam asked for. This is a
+// dumb, transparent loop over the SAME real bid/pass endpoints a human
+// clicking through the UI would use -- no separate simulation logic,
+// no shortcut through the event engine. Runs until the draft completes,
+// the user clicks Stop, or an unexpected error occurs.
+let pdAutoSimRunning = false;
+
+function pdSleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+async function pdAutoSimStep() {
+  const pendingPanel = document.getElementById("pd-nomination");
+  if (pendingPanel.classList.contains("hidden")) return { done: true, reason: "no active nomination" };
+  const aiPrice = parseFloat(document.getElementById("pd-ai-price").textContent);
+  const stop = parseFloat(document.getElementById("pd-stop").textContent);
+  const player = document.getElementById("pd-player").textContent;
+  try {
+    let r;
+    if (!isNaN(stop) && !isNaN(aiPrice) && stop > aiPrice) {
+      const bidAmount = aiPrice + 1;
+      r = await api(`/practice-draft/${pdSessionId}/bid`, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: bidAmount }) });
+      document.getElementById("pd-autosim-status").textContent = `Bid $${bidAmount} on ${player} (stop $${stop} > AI $${aiPrice}). Status: ${r.status}`;
+    } else {
+      r = await api(`/practice-draft/${pdSessionId}/pass`, { method: "POST" });
+      document.getElementById("pd-autosim-status").textContent = `Passed on ${player} (stop $${isNaN(stop) ? "?" : stop} <= AI $${isNaN(aiPrice) ? "?" : aiPrice}). Status: ${r.status}`;
+    }
+    document.getElementById("pd-status").textContent = "Status: " + r.status;
+    renderPracticeDraftPending(r.pending);
+    return { done: r.status === "COMPLETE" || !r.pending, reason: r.status };
+  } catch (e) {
+    document.getElementById("pd-autosim-status").textContent = "Auto-Simulate stopped on error: " + (e && e.message ? e.message : e);
+    return { done: true, reason: "error" };
+  }
+}
+
+document.getElementById("pd-autosim-btn").addEventListener("click", async () => {
+  if (!pdSessionId) { toast("Start a practice draft first."); return; }
+  if (pdAutoSimRunning) return;
+  pdAutoSimRunning = true;
+  document.getElementById("pd-autosim-btn").classList.add("hidden");
+  document.getElementById("pd-autosim-stop-btn").classList.remove("hidden");
+  const speedMs = parseInt(document.getElementById("pd-autosim-speed").value) || 0;
+  while (pdAutoSimRunning) {
+    const result = await pdAutoSimStep();
+    if (result.done) {
+      document.getElementById("pd-autosim-status").textContent += ` -- Auto-Simulate finished (${result.reason}).`;
+      break;
+    }
+    if (speedMs > 0) await pdSleep(speedMs);
+  }
+  pdAutoSimRunning = false;
+  document.getElementById("pd-autosim-btn").classList.remove("hidden");
+  document.getElementById("pd-autosim-stop-btn").classList.add("hidden");
+});
+
+document.getElementById("pd-autosim-stop-btn").addEventListener("click", () => {
+  pdAutoSimRunning = false;
+  document.getElementById("pd-autosim-status").textContent += " -- Stopped by user.";
+});
+
 // ---- init ----
 refreshHeader();
 refreshModeBanner();

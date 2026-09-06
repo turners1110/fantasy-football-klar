@@ -69,6 +69,16 @@
     <button id="pd-pass-btn">Pass</button>
     <button id="pd-undo-btn">Undo Last Sale</button>
   </div>
+  <div class="autosim-controls" style="margin-top:10px; padding:8px; border:1px dashed #999;">
+    <button id="pd-autosim-btn">Auto-Simulate: bid $1 above AI price while it's below my stop</button>
+    <button id="pd-autosim-stop-btn" class="hidden">Stop Auto-Simulate</button>
+    <label style="margin-left:12px;">Speed: <select id="pd-autosim-speed">
+      <option value="600">Watchable (slow)</option>
+      <option value="200" selected>Normal</option>
+      <option value="0">Fastest</option>
+    </select></label>
+    <div id="pd-autosim-status" style="font-size:12px; color:#555;"></div>
+  </div>
   <div id="pd-status"></div>
   <pre id="pd-review-output" class="hidden"></pre>
 </div>
