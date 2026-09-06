@@ -167,6 +167,12 @@ def get_draft_score():
     return _active().api_draft_score()
 
 
+@app.get("/api/coach")
+def get_coach():
+    """Stage-of-draft coaching (headline + up to two focus points); read-only."""
+    return _active().api_coach()
+
+
 @app.get("/api/operational-status")
 def get_operational_status():
     """V3 Part 14: operational status area -- mode, sequence, active log

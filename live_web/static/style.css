@@ -104,3 +104,18 @@ tr.college-rights-row { color: #666; font-style: italic; }
 
 /* Yahoo league team name shown under/beside the internal owner id */
 .yahoo-name { font-size: 0.85em; opacity: 0.7; font-style: italic; }
+
+/* Coach banner: stage-of-draft plan, sits under the header on every tab */
+.coach-banner {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: #fff8e6; border-left: 5px solid #d9791f; padding: 8px 14px; margin: 0 0 6px 0;
+  font-size: 14px; line-height: 1.35;
+}
+.coach-label { font-weight: 700; color: #d9791f; letter-spacing: 0.06em; white-space: nowrap; padding-top: 2px; }
+.coach-phase { display: block; font-weight: 500; letter-spacing: 0; color: #6b4b12; font-size: 12px; white-space: normal; max-width: 180px; }
+.coach-body { flex: 1; min-width: 0; }
+.coach-headline { font-weight: 600; color: #2a2a2a; }
+.coach-points { margin: 4px 0 0 0; padding-left: 18px; color: #333; }
+.coach-points li { margin: 2px 0; }
+.coach-points li.coach-warn { color: #b00020; font-weight: 600; }
+@media (max-width: 700px) { .coach-banner { flex-direction: column; gap: 4px; } .coach-phase { max-width: none; display: inline; margin-left: 6px; } }

@@ -1633,6 +1633,29 @@ class AuctionCLI:
             "budget_deployment_monitor": self._budget_deployment_monitor(sam),
         }
 
+    def api_coach(self) -> dict:
+        """Stage-of-draft coaching: a headline plus at most two focus points,
+        built purely from api_status/api_board data (read-only; never touches
+        stops). See auction_engine/coach.py."""
+        from auction_engine.coach import coach_message
+        sam = self._sam()
+        monitor = self._budget_deployment_monitor(sam)
+        best_remaining: dict = {}
+        for row in self.api_board():
+            pos = row["position"]
+            if row["recommended_stop"] > best_remaining.get(pos, {}).get("recommended_stop", -1):
+                best_remaining[pos] = {"player": row["player"], "recommended_stop": row["recommended_stop"]}
+        return coach_message(
+            sales_so_far=len(self.store.state.sold_players),
+            open_slots=sam.open_slots,
+            budget_remaining=sam.budget_remaining,
+            position_counts=sam.position_counts,
+            position_needs=sam.legal_starting_needs(),
+            monitor_status=monitor["budget_deployment_status"],
+            projected_unused=monitor["projected_unused_cash_from_best_current_roster_path_dollars"],
+            best_remaining=best_remaining,
+        )
+
     def api_draft_score(self) -> dict:
         """A live, comparative 0-100 draft score: Sam's current best legal
         starting lineup (via the same greedy_best_lineup used for Sam's

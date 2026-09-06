@@ -63,7 +63,26 @@ async function refreshHeader() {
   document.getElementById("hdr-budget").textContent = "$" + s.budget_remaining.toFixed(2);
   document.getElementById("hdr-slots").textContent = s.open_slots;
   document.getElementById("hdr-maxbid").textContent = "$" + s.legal_max_bid.toFixed(2);
+  refreshCoach();
   return s;
+}
+
+// ---- Coach banner: stage-of-draft plan, refreshed with the header after every sale/undo ----
+async function refreshCoach() {
+  try {
+    const c = await api("/coach");
+    document.getElementById("coach-phase").textContent =
+      `${c.phase} -- ${c.sales_so_far} sold, ${c.open_slots} slot(s) / $${Math.round(c.budget_remaining)} left`;
+    document.getElementById("coach-headline").textContent = c.headline;
+    const ul = document.getElementById("coach-points");
+    ul.innerHTML = "";
+    (c.points || []).forEach(p => {
+      const li = document.createElement("li");
+      li.textContent = p;
+      if (/STRANDING|underspend/i.test(p)) li.classList.add("coach-warn");
+      ul.appendChild(li);
+    });
+  } catch (e) { /* advisory only -- never block the tool on it */ }
 }
 
 // ---- Tabs ----
