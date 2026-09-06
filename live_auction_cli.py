@@ -249,6 +249,72 @@ class AuctionCLI:
         except Exception:
             return {}
 
+    def _compute_sequential_remaining_roster_value(self) -> dict:
+        """V3.2.1 REPAIR: a genuine sequential, roster-aware estimate of
+        how many total marginal points Sam can realistically capture
+        with his remaining open slots -- replacing the independent
+        top-N sum, which double-counted overlapping value (several
+        remaining players competing for the SAME WR/RB/TE/FLEX/bench
+        role each contributed their full independent marginal value to
+        the sum, even though Sam can only actually add one of them to
+        that role).
+
+        Algorithm (greedy, one slot at a time): start from Sam's real
+        current roster; for each open slot, score every still-available
+        player's marginal value against the CURRENT hypothetical
+        roster (not the original one), pick the single best positive
+        one, lock it into the hypothetical roster, remove it from the
+        hypothetical pool, and repeat. Recomputing after each pick is
+        what correctly reflects overlap -- once the best WR is locked
+        in, the next-best WR's marginal value legitimately drops (or
+        a different position may now be more valuable), exactly
+        mirroring how a real complete-roster decision actually plays
+        out.
+
+        Returns a dict: total_sequential_points, selections (ordered
+        list of {player, position, marginal_value_at_selection}),
+        filled_all_slots (bool), fallback_reason (str or None -- set
+        whenever the sequential estimate could not be computed and the
+        caller must fall back to the independent top-N sum instead)."""
+        sam = self._sam()
+        open_slots = sam.open_slots
+        if open_slots <= 0:
+            return {"total_sequential_points": 0.0, "selections": [], "filled_all_slots": True, "fallback_reason": None}
+        try:
+            hypothetical_roster = [dict(p) for p in sam.roster]
+            remaining_pool = dict(self.store.state.available_pool)
+            selections: list[dict] = []
+            total_points = 0.0
+            for _ in range(open_slots):
+                if not remaining_pool:
+                    break
+                rows = compute_live_sam_values(hypothetical_roster, remaining_pool)
+                positive_rows = [r for r in rows if r.marginal_value and r.marginal_value > 0]
+                if not positive_rows:
+                    break
+                best = max(positive_rows, key=lambda r: r.marginal_value)
+                info = remaining_pool[best.player]
+                selections.append({
+                    "player": best.player, "position": info["position"],
+                    "marginal_value_at_selection": best.marginal_value,
+                })
+                total_points += best.marginal_value
+                hypothetical_roster.append({
+                    "player_id": best.player, "position": info["position"],
+                    "projected_points": info.get("projected_points", 0.0),
+                })
+                del remaining_pool[best.player]
+            return {
+                "total_sequential_points": total_points, "selections": selections,
+                "filled_all_slots": len(selections) == open_slots, "fallback_reason": None,
+            }
+        except Exception as e:
+            self._log_error("sequential_remaining_roster_value", e)
+            return {
+                "total_sequential_points": 0.0, "selections": [], "filled_all_slots": False,
+                "fallback_reason": f"EXCEPTION: {e}",
+            }
+
     def _current_state_points_to_dollars_rate(self) -> float:
         """V3.2 REPAIR (real root cause of the underspend / marginal-
         value-cliff bug): the ONE shared fallback conversion from
@@ -288,25 +354,57 @@ class AuctionCLI:
         left to get" -- never a fixed universal scalar, and never a
         single player's own idiosyncratic market price.
 
-        Cached per (sequence_number, open_slots) so a caller that
-        scores many candidates in one board/targets pass (api_board,
-        _scored_targets) does not repeat this pool-wide computation
-        once per candidate -- the underlying inputs (Sam's roster and
-        the remaining pool) only change when the auction state
-        actually changes."""
+        V3.2.1 REPAIR: the denominator used to be an INDEPENDENT top-N
+        sum of marginal values (best_achievable_points = sum of the
+        top `open_slots` marginal values across the whole remaining
+        pool). That double-counts overlapping value: several remaining
+        players competing for the exact same WR/RB/TE/FLEX/bench role
+        each contributed their full independent marginal value to the
+        sum, even though Sam can only ever add ONE of them to that
+        role -- overstating achievable points, which understated
+        dollars-per-point, which kept recommended stops too
+        conservative even after the V3.2 fix (spend rose to only
+        45-56% of budget across 5 seeds, not the ~80%+ a genuinely
+        achievable-points estimate should support). Replaced with
+        _compute_sequential_remaining_roster_value()'s greedy,
+        recompute-after-each-pick estimate, which correctly reflects
+        that overlap. Falls back to the OLD independent top-N sum
+        (labeled FALLBACK_INDEPENDENT_MARGINAL_SUM via
+        self._last_rate_calc_label, never silently presented as the
+        sequential result) only if the sequential computation raises
+        or fills zero slots.
+
+        Cached per (sequence_number, open_slots, budget_remaining) so a
+        caller that scores many candidates in one board/targets pass
+        (api_board, _scored_targets) does not repeat this pool-wide
+        computation once per candidate -- the underlying inputs (Sam's
+        roster and the remaining pool) only change when the auction
+        state actually changes, and every mutation (sale/undo/
+        correction/load) advances sequence_number, invalidating the
+        cache automatically."""
         sam = self._sam()
         cache_key = (self.store.state.sequence_number, sam.open_slots, sam.budget_remaining)
         cache = getattr(self, "_current_state_rate_cache", None)
         if cache is not None and cache[0] == cache_key:
             return cache[1]
-        pool = self.store.state.available_pool
-        try:
-            rows = compute_live_sam_values(sam.roster, pool) if pool else []
-            marginal_values = sorted((r.marginal_value for r in rows if r.marginal_value and r.marginal_value > 0), reverse=True)
-        except Exception:
-            marginal_values = []
-        n = max(1, sam.open_slots)
-        best_achievable_points = sum(marginal_values[:n])
+        seq = self._compute_sequential_remaining_roster_value()
+        if seq["fallback_reason"] is None and seq["total_sequential_points"] > 0:
+            best_achievable_points = seq["total_sequential_points"]
+            self._last_rate_calc_label = "SEQUENTIAL_ROSTER_COMPLETION"
+        else:
+            # SAFE FALLBACK: the old independent top-N sum. Never
+            # silently treated as the sequential result.
+            pool = self.store.state.available_pool
+            try:
+                rows = compute_live_sam_values(sam.roster, pool) if pool else []
+                marginal_values = sorted((r.marginal_value for r in rows if r.marginal_value and r.marginal_value > 0), reverse=True)
+            except Exception:
+                marginal_values = []
+            n = max(1, sam.open_slots)
+            best_achievable_points = sum(marginal_values[:n])
+            self._last_rate_calc_label = "FALLBACK_INDEPENDENT_MARGINAL_SUM"
+            if seq["fallback_reason"] is not None:
+                self._log_error("sequential_remaining_roster_value_fallback", Exception(seq["fallback_reason"]))
         reserve_for_other_slots = max(0, sam.open_slots - 1) * 1.0
         spendable = max(0.0, sam.budget_remaining - reserve_for_other_slots)
         # Same documented conservative floor as the old formula's last
@@ -315,6 +413,66 @@ class AuctionCLI:
         rate = spendable / best_achievable_points if best_achievable_points > 0 else 0.20
         self._current_state_rate_cache = (cache_key, rate)
         return rate
+
+    def _budget_deployment_monitor(self, sam=None) -> dict:
+        """V3.2.1 REPAIR: a human-visible safety net, independent of how
+        well the valuation algorithm itself performs -- Sam (or any
+        viewer) can see directly whether the auction is on pace to
+        actually deploy the budget, regardless of what the underlying
+        recommended-stop math is doing. This is a WARNING indicator
+        only: it never raises any player above a valid exact ceiling,
+        static hard maximum, or legal maximum bid -- it purely informs.
+
+        target_terminal_cash_dollars: the $ Sam should reasonably expect
+        to end the auction with (a small buffer, not $0 -- matches the
+        platform's own $1-per-empty-slot reserve convention elsewhere).
+
+        required_average_spend_per_remaining_slot_dollars: how much Sam
+        would need to average per remaining slot to land at the target
+        terminal cash.
+
+        projected_unused_cash_from_best_current_roster_path_dollars:
+        reuses the SAME sequential roster-completion estimate that now
+        drives the recommended-stop conversion (one shared computation,
+        not a second parallel one) -- budget remaining minus what the
+        best realistically achievable finish would actually cost at the
+        current dollars-per-point rate.
+
+        Status labels (first matching rule wins, worst-case first):
+          FINAL_SLOTS_CASH_STRANDED -- 2 or fewer open slots AND
+            projected unused cash > $15 (money about to become
+            permanently unspendable).
+          SERIOUS_UNDERSPEND_RISK -- projected unused cash > $40.
+          WATCH_SPEND -- projected unused cash > $20.
+          ON_PACE -- otherwise."""
+        sam = sam or self._sam()
+        target_terminal_cash = 5.0
+        open_slots = sam.open_slots
+        required_avg = max(1.0, (sam.budget_remaining - target_terminal_cash) / open_slots) if open_slots > 0 else 0.0
+        seq = self._compute_sequential_remaining_roster_value()
+        rate = self._current_state_points_to_dollars_rate()
+        # What the best achievable finish would cost at this rate --
+        # bounded by budget_remaining, since Sam can never spend more
+        # than he has regardless of how the estimate prices it.
+        projected_spend = min(sam.budget_remaining, seq["total_sequential_points"] * rate) if seq["total_sequential_points"] > 0 else 0.0
+        projected_unused = max(0.0, sam.budget_remaining - projected_spend) if open_slots > 0 else max(0.0, sam.budget_remaining)
+        if open_slots <= 2 and projected_unused > 15:
+            status = "FINAL_SLOTS_CASH_STRANDED"
+        elif projected_unused > 40:
+            status = "SERIOUS_UNDERSPEND_RISK"
+        elif projected_unused > 20:
+            status = "WATCH_SPEND"
+        else:
+            status = "ON_PACE"
+        return {
+            "budget_remaining_dollars": round(sam.budget_remaining, 2),
+            "open_slots": open_slots,
+            "legal_max_bid_dollars": round(sam.legal_max_bid, 2),
+            "target_terminal_cash_dollars": target_terminal_cash,
+            "required_average_spend_per_remaining_slot_dollars": round(required_avg, 2),
+            "projected_unused_cash_from_best_current_roster_path_dollars": round(projected_unused, 2),
+            "budget_deployment_status": status,
+        }
 
     def _governed_ceiling(self, player: str, position: str, marginal_value_points: float, expected_role: str,
                           live_price: float, exact_ceiling: float | None = None, exact_status: str | None = None,
@@ -454,9 +612,13 @@ class AuctionCLI:
         sam = self._sam()
         needs = sam.legal_starting_needs()
         counts = sam.position_counts
+        monitor = self._budget_deployment_monitor(sam)
         lines = [
             f"Sam -- budget remaining: ${sam.budget_remaining:.2f}",
             f"Open roster slots: {sam.open_slots}  |  Min reserve: ${sam.min_reserve:.2f}  |  Legal max bid: ${sam.legal_max_bid:.2f}",
+            f"Budget deployment: {monitor['budget_deployment_status']}  |  "
+            f"Projected unused cash (best current path): ${monitor['projected_unused_cash_from_best_current_roster_path_dollars']:.2f}  |  "
+            f"Required avg spend/remaining slot: ${monitor['required_average_spend_per_remaining_slot_dollars']:.2f}",
             f"Position needs (starters still open): {needs}",
             f"Current roster counts: {counts}",
             "Roster:",
@@ -1442,6 +1604,7 @@ class AuctionCLI:
                 for name in sorted(COLLEGE_RIGHTS)
             ],
             "sequence_number": self.store.state.sequence_number,
+            "budget_deployment_monitor": self._budget_deployment_monitor(sam),
         }
 
     def api_draft_score(self) -> dict:
@@ -1704,6 +1867,7 @@ class AuctionCLI:
             "reason": reason,
             "critical_review_required": check["critical_review_required"],
             "critical_reasons": check["critical_reasons"],
+            "budget_deployment_monitor": self._budget_deployment_monitor(sam),
         }
 
     def api_paths(self) -> dict:

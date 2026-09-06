@@ -409,4 +409,9 @@ class PracticeDraftSession:
             ],
             "positional_marginal_value_evolution": self.marginal_value_history,
             "total_league_sales": len(self.cli.store.state.sold_players),
+            # V3.2.1: final budget-deployment status for this completed
+            # draft -- a human-visible check on whether the auction
+            # actually deployed Sam's budget, independent of the "113/113
+            # sales completed" mechanics-only success signal above.
+            "budget_deployment_monitor": self.cli._budget_deployment_monitor(sam),
         }
