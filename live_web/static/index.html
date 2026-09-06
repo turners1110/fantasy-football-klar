@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>SUNDAY LIVE AUCTION TOOL</title>
 <link rel="stylesheet" href="/style.css">
 </head>
@@ -24,7 +25,17 @@
         <option value="sam_rb_overload">Practice: Sam RB-overload</option>
       </select>
     </span>
+    <input id="lan-token-input" placeholder="LAN token (only if using --lan)" size="18">
   </div>
+</div>
+<div id="operational-status">
+  Mode: <b id="opstat-mode">--</b> |
+  Sequence: <b id="opstat-seq">--</b> |
+  Log: <b id="opstat-log">--</b> |
+  Last event: <b id="opstat-last-event">--</b> |
+  Connection: <b id="opstat-connection">--</b> |
+  Exact freshness: <b id="opstat-exact">--</b> |
+  Sim-prior freshness: <b id="opstat-sim">--</b>
 </div>
 <div id="global-search-results" class="search-results hidden"></div>
 
@@ -139,7 +150,7 @@
 
   <h4>Correct a Sale</h4>
   <input id="correct-player" placeholder="player">
-  <input id="correct-team" placeholder="corrected team">
+  <select id="correct-team"><option value="">-- select official team --</option></select>
   <input id="correct-price" type="number" placeholder="corrected price">
   <button id="btn-correct">Correct</button>
 
@@ -160,7 +171,7 @@
 <div id="sale-modal" class="modal hidden">
   <div class="modal-box">
     <h3>Mark Sold: <span id="modal-player"></span></h3>
-    <label>Winning team: <input id="modal-team"></label>
+    <label>Winning team: <select id="modal-team"><option value="">-- select official team --</option></select></label>
     <label>Sale price: <input id="modal-price" type="number"></label>
     <div id="modal-confirm-msg" class="confirm-msg hidden"></div>
     <button id="modal-submit">Record Sale</button>

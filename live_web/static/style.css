@@ -68,5 +68,14 @@ h3, h4 { margin-top: 18px; }
 }
 .mode-controls select { margin-left: 12px; padding: 4px 8px; font-weight: bold; }
 .board-name-filter { min-width: 260px; padding: 5px 8px; font-size: 1em; }
+#operational-status {
+  font-size: 0.8em; padding: 4px 10px; background: #f0f0f0; border-bottom: 1px solid #ccc;
+  color: #444; overflow-x: auto; white-space: nowrap;
+}
+@media (max-width: 480px) {
+  #operational-status { white-space: normal; }
+  .hdr-stats { flex-wrap: wrap; }
+  #board-table, #targets-table, #league-table { display: block; overflow-x: auto; }
+}
 .team-roster-block { border: 1px solid #ccc; border-radius: 6px; padding: 10px 14px; margin: 10px 0; background: white; }
 .team-roster-block h4 { margin-top: 0; }

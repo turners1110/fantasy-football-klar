@@ -18,12 +18,24 @@ function recClass(rec) {
   return "rec-yellow";
 }
 
+// V3 Part 14: LAN mutation token, entered once by the user (printed to
+// the terminal by run_live_web.py --host 0.0.0.0), stored only in this
+// tab's memory -- never required for the default 127.0.0.1-only launch.
+let lanAuthToken = null;
+try { lanAuthToken = localStorage.getItem("sunday_lan_auth_token"); } catch (e) {}
+
 async function api(path, opts) {
+  opts = opts || {};
+  if (opts.method && opts.method !== "GET" && lanAuthToken) {
+    opts.headers = Object.assign({}, opts.headers, { "X-Auth-Token": lanAuthToken });
+  }
   const res = await fetch(API + path, opts);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    if (res.status === 401) { window.__connectionStatus = "AUTH_REQUIRED"; }
     throw new Error(data.detail || res.statusText);
   }
+  window.__connectionStatus = "OK";
   return data;
 }
 
@@ -539,7 +551,53 @@ document.getElementById("mode-select").addEventListener("change", async (e) => {
   } catch (e2) { toast("ERROR switching mode: " + e2.message); }
 });
 
+// ---- V3 Part 14: official-team dropdown + operational status ----
+async function populateTeamDropdowns() {
+  try {
+    const data = await api("/teams");
+    ["modal-team", "correct-team"].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      data.teams.forEach(t => {
+        const o = document.createElement("option");
+        o.value = t; o.textContent = t;
+        sel.appendChild(o);
+      });
+    });
+  } catch (e) { /* non-fatal -- selects just stay with the placeholder option */ }
+}
+
+document.getElementById("lan-token-input").addEventListener("change", (e) => {
+  lanAuthToken = e.target.value.trim() || null;
+  try {
+    if (lanAuthToken) localStorage.setItem("sunday_lan_auth_token", lanAuthToken);
+    else localStorage.removeItem("sunday_lan_auth_token");
+  } catch (err) {}
+  toast(lanAuthToken ? "LAN token set for this browser." : "LAN token cleared.");
+});
+if (lanAuthToken) document.getElementById("lan-token-input").value = lanAuthToken;
+
+async function refreshOperationalStatus() {
+  try {
+    const s = await api("/operational-status");
+    document.getElementById("opstat-mode").textContent = s.mode;
+    document.getElementById("opstat-seq").textContent = s.sequence_number;
+    document.getElementById("opstat-log").textContent = s.active_log_path ? s.active_log_path.split("/").slice(-1)[0] : "none";
+    document.getElementById("opstat-last-event").textContent = s.last_persisted_event ?
+      `${s.last_persisted_event.event_type} (#${s.last_persisted_event.sequence_number})` : "none yet";
+    document.getElementById("opstat-connection").textContent = "OK";
+    document.getElementById("opstat-exact").textContent = s.exact_freshness;
+    document.getElementById("opstat-sim").textContent = s.market_prior_freshness;
+  } catch (e) {
+    const el = document.getElementById("opstat-connection");
+    if (el) el.textContent = window.__connectionStatus === "AUTH_REQUIRED" ? "AUTH_REQUIRED (enter LAN token)" : "DISCONNECTED";
+  }
+}
+setInterval(refreshOperationalStatus, 5000);
+
 // ---- init ----
 refreshHeader();
 refreshModeBanner();
+populateTeamDropdowns();
+refreshOperationalStatus();
 loadBoard();

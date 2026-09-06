@@ -26,7 +26,9 @@ from pathlib import Path
 BASE_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
-from fastapi import FastAPI, HTTPException
+import os
+
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -37,6 +39,19 @@ from auction_engine.practice_scenarios import build_practice_cli, SCENARIOS
 STATIC_DIR = Path(__file__).parent / "static"
 
 app = FastAPI(title="Sunday Live Auction Tool")
+
+
+def require_lan_token(x_auth_token: str | None = Header(default=None)):
+    """V3 Part 14: when SUNDAY_AUTH_TOKEN is set (run_live_web.py sets it
+    only when binding to 0.0.0.0 for LAN access), every MUTATION endpoint
+    requires this header to match. Read-only endpoints never call this
+    dependency and stay open on the LAN, per the spec's explicit
+    distinction. When the token is unset (the default 127.0.0.1-only
+    launch), this is a no-op -- no token is required, matching current
+    single-laptop-only behavior exactly."""
+    required = os.environ.get("SUNDAY_AUTH_TOKEN")
+    if required and x_auth_token != required:
+        raise HTTPException(status_code=401, detail="Missing or incorrect X-Auth-Token header (LAN mode requires it for mutations).")
 
 # Single process-wide PRODUCTION AuctionCLI instance -- the SAME
 # event-sourced auction_engine state the CLI would use if launched
@@ -145,6 +160,26 @@ class LadderRequest(BaseModel):
 @app.get("/api/status")
 def get_status():
     return _active().api_status()
+
+
+@app.get("/api/operational-status")
+def get_operational_status():
+    """V3 Part 14: operational status area -- mode, sequence, active log
+    path, last persisted event, exact-solve freshness, sim-prior
+    freshness. Connection status is implicit in the fact this request
+    succeeded at all; the client also reports its own perceived
+    connection state (e.g. after a failed fetch) separately in the UI."""
+    result = _active().api_operational_status()
+    result["mode"] = _RUNTIME["mode"]
+    result["scenario"] = _RUNTIME["scenario"]
+    return result
+
+
+@app.get("/api/teams")
+def get_teams():
+    """V3 Part 14: the 12 official commissioner team names, for a
+    validated dropdown/autocomplete -- replaces free-text team entry."""
+    return {"teams": sorted(_active().store.state.teams.keys())}
 
 
 @app.get("/api/board")
@@ -288,13 +323,13 @@ def get_exact_status(player: str):
            "cached_prices": [k[2] for k in _active()._exact_cache if k[0] == cache_key_prefix[0] and k[1] == cache_key_prefix[1]]}
 
 
-@app.post("/api/nominate")
+@app.post("/api/nominate", dependencies=[Depends(require_lan_token)])
 def post_nominate(req: NominateRequest):
     _nominated_by_mode[_RUNTIME["mode"]] = req.player
     return {"nominated": _nominated_by_mode[_RUNTIME["mode"]]}
 
 
-@app.post("/api/sale")
+@app.post("/api/sale", dependencies=[Depends(require_lan_token)])
 def post_sale(req: SaleRequest):
     with _mutation_lock:
         # Idempotency replay: a retried request with the same key gets
@@ -330,14 +365,14 @@ def post_sale(req: SaleRequest):
         return result
 
 
-@app.post("/api/undo")
+@app.post("/api/undo", dependencies=[Depends(require_lan_token)])
 def post_undo():
     with _mutation_lock:
         message = _active().cmd_undo()
         return {"message": message, "status": _active().api_status()}
 
 
-@app.post("/api/correct")
+@app.post("/api/correct", dependencies=[Depends(require_lan_token)])
 def post_correct(req: CorrectRequest):
     with _mutation_lock:
         message = _active().cmd_correct(req.player, req.team, str(req.price))
@@ -346,12 +381,12 @@ def post_correct(req: CorrectRequest):
         return {"message": message, "status": _active().api_status()}
 
 
-@app.post("/api/save")
+@app.post("/api/save", dependencies=[Depends(require_lan_token)])
 def post_save(req: SnapshotRequest):
     return {"message": _active().cmd_save(req.name)}
 
 
-@app.post("/api/load")
+@app.post("/api/load", dependencies=[Depends(require_lan_token)])
 def post_load(req: SnapshotRequest):
     message = _active().cmd_load(req.name)
     if message.startswith("ERROR"):
@@ -373,7 +408,7 @@ def get_mode():
     }
 
 
-@app.post("/api/mode/practice")
+@app.post("/api/mode/practice", dependencies=[Depends(require_lan_token)])
 def post_mode_practice(req: ModeRequest):
     """Switches the active instance to a brand-new, fully isolated
     practice AuctionCLI seeded with the requested scenario. The
@@ -391,7 +426,7 @@ def post_mode_practice(req: ModeRequest):
     return {"mode": "practice", "scenario": req.scenario, "proof": proof}
 
 
-@app.post("/api/mode/production")
+@app.post("/api/mode/production", dependencies=[Depends(require_lan_token)])
 def post_mode_production():
     """Switches back to the single persistent production AuctionCLI
     instance. Nothing about production state is rebuilt or reset here --

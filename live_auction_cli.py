@@ -1176,6 +1176,28 @@ class AuctionCLI:
             "sequence_number": self.store.state.sequence_number,
         }
 
+    def api_operational_status(self) -> dict:
+        """V3 Part 14: operational status area -- everything Sam needs to
+        confirm this is the real, correct, currently-persisting session
+        before trusting any recommendation on it."""
+        seq = self.store.state.sequence_number
+        last_event = self.store.events[-1] if self.store.events else None
+        exact_current_count = sum(1 for k in self._exact_cache if k[0] == seq)
+        _, market_n = self.market_state.league_ratio()
+        return {
+            "sequence_number": seq,
+            "active_log_path": str(self.log_path) if self.log_path else None,
+            "last_persisted_event": (
+                {"event_type": last_event.event_type, "sequence_number": last_event.sequence_number,
+                 "timestamp": last_event.timestamp} if last_event else None
+            ),
+            "exact_cache_current_count": exact_current_count,
+            "exact_freshness": "CURRENT" if exact_current_count > 0 else "NONE_CACHED_AT_CURRENT_SEQUENCE",
+            "market_prior_observation_count": market_n,
+            "market_prior_freshness": "STATIC_PRE_DRAFT_MARKET_PRIOR" + (
+                f" ({market_n} live observations blended in)" if market_n else " (no live observations yet)"),
+        }
+
     def api_board(self) -> list[dict]:
         pool = self._remaining_pool()
         if not pool:
