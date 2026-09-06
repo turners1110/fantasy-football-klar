@@ -175,9 +175,8 @@ class AuctionCLI:
         expected_price) shape cmd_sale's own live add_observation call
         uses -- expected_price is each player's static pre-draft
         base_value (the same convention used everywhere else in this
-        file), tier is the same hardcoded "t1" placeholder used
-        everywhere else (a pre-existing, disclosed simplification, not
-        something this fix changes)."""
+        file). V3.1 GATE 6 FIX: tier is the player's real tier via
+        _tier_label, matching every other call site in this file."""
         sales = []
         for player_id, record in self.store.state.sold_players.items():
             position = None
@@ -190,7 +189,7 @@ class AuctionCLI:
                     break
             expected_price = self.players[player_id].base_value if player_id in self.players else record["sale_price"]
             sales.append({
-                "position": position or "UNKNOWN", "tier": "t1",
+                "position": position or "UNKNOWN", "tier": self._tier_label(player_id),
                 "actual_price": record["sale_price"], "expected_price": max(1.0, expected_price),
             })
         return MarketAdjustmentState.rebuild_from_sales(sales)
@@ -330,6 +329,22 @@ class AuctionCLI:
 
     # ---- helpers ----
 
+    def _tier_label(self, player: str) -> str:
+        """V3.1 Gate 6 fix: the ONE place a player's real tier gets
+        resolved to the string key market_adjustments.py's
+        MarketAdjustmentState uses ("t1", "t2", ...) -- the same source
+        api_targets already correctly reads (self.players[player].tier),
+        now reused everywhere else instead of the stale hardcoded "t1"
+        placeholder. Returns "UNKNOWN" (never a silently-wrong "t1")
+        when a player has no resolvable tier -- MarketAdjustmentState.tier_ratio
+        already degrades gracefully for an unmatched tier key (falls
+        back to the position-level ratio), so "UNKNOWN" observations
+        never corrupt real tier-specific learning."""
+        info = self.players.get(player)
+        if info is not None and getattr(info, "tier", None) is not None:
+            return f"t{info.tier}"
+        return "UNKNOWN"
+
     def _sam(self):
         return self.store.state.teams["Sam"]
 
@@ -431,9 +446,10 @@ class AuctionCLI:
 
         self._invalidate_exact_cache()
 
-        # feed the market-adjustment signal with this real observation
+        # feed the market-adjustment signal with this real observation.
+        # V3.1 GATE 6 FIX: real tier (was hardcoded "t1").
         pre_draft_price = max(1.0, self.players[player].base_value) if player in self.players else price_f
-        self.market_state.add_observation(pos or "UNKNOWN", "t1", price_f, pre_draft_price)
+        self.market_state.add_observation(pos or "UNKNOWN", self._tier_label(player), price_f, pre_draft_price)
 
         lines = [f"Recorded: {player} to {team} for ${price_f:.0f}."]
         if team == "Sam" and pos:
@@ -465,7 +481,7 @@ class AuctionCLI:
             open_flex = sum(1 for t in self.store.state.teams.values() if t.legal_starting_needs().get("FLEX", 0) > 0)
             cash_teams = sum(1 for t in self.store.state.teams.values() if t.legal_max_bid > 10)
             supply = sum(1 for n, v in self.store.state.available_pool.items() if v["position"] == pos)
-            market = live_expected_price(pre_draft_price, pos, "t1", self.market_state, open_starter, open_flex, cash_teams, supply)
+            market = live_expected_price(pre_draft_price, pos, self._tier_label(player), self.market_state, open_starter, open_flex, cash_teams, supply)
         except Exception as e:
             self._log_error("check/market", e)
             market = {"live_expected_price": pre_draft_price, "calculation_label": "SOLVER_FAILURE_FALLBACK"}
@@ -553,7 +569,7 @@ class AuctionCLI:
             pre_draft_price = max(1.0, info.get("base_value", 1.0)) if info else 1.0
             try:
                 os_, of_, ct_, sup_ = pos_market.get(r.position, (0, 0, 6, 1))
-                market = live_expected_price(pre_draft_price, r.position, "t1", self.market_state, os_, of_, ct_, sup_)
+                market = live_expected_price(pre_draft_price, r.position, self._tier_label(r.player), self.market_state, os_, of_, ct_, sup_)
                 live_market_price = market["live_expected_price"]
             except Exception:
                 live_market_price = pre_draft_price
@@ -605,8 +621,8 @@ class AuctionCLI:
             governed_for_score = self._governed_ceiling(r.player, r.position, r.marginal_value, r.expected_role, live_market_price)
             team_specific_dollar_value = governed_for_score.dollar_ceiling
             score = compute_target_score(
-                player=r.player, position=r.position, marginal_value=team_specific_dollar_value, expected_role=r.expected_role,
-                live_expected_price=live_market_price, exact_or_approx_ceiling=max(1.0, team_specific_dollar_value),
+                player=r.player, position=r.position, team_specific_value_dollars=team_specific_dollar_value, expected_role=r.expected_role,
+                expected_market_price_dollars=live_market_price, exact_or_approximate_ceiling_dollars=max(1.0, team_specific_dollar_value),
                 hard_max=None, remaining_alternatives_count=remaining_alts, is_last_legal_alternative=is_last,
                 price_confidence=(0.8 if exact_current else 0.5), position_need_score=raw_need, portfolio_paths_broken_if_missed=0,
             )
@@ -1247,7 +1263,7 @@ class AuctionCLI:
         rows = compute_live_sam_values(self._sam().roster, {player: info})
         r = rows[0]
         pre_draft_price = max(1.0, info.get("base_value", 1.0))
-        market = live_expected_price(pre_draft_price, info["position"], "t1", self.market_state, 0, 0, 6, 10)
+        market = live_expected_price(pre_draft_price, info["position"], self._tier_label(player), self.market_state, 0, 0, 6, 10)
         sam = self._sam()
         governed = self._governed_ceiling(player, info["position"], r.marginal_value, r.expected_role, market["live_expected_price"])
         rec = compute_recommended_bid(
@@ -1381,7 +1397,7 @@ class AuctionCLI:
             pre_draft_price = max(1.0, info.get("base_value", 1.0)) if info else 1.0
             os_, of_, ct_, sup_ = pos_market.get(r.position, (0, 0, 6, 1))
             try:
-                market = live_expected_price(pre_draft_price, r.position, "t1", self.market_state, os_, of_, ct_, sup_)
+                market = live_expected_price(pre_draft_price, r.position, self._tier_label(r.player), self.market_state, os_, of_, ct_, sup_)
                 live_price = market["live_expected_price"]
                 calc_label = market["calculation_label"]
             except Exception:
@@ -1427,7 +1443,7 @@ class AuctionCLI:
             open_flex = sum(1 for t in self.store.state.teams.values() if t.legal_starting_needs().get("FLEX", 0) > 0)
             cash_teams = sum(1 for t in self.store.state.teams.values() if t.legal_max_bid > 10)
             supply = sum(1 for v in self.store.state.available_pool.values() if v["position"] == pos)
-            market = live_expected_price(pre_draft_price, pos, "t1", self.market_state, open_starter, open_flex, cash_teams, supply)
+            market = live_expected_price(pre_draft_price, pos, self._tier_label(player), self.market_state, open_starter, open_flex, cash_teams, supply)
         except Exception:
             market = {"live_expected_price": pre_draft_price, "calculation_label": "SOLVER_FAILURE_FALLBACK"}
         rows = compute_live_sam_values(sam.roster, {player: info})
@@ -1628,6 +1644,24 @@ class AuctionCLI:
             return None
         sold_by_team = [e for e in self.api_log() if e["team"] == team_id]
         college_rights_holdings = sorted(COLLEGE_RIGHTS) if team_id == self.store.state.sam_team_id else []
+        # V3.1 CLEANUP E: one unified protected-occupancy breakdown,
+        # never presenting the named veteran roster as if it were the
+        # team's FULL protected roster. t.college_rights_count is a
+        # single generic "protected but not in roster[]" counter reused
+        # for both named college-rights holds (Sam: Mendoza+Bond) and
+        # Brad's/Reid's one UNNAMED protected slot each -- this breakdown
+        # splits it back into its real, honestly-labeled parts.
+        named_college_rights_count = len(college_rights_holdings)
+        unnamed_protected_count = max(0, t.college_rights_count - named_college_rights_count)
+        veteran_roster_count = len(t.roster)
+        total_occupied_count = veteran_roster_count + t.college_rights_count
+        protected_breakdown = {
+            "veteran_roster_count": veteran_roster_count,
+            "college_rights_count": named_college_rights_count,
+            "unnamed_protected_count": unnamed_protected_count,
+            "total_occupied_count": total_occupied_count,
+            "open_auction_slots": t.open_slots,
+        }
         return {
             "team": team_id, "budget_remaining": t.budget_remaining, "open_slots": t.open_slots,
             "legal_max_bid": t.legal_max_bid, "position_counts": t.position_counts,
@@ -1640,6 +1674,7 @@ class AuctionCLI:
             # only as a separate, clearly-labeled note so nothing implies
             # they occupy a roster slot.
             "college_rights_holdings": college_rights_holdings,
+            "protected_breakdown": protected_breakdown,
         }
 
     def api_all_rosters(self) -> list[dict]:

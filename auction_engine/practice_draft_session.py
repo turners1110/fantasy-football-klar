@@ -141,11 +141,21 @@ class PracticeDraftSession:
         )
 
     def _build_md_pool(self) -> dict[str, MDPlayer]:
+        # V3.1 GATE 6 FIX: was hardcoded tier=1 for every player
+        # regardless of their real tier -- now reads the same canonical
+        # self.cli.players[name].tier source api_targets/_tier_label
+        # already use, so tier-based archetype behavior (tier_cliff
+        # bonuses, etc.) during a practice draft matches the real
+        # player's actual tier, not a flat placeholder.
         pool = {}
         for name, info in self.cli.store.state.available_pool.items():
+            real_player = self.cli.players.get(name)
+            tier = real_player.tier if real_player is not None else 1
+            tier_size = real_player.tier_size if real_player is not None else 1
+            tier_rank = real_player.tier_rank if real_player is not None else 1
             pool[name] = MDPlayer(
                 name=name, position=info["position"], base_value=max(1.0, info.get("base_value", 1.0)),
-                tier=1, tier_size=1, tier_rank=1, projected_points=info.get("projected_points", 0.0),
+                tier=tier, tier_size=tier_size, tier_rank=tier_rank, projected_points=info.get("projected_points", 0.0),
             )
         return pool
 

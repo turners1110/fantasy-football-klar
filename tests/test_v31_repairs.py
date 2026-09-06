@@ -372,3 +372,99 @@ def test_cleanup_f_template_file_exists():
     assert template.exists()
     content = template.read_text()
     assert "Brad" in content and "Reid" in content
+
+
+# ---------------------------------------------------------------------------
+# GATE 6: real tier propagation (this follow-up pass)
+# ---------------------------------------------------------------------------
+
+def test_gate6_tier_label_matches_real_player_tier(cli):
+    for name, p in cli.players.items():
+        if name in cli.store.state.available_pool:
+            assert cli._tier_label(name) == f"t{p.tier}"
+            break
+
+
+def test_gate6_sale_records_real_tier_not_t1(cli):
+    name = next(n for n, p in cli.players.items() if n in cli.store.state.available_pool and p.tier != 1)
+    cli.cmd_sale(name, "Brandon", "5", confirmed=True)
+    obs = cli.market_state.observations[-1]
+    assert obs["tier"] == cli._tier_label(name)
+    assert obs["tier"] != "t1"
+
+
+def test_gate6_tier_survives_resume(tmp_path):
+    from live_auction_cli import AuctionCLI as CLI
+    log_path = tmp_path / "tier_session.jsonl"
+    cli1 = CLI(log_path=log_path, resume=False)
+    name = next(n for n, p in cli1.players.items() if n in cli1.store.state.available_pool and p.tier != 1)
+    real_tier_label = cli1._tier_label(name)
+    cli1.cmd_sale(name, "Brandon", "5", confirmed=True)
+    assert cli1.market_state.observations[-1]["tier"] == real_tier_label
+
+    cli2 = CLI(log_path=log_path, resume=True)
+    assert cli2.market_state.observations[-1]["tier"] == real_tier_label
+
+
+def test_gate6_tier_survives_correction(cli):
+    name = next(n for n, p in cli.players.items() if n in cli.store.state.available_pool and p.tier != 1)
+    real_tier_label = cli._tier_label(name)
+    cli.cmd_sale(name, "Brandon", "5", confirmed=True)
+    cli.cmd_correct(name, "Coby", "8")
+    assert cli.market_state.observations[-1]["tier"] == real_tier_label
+
+
+def test_gate6_practice_pool_uses_real_tier():
+    from auction_engine.practice_draft_session import PracticeDraftSession
+    sess = PracticeDraftSession(session_id="gate6-tier-test", seed=1)
+    pool = sess._build_md_pool()
+    checked = 0
+    for name, mdp in pool.items():
+        real_player = sess.cli.players.get(name)
+        if real_player is not None:
+            assert mdp.tier == real_player.tier
+            checked += 1
+        if checked >= 10:
+            break
+    assert checked >= 10
+
+
+def test_gate6_missing_tier_uses_unknown_not_t1(cli):
+    assert cli._tier_label("Not A Real Player At All") == "UNKNOWN"
+
+
+# ---------------------------------------------------------------------------
+# CLEANUP D: target-scorer parameters are explicitly unit-named
+# ---------------------------------------------------------------------------
+
+def test_cleanup_d_compute_target_score_uses_explicit_unit_param_names():
+    import inspect
+    from auction_engine.live_target_scoring import compute_target_score
+    params = list(inspect.signature(compute_target_score).parameters.keys())
+    assert "team_specific_value_dollars" in params
+    assert "expected_market_price_dollars" in params
+    assert "exact_or_approximate_ceiling_dollars" in params
+    assert "marginal_value" not in params
+    assert "exact_or_approx_ceiling" not in params
+
+
+# ---------------------------------------------------------------------------
+# CLEANUP E: unified protected-occupancy breakdown
+# ---------------------------------------------------------------------------
+
+def test_cleanup_e_sam_protected_breakdown(cli):
+    detail = cli.api_team_detail("Sam")
+    b = detail["protected_breakdown"]
+    assert b["veteran_roster_count"] == 6
+    assert b["college_rights_count"] == 2
+    assert b["unnamed_protected_count"] == 0
+    assert b["total_occupied_count"] == 8
+    assert b["open_auction_slots"] == 8
+
+
+def test_cleanup_e_brad_shows_unnamed_protected_slot(cli):
+    detail = cli.api_team_detail("Brad")
+    b = detail["protected_breakdown"]
+    assert b["unnamed_protected_count"] == 1
+    assert b["total_occupied_count"] == 7
+    assert b["open_auction_slots"] == 9
