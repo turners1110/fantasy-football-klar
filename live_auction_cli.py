@@ -1366,6 +1366,13 @@ class AuctionCLI:
             "position_needs": sam.legal_starting_needs(), "position_counts": sam.position_counts,
             "roster": [{"position": p["position"], "display_name": p["display_name"], "price": p["price"],
                        "is_keeper": bool(p.get("is_keeper"))} for p in sam.roster],
+            # Sam's college-rights holds (Mendoza/Bond) occupy a roster
+            # slot and count toward his 16-player/8-protected totals
+            # (already reflected in open_slots) but are never veteran
+            # keepers or auction purchases, so they don't live in
+            # sam.roster -- surfaced separately here so the UI can show
+            # them without implying they're auction-eligible.
+            "college_rights_holdings": sorted(COLLEGE_RIGHTS),
             "sequence_number": self.store.state.sequence_number,
         }
 

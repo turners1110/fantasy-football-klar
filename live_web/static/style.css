@@ -85,3 +85,19 @@ h3, h4 { margin-top: 18px; }
 .team-roster-block h4 { margin-top: 0; }
 .stop-above-expected { color: #0a7d1e; font-weight: 600; }
 .stop-below-expected { color: #b00020; }
+
+.board-summary-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; flex-wrap: wrap; }
+.grade-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px; border-radius: 8px; font-size: 24px; font-weight: 700;
+  color: white; flex-shrink: 0; cursor: help;
+}
+.grade-a { background: #0a7d1e; }
+.grade-b { background: #4a9c2a; }
+.grade-c { background: #c9a227; }
+.grade-d { background: #d9791f; }
+.grade-f { background: #b00020; }
+.grade-pending { background: #888; font-size: 12px; }
+#board-position-table { font-size: 12px; }
+#board-position-table th, #board-position-table td { padding: 2px 8px; }
+tr.college-rights-row { color: #666; font-style: italic; }

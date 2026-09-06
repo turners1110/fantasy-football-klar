@@ -94,6 +94,13 @@
 
 <!-- DRAFT BOARD -->
 <div id="tab-board" class="tab-content">
+  <div id="board-summary" class="board-summary-bar">
+    <div id="board-grade-badge" class="grade-badge grade-pending">--</div>
+    <table id="board-position-table">
+      <thead><tr><th>Pos</th><th>Req.</th><th>Have</th><th>Status</th></tr></thead>
+      <tbody id="board-position-body"></tbody>
+    </table>
+  </div>
   <div class="filters">
     <input id="f-name" class="board-name-filter" placeholder="Filter table by name or position (live)..." autocomplete="off">
     <select id="f-position"><option value="">All positions</option><option>QB</option><option>RB</option><option>WR</option><option>TE</option></select>

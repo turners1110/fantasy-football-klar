@@ -173,6 +173,11 @@ async function loadBoard() {
   currentBoard = data.players;
   if (data.nominated) showNominated(data.nominated);
   renderBoard();
+  try {
+    const s = await api("/status");
+    renderPositionCountsTable("board-position-body", s);
+    renderDraftGrade("board-grade-badge", s);
+  } catch (e) { /* summary bar is a convenience, not critical -- don't block the board on it */ }
 }
 
 // V2.2 Request 2: live, as-you-type table filtering. Pure client-side
@@ -422,14 +427,11 @@ const REQUIRED_STARTERS = { QB: 1, RB: 2, WR: 2, TE: 1 };
 const FLEX_ELIGIBLE = ["RB", "WR", "TE"];
 const FLEX_SLOTS = 3;
 
-async function loadRoster() {
-  const s = await api("/status");
-  document.getElementById("roster-summary").innerHTML =
-    `Budget remaining: <b>$${s.budget_remaining.toFixed(2)}</b> | Open slots: <b>${s.open_slots}</b> | ` +
-    `Min reserve: <b>$${s.min_reserve.toFixed(2)}</b> | Legal max bid: <b>$${s.legal_max_bid.toFixed(2)}</b>`;
-
-  // Position counts & requirements table
-  const posBody = document.getElementById("roster-position-body");
+// Shared by My Roster and the Draft Board summary bar -- renders the
+// position counts/requirements rows into whichever tbody id is passed.
+function renderPositionCountsTable(tbodyId, s) {
+  const posBody = document.getElementById(tbodyId);
+  if (!posBody) return;
   posBody.innerHTML = "";
   const counts = s.position_counts || {};
   Object.keys(REQUIRED_STARTERS).forEach(pos => {
@@ -448,6 +450,63 @@ async function loadRoster() {
   const flexRow = document.createElement("tr");
   flexRow.innerHTML = `<td>FLEX (RB/WR/TE)</td><td>${FLEX_SLOTS}</td><td>--</td><td>${flexNeeded > 0 ? `Need ${flexNeeded} more` : "Filled"}</td>`;
   posBody.appendChild(flexRow);
+}
+
+// Transparent, disclosed heuristic -- NOT the same thing as the
+// governed recommendation/policy engine (that logic is under separate
+// repair for a real underspend bug found in practice testing). This is
+// just a simple, honest scoreboard glance: how much of the $225 budget
+// has been deployed, and whether the roster is dangerously imbalanced.
+// Formula is intentionally visible via the tooltip rather than a black
+// box, exactly like the Stop-Expected column.
+function computeDraftGrade(s) {
+  if (s.open_slots > 0) {
+    const spent = 225 - s.budget_remaining; // Sam's fixed official auction budget
+    return { label: "IN PROGRESS", cls: "grade-pending",
+      detail: `${s.open_slots} open slot${s.open_slots > 1 ? "s" : ""} remaining, $${s.budget_remaining.toFixed(0)} left ($${spent.toFixed(0)} spent so far). Grade shown once drafting completes.` };
+  }
+  const spent = 225 - s.budget_remaining;
+  const spendPct = (spent / 225) * 100;
+  const counts = s.position_counts || {};
+  let imbalance = 0;
+  Object.keys(REQUIRED_STARTERS).forEach(pos => {
+    const surplus = (counts[pos] || 0) - REQUIRED_STARTERS[pos];
+    if (surplus > FLEX_SLOTS) imbalance += (surplus - FLEX_SLOTS); // more surplus at one position than all FLEX slots could ever use
+  });
+  let letter;
+  if (spendPct >= 85) letter = "A";
+  else if (spendPct >= 70) letter = "B";
+  else if (spendPct >= 55) letter = "C";
+  else if (spendPct >= 40) letter = "D";
+  else letter = "F";
+  const gradeOrder = ["A", "B", "C", "D", "F"];
+  if (imbalance > 0) {
+    const idx = Math.min(gradeOrder.indexOf(letter) + Math.ceil(imbalance / 2), gradeOrder.length - 1);
+    letter = gradeOrder[idx];
+  }
+  const cls = "grade-" + letter.toLowerCase();
+  const detail = `Budget used: ${spendPct.toFixed(0)}% ($${spent.toFixed(0)} of $225).` +
+    (imbalance > 0 ? ` Position imbalance detected (${imbalance} slot${imbalance > 1 ? "s" : ""} of surplus depth beyond usable FLEX capacity).` : " Position balance looks reasonable.") +
+    " Simple heuristic (budget utilization + position balance) -- not the same as the governed recommendation engine.";
+  return { label: letter, cls, detail };
+}
+
+function renderDraftGrade(elId, s) {
+  const badge = document.getElementById(elId);
+  if (!badge) return;
+  const g = computeDraftGrade(s);
+  badge.textContent = g.label;
+  badge.className = "grade-badge " + g.cls;
+  badge.title = g.detail;
+}
+
+async function loadRoster() {
+  const s = await api("/status");
+  document.getElementById("roster-summary").innerHTML =
+    `Budget remaining: <b>$${s.budget_remaining.toFixed(2)}</b> | Open slots: <b>${s.open_slots}</b> | ` +
+    `Min reserve: <b>$${s.min_reserve.toFixed(2)}</b> | Legal max bid: <b>$${s.legal_max_bid.toFixed(2)}</b>`;
+
+  renderPositionCountsTable("roster-position-body", s);
 
   const needs = Object.entries(s.position_needs).filter(([k, v]) => v > 0);
   document.getElementById("roster-needs").textContent = needs.length
@@ -472,6 +531,16 @@ async function loadRoster() {
   s.roster.forEach(p => {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${p.position}</td><td>${p.display_name}</td><td>$${p.price.toFixed(0)}</td><td>${p.is_keeper ? "Yes" : "No"}</td>`;
+    tbody.appendChild(tr);
+  });
+  // College-rights holds (Mendoza/Bond): occupy a roster slot, already
+  // reflected in open_slots, but are NOT veteran keepers or auction
+  // purchases -- shown here for full visibility with a clearly distinct
+  // label rather than blank/missing price and keeper columns.
+  (s.college_rights_holdings || []).forEach(name => {
+    const tr = document.createElement("tr");
+    tr.className = "college-rights-row";
+    tr.innerHTML = `<td>--</td><td>${name}</td><td colspan="2">College-rights hold (not veteran keeper, not auction-eligible)</td>`;
     tbody.appendChild(tr);
   });
 }
