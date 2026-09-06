@@ -19,6 +19,7 @@ cd "$(dirname "$0")"
 LOG_PATH="outputs/auction_rebuild/live_mvp/cli_session.jsonl"
 MODE=""
 HOST="127.0.0.1"
+NO_AUTH=""
 
 for arg in "$@"; do
   case "$arg" in
@@ -27,6 +28,7 @@ for arg in "$@"; do
     --mode=exit)   MODE="exit" ;;
     --mode=*) echo "Unknown --mode value in $arg (expected resume|clean|exit)" >&2; exit 2 ;;
     --lan) HOST="0.0.0.0" ;;
+    --no-auth) NO_AUTH="--no-auth" ;;
   esac
 done
 
@@ -100,4 +102,4 @@ case "$MODE" in
 esac
 
 echo "Launching Sunday Live Auction Tool on http://$HOST:8010 ..."
-exec python3 run_live_web.py --host "$HOST"
+exec python3 run_live_web.py --host "$HOST" $NO_AUTH
