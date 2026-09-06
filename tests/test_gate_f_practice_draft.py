@@ -84,7 +84,25 @@ def test_ai_willingness_is_roster_aware_not_just_personality_fixed():
     """Sam's addendum: opponent willingness must respond to their OWN
     roster saturation, the same way Sam's engine already proves for Sam.
     Directly exercises _ai_ceiling before and after artificially loading
-    one AI team up with RBs, on the SAME candidate."""
+    one AI team up with RBs, on the SAME candidate.
+
+    _ai_ceiling -> compute_willingness draws a random noise term from
+    the session's shared, stateful self.rng on every call (see
+    mock_draft.valuation.get_noise_adjustment), so two sequential calls
+    always sample different noise regardless of any real roster-fit
+    effect. That's an independent, real source of variance this test
+    must hold constant to isolate the roster-saturation effect it
+    actually claims to test -- otherwise a small, unrelated shift in
+    which random draws happen (e.g. a legitimate pool-composition
+    change from an unrelated data fix removing/adding a candidate
+    elsewhere in the pool) can flip a razor-thin before/after
+    difference by pure noise, which is exactly what surfaced this
+    fragility (a real college-rights-pool leak fix removed Sean Tucker
+    from this AI team's RB candidates, coincidentally tipping an
+    already-marginal 1-dollar noise draw over the line). Snapshotting
+    and restoring the RNG's bit-generator state before each _ai_ceiling
+    call holds the noise draw identical both times, so the assertion
+    genuinely isolates roster saturation as intended."""
     sess = PracticeDraftSession(session_id="unit-test-7", seed=7)
     ai_team = sess.ai_team_ids[0]
     pool = sess._build_md_pool()
@@ -92,6 +110,7 @@ def test_ai_willingness_is_roster_aware_not_just_personality_fixed():
     candidate_name = rb_candidates[0]
     candidate = pool[candidate_name]
 
+    rng_state = sess.rng.bit_generator.state
     ceiling_before = sess._ai_ceiling(ai_team, candidate, pool, 0.1)
 
     # Artificially saturate this AI team with RBs (bypassing the normal
@@ -100,6 +119,7 @@ def test_ai_willingness_is_roster_aware_not_just_personality_fixed():
         sess.cli.cmd_sale(rb_name, ai_team, "5", confirmed=True)
 
     pool_after = sess._build_md_pool()
+    sess.rng.bit_generator.state = rng_state  # same noise draw as the "before" call
     ceiling_after = sess._ai_ceiling(ai_team, candidate, pool_after, 0.1)
 
     assert ceiling_after is None or ceiling_before is None or ceiling_after <= ceiling_before, (

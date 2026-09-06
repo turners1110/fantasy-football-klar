@@ -260,7 +260,13 @@ def test_college_rights_holdings_never_appear_inside_roster_list(client):
     roster_names = {p["display_name"] for p in data["roster"]}
     assert "Fernando Mendoza" not in roster_names
     assert "Isaiah Bond" not in roster_names
-    assert data["college_rights_holdings"] == ["Fernando Mendoza", "Isaiah Bond"]
+    # Sam also holds Bryce Young's college-draft rights (owner "Sam" in
+    # data/college_draft_completed_picks.csv, closed via
+    # data/protected_player_overrides.csv alongside the Mendoza/Bond
+    # hardcoded pair) -- college_rights_holdings is sorted, so this is
+    # a 3-name list, not just the original 2.
+    assert "Bryce Young" not in roster_names
+    assert data["college_rights_holdings"] == ["Bryce Young", "Fernando Mendoza", "Isaiah Bond"]
 
 
 def test_non_sam_team_has_no_college_rights_holdings(client):

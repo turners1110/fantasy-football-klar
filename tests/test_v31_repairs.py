@@ -463,7 +463,15 @@ def test_cleanup_e_sam_protected_breakdown(cli):
     detail = cli.api_team_detail("Sam")
     b = detail["protected_breakdown"]
     assert b["veteran_roster_count"] == 6
-    assert b["college_rights_count"] == 2
+    # Sam also holds Bryce Young's college-draft rights (see the
+    # college-draft-rights leak fix below) in addition to the original
+    # Mendoza/Bond pair -- college_rights_count counts NAMED holdings,
+    # not official roster-slot capacity (which is unaffected: Bryce
+    # Young's pick isn't modeled as consuming an additional real 16-man
+    # roster slot the way the official commissioner-confirmed
+    # Mendoza/Bond pair is, so total_occupied_count/open_auction_slots
+    # stay exactly as before).
+    assert b["college_rights_count"] == 3
     assert b["unnamed_protected_count"] == 0
     assert b["total_occupied_count"] == 8
     assert b["open_auction_slots"] == 8
@@ -491,11 +499,15 @@ def test_cleanup_e_brad_shows_unnamed_protected_slot(cli):
 # ---------------------------------------------------------------------------
 
 def test_protected_player_overrides_file_loads_both_named_players(cli):
-    assert cli.protected_player_overrides == {"Makai Lemon", "Carnell Tate"}
-    assert cli.protected_player_overrides_by_team == {
-        "Brad": ["Makai Lemon"],
-        "Reid": ["Carnell Tate"],
-    }
+    # data/protected_player_overrides.csv now also carries the 6
+    # college-draft-rights leak closures (see
+    # COLLEGE_DRAFT_CONFIRMED_LEAKS below) on top of the original
+    # Brad/Reid rows -- assert Brad/Reid are still present rather than
+    # asserting an exact set, so this test doesn't need updating again
+    # every time the overrides file legitimately grows.
+    assert {"Makai Lemon", "Carnell Tate"} <= cli.protected_player_overrides
+    assert cli.protected_player_overrides_by_team["Brad"] == ["Makai Lemon"]
+    assert cli.protected_player_overrides_by_team["Reid"] == ["Carnell Tate"]
 
 
 def test_protected_player_overrides_resolve_brad_and_reid(cli):
@@ -617,3 +629,84 @@ def test_undo_fix_applies_identically_to_practice_draft_session():
         sess.undo()
         seen_sequences.append(sess.cli.store.state.sequence_number)
     assert seen_sequences == [4, 3, 2, 1], f"practice-mode undo sequence oscillated or stalled: {seen_sequences}"
+
+
+# ---------------------------------------------------------------------------
+# College-draft-rights eligibility gap: data/college_draft_completed_picks.csv
+# lists 144 college-draft picks across all 12 teams (3 draft classes).
+# 12 rows are tagged nfl_status_sheet == "In NFL"; cross-checked against
+# the real projections universe (cli.players / available_pool -- the same
+# ground truth the rest of the auction already treats as authoritative)
+# on 2026-09-06:
+#   - 6 were REAL, CURRENT LEAKS: Josh Downs, Bryce Young, Sean Tucker,
+#     Darnell Washington, Xavier Hutchinson, CJ Stroud -- all sitting in
+#     the live sellable pool despite belonging to another team's
+#     college-rights holding.
+#   - Jordan Addison and Zay Flowers (owner Brandon) were NOT leaking --
+#     already real veteran keepers on Brandon's roster (the college pick
+#     was superseded by a real keeper claim), confirmed via each
+#     player's presence in Brandon's roster/keeper_ids.
+#   - Jalin Hyatt, Deuce Vaughn, Israel Abanikanda, Mohamed Ibrahim were
+#     NOT leaking -- none appear in this season's projections universe
+#     at all (cli.players), so they cannot enter the pool regardless of
+#     the sheet's "In NFL" tag; no identity/alias mismatch found for any
+#     of the 12 "In NFL" rows.
+#
+# Owner resolution (data/college_draft_reference.md, cross-checked
+# against outputs/auction_rebuild/live_v3/canonical_team_mapping.csv,
+# the same evidence-based mapping used throughout this whole repair
+# arc): Brandon/Sam/Ryan J/Shane/James/CJ all map directly to a current
+# team. "Paul" and "Ryan B" are legacy owner names the reference doc
+# itself states do NOT appear on the current 12-team roster and require
+# commissioner confirmation -- both of the leaking "Paul"-owned players
+# (Josh Downs, CJ Stroud) are excluded from the auction regardless
+# (the safety property), but are recorded with an explicit
+# UNRESOLVED_LEGACY_PAUL team id rather than guessed onto a real team.
+# ---------------------------------------------------------------------------
+
+COLLEGE_DRAFT_CONFIRMED_LEAKS = {
+    "Josh Downs": "WR", "Bryce Young": "QB", "Sean Tucker": "RB",
+    "Darnell Washington": "TE", "Xavier Hutchinson": "WR", "CJ Stroud": "QB",
+}
+
+
+def test_college_draft_rights_confirmed_leaks_are_now_excluded(cli):
+    for name in COLLEGE_DRAFT_CONFIRMED_LEAKS:
+        assert name not in cli.store.state.available_pool, f"{name} is still leaking into the sellable pool"
+        result = cli.cmd_sale(name, "Brandon", "5")
+        assert result.startswith("REFUSED:"), f"{name} was sellable: {result}"
+
+
+def test_college_draft_rights_legacy_owner_mapping_spot_check(cli):
+    # Resolvable legacy owners land on the correct current team.
+    assert cli.api_team_detail("Sam")["college_rights_holdings"].count("Bryce Young") == 1
+    assert cli.api_team_detail("Ryan J")["college_rights_holdings"] == ["Sean Tucker"]
+    assert cli.api_team_detail("Shane")["college_rights_holdings"] == ["Darnell Washington"]
+    assert cli.api_team_detail("James")["college_rights_holdings"] == ["Xavier Hutchinson"]
+    # Genuinely unresolved legacy owner ("Paul") is excluded (safety
+    # property) but NOT guessed onto any real team -- it must not appear
+    # under any actual team's college_rights_holdings.
+    for team_id in cli.store.state.teams:
+        assert "Josh Downs" not in cli.api_team_detail(team_id)["college_rights_holdings"]
+        assert "CJ Stroud" not in cli.api_team_detail(team_id)["college_rights_holdings"]
+
+
+def test_college_draft_rights_fix_does_not_over_exclude_real_free_agents(cli):
+    """The 6 non-leaking 'In NFL' rows (already-real keepers, or players
+    absent from this season's projections entirely) must NOT have been
+    swept into protected_player_overrides.csv -- only genuine current
+    leaks get excluded, not the whole 144-row sheet mechanically."""
+    non_leaking_names = {
+        "Jordan Addison", "Zay Flowers",  # already real keepers elsewhere
+        "Jalin Hyatt", "Deuce Vaughn", "Israel Abanikanda", "Mohamed Ibrahim",  # not in this season's pool at all
+    }
+    assert non_leaking_names.isdisjoint(cli.protected_player_overrides)
+
+
+def test_college_draft_rights_overrides_file_still_has_brad_reid_rows(cli):
+    """Extending the overrides file for the college-draft leak must not
+    disturb the existing Brad/Reid protected-player-identity entries."""
+    assert "Makai Lemon" in cli.protected_player_overrides
+    assert "Carnell Tate" in cli.protected_player_overrides
+    assert cli.protected_player_overrides_by_team.get("Brad") == ["Makai Lemon"]
+    assert cli.protected_player_overrides_by_team.get("Reid") == ["Carnell Tate"]

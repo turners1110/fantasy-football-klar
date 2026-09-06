@@ -1,3 +1,9 @@
 internal_team_id,commissioner_team_name,player_name,position,protection_type,auction_exclusion_confirmed
 Brad,Bidding with One Second Left,Makai Lemon,WR,COLLEGE_RIGHTS,TRUE
 Reid,Taste My Pig Skin,Carnell Tate,WR,COLLEGE_RIGHTS,TRUE
+Sam,Woody Johnson's D...efence,Bryce Young,QB,COLLEGE_RIGHTS,TRUE
+Ryan J,Mama,Sean Tucker,RB,COLLEGE_RIGHTS,TRUE
+Shane,Buncha Blockheads,Darnell Washington,TE,COLLEGE_RIGHTS,TRUE
+James,JDs Hogg,Xavier Hutchinson,WR,COLLEGE_RIGHTS,TRUE
+UNRESOLVED_LEGACY_PAUL,"UNRESOLVED -- legacy owner ""Paul"" is not on the current 12-team roster; needs commissioner confirmation per data/college_draft_reference.md before rights can be attributed to a specific team",Josh Downs,WR,COLLEGE_RIGHTS,TRUE
+UNRESOLVED_LEGACY_PAUL,"UNRESOLVED -- legacy owner ""Paul"" is not on the current 12-team roster; needs commissioner confirmation per data/college_draft_reference.md before rights can be attributed to a specific team",CJ Stroud,QB,COLLEGE_RIGHTS,TRUE
