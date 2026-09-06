@@ -62,10 +62,15 @@ class DuplicateCanonicalPlayerError(ValueError):
 
 
 def _assert_no_canonical_duplicate_names(prices: pd.DataFrame) -> None:
+    # Uses the SAME canonical_id function as the live sale-entry
+    # duplicate check (live_auction_cli.py) and website search
+    # (api_search) -- one identity layer (auction_engine.player_identity),
+    # not three independently-maintained normalization implementations.
+    from auction_engine.player_identity import canonical_id, CanonicalIdentityCollisionError
     seen: dict[str, str] = {}
     collisions = []
     for name in prices["player"]:
-        key = normalize_name(name)
+        key = canonical_id(name)
         if key in seen and seen[key] != name:
             collisions.append((seen[key], name))
         else:

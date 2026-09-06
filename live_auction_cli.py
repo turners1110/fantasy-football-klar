@@ -34,6 +34,7 @@ from auction_engine.recommendation_guardrails import compute_governed_dollar_cei
 from auction_model import exact_roster_solver
 from auction_model.roster_optimizer import assign_lineup
 from auction_model.confirmed_keeper_pipeline import OFFICIAL_PROTECTED_COUNT
+from auction_engine.player_identity import canonical_id, canonical_display_name
 import pandas as pd
 from mock_draft.data import load_confirmed_pool_and_teams
 
@@ -286,6 +287,19 @@ class AuctionCLI:
             return f"REFUSED: {player} is a keeper and cannot be sold in the veteran auction."
         if player not in self.players and player not in self._remaining_pool():
             return f"ERROR: unknown player {player!r} -- check spelling (case-sensitive, matches the projections file)."
+        # GATE E (V3 repair, Part 3): refuse a sale if the CANONICAL
+        # player was already sold under a different display name (an
+        # alias) -- not just an exact string match, which is all the
+        # reducer's own duplicate check does. This is the real-time
+        # backstop for the alias-duplicate-sale bug class (Bill/Jacory
+        # Croskey-Merritt, Kenny/Kenneth Gainwell) at the live sale-entry
+        # point, in addition to the pool-load-time guard in
+        # mock_draft.data._assert_no_canonical_duplicate_names.
+        requested_cid = canonical_id(player)
+        for sold_name in self.store.state.sold_players:
+            if sold_name != player and canonical_id(sold_name) == requested_cid:
+                return (f"REFUSED: {player} is the same real player as already-sold {sold_name} "
+                       f"(canonical identity match) -- cannot be sold twice under different names.")
         try:
             price_f = float(price)
         except ValueError:
@@ -417,10 +431,41 @@ class AuctionCLI:
         for v in pool.values():
             pos_supply[v["position"]] = pos_supply.get(v["position"], 0) + 1
 
+        # V3 Part 9 (Targets page rebuild): one live_expected_price
+        # computation per position, same pattern api_board already
+        # uses -- the Targets page now scores against the REAL live
+        # market price (accounting for open starter/FLEX needs
+        # leaguewide, cash-flush team count, and remaining supply), not
+        # a stale pre-draft base_value, and can display it as a real
+        # required column.
+        pos_market = {}
+        for pos in ("QB", "RB", "WR", "TE"):
+            open_starter = sum(1 for t in self.store.state.teams.values() if t.legal_starting_needs().get(pos, 0) > 0)
+            open_flex = sum(1 for t in self.store.state.teams.values() if t.legal_starting_needs().get("FLEX", 0) > 0)
+            cash_teams = sum(1 for t in self.store.state.teams.values() if t.legal_max_bid > 10)
+            supply = sum(1 for v in pool.values() if v["position"] == pos)
+            pos_market[pos] = (open_starter, open_flex, cash_teams, supply)
+
+        self._targets_extra_by_player = {}
         scored = []
         for r in rows:
             info = next((v for v in pool.values() if v["display_name"] == r.player), None)
             pre_draft_price = max(1.0, info.get("base_value", 1.0)) if info else 1.0
+            try:
+                os_, of_, ct_, sup_ = pos_market.get(r.position, (0, 0, 6, 1))
+                market = live_expected_price(pre_draft_price, r.position, "t1", self.market_state, os_, of_, ct_, sup_)
+                live_market_price = market["live_expected_price"]
+            except Exception:
+                live_market_price = pre_draft_price
+            proj = self.players[r.player].projected_points if r.player in self.players else info.get("projected_points", 0.0)
+            tier = self.players[r.player].tier if r.player in self.players else None
+            exact_current = self._has_current_exact(r.player)
+            self._targets_extra_by_player[r.player] = {
+                "tier": tier, "projected_points": round(proj, 1),
+                "marginal_lineup_points": round(r.marginal_value, 2),
+                "expected_market_price_dollars": round(live_market_price, 1),
+                "exact_is_current": exact_current,
+            }
             remaining_alts = max(0, pos_supply.get(r.position, 1) - 1)
             is_last = pos_supply.get(r.position, 0) <= 1 and needs.get(r.position, 0) > 0
             raw_need = min(1.0, needs.get(r.position, 0) / 2.0) if r.position in ("RB", "WR") else min(1.0, needs.get(r.position, 0))
@@ -445,13 +490,16 @@ class AuctionCLI:
             # api_targets). Fixed by reusing the SAME governed-ceiling
             # dollar conversion already used everywhere else in this
             # file -- never a second, target-scorer-only formula.
-            governed_for_score = self._governed_ceiling(r.player, r.position, r.marginal_value, r.expected_role, pre_draft_price)
+            # Scored against the REAL live market price (live_market_price),
+            # not the stale static pre_draft_price -- see the pos_market
+            # computation above.
+            governed_for_score = self._governed_ceiling(r.player, r.position, r.marginal_value, r.expected_role, live_market_price)
             team_specific_dollar_value = governed_for_score.dollar_ceiling
             score = compute_target_score(
                 player=r.player, position=r.position, marginal_value=team_specific_dollar_value, expected_role=r.expected_role,
-                live_expected_price=pre_draft_price, exact_or_approx_ceiling=max(1.0, team_specific_dollar_value),
+                live_expected_price=live_market_price, exact_or_approx_ceiling=max(1.0, team_specific_dollar_value),
                 hard_max=None, remaining_alternatives_count=remaining_alts, is_last_legal_alternative=is_last,
-                price_confidence=0.5, position_need_score=raw_need, portfolio_paths_broken_if_missed=0,
+                price_confidence=(0.8 if exact_current else 0.5), position_need_score=raw_need, portfolio_paths_broken_if_missed=0,
             )
             scored.append(score)
         return sorted(scored, key=lambda s: -s.total_score)[:n]
@@ -476,10 +524,38 @@ class AuctionCLI:
             )
             if governed.critical_review_required:
                 rec.recommendation_type = "CRITICAL_REVIEW_REQUIRED"
+            extra = self._targets_extra_by_player.get(s.player, {})
+            exact_current = extra.get("exact_is_current", False)
+            # V3 Part 9: full required Targets-page field list, every
+            # dollar-vs-points field explicitly unit-suffixed. Fields the
+            # spec asks for that this pass genuinely cannot populate
+            # (Market P25/P50/P75/P90 -- no validated Monte Carlo batch
+            # exists this pass; draft probability -- same reason; current
+            # live bid -- no backend nomination-bid state exists, only
+            # ephemeral client-side UI state) are explicitly None rather
+            # than fabricated.
             out.append({
-                "player": s.player, "position": s.position, "total_score": s.total_score,
+                "player": s.player, "position": s.position,
+                "tier": extra.get("tier"),
+                "projected_points": extra.get("projected_points"),
+                "marginal_lineup_points": extra.get("marginal_lineup_points"),
+                "team_specific_value_dollars": s.team_specific_value,
+                "expected_market_price_dollars": extra.get("expected_market_price_dollars"),
+                "market_p25_p50_p75_p90_dollars": None,  # no validated Monte Carlo batch this pass -- honest None
+                "draft_probability": None,  # same reason
+                "exact_ceiling_dollars": (s.team_specific_value if exact_current else None),
+                "approximate_ceiling_dollars": (None if exact_current else s.team_specific_value),
+                "exact_or_approximate_status": ("EXACT_CURRENT" if exact_current else "APPROXIMATE_NO_CURRENT_EXACT"),
+                "recommended_stop_dollars": rec.recommended_final_bid,
+                "current_live_bid_dollars": None,  # no backend nomination-bid state exists yet (see final report)
+                "surplus_or_deficit_dollars": round(s.team_specific_value - live_px, 2),
+                "confidence": ("HIGH" if exact_current else "MODERATE" if s.price_confidence >= 0.5 else "LOW"),
+                "total_score": s.total_score,
                 "recommendation_class": s.recommendation_class if not governed.critical_review_required else "CRITICAL_REVIEW_REQUIRED",
+                "reason": rec.reason,
                 "critical_review_required": governed.critical_review_required, "critical_reasons": governed.critical_reasons,
+                # legacy/component fields (kept for backward compatibility
+                # with existing consumers of this endpoint):
                 "recommended_stop": rec.recommended_final_bid,
                 "expected_surplus_at_price": s.expected_surplus_at_price, "starting_lineup_gain": s.starting_lineup_gain,
                 "team_specific_value": s.team_specific_value, "role_probability_score": s.role_probability_score,
@@ -1364,7 +1440,19 @@ class AuctionCLI:
             for name in COLLEGE_RIGHTS:
                 if query_norm in name.lower():
                     results.append({"player": name, "position": "?", "status": "COLLEGE_RIGHTS_HELD", "owner": "Sam"})
-        return results
+        # GATE E (V3 repair, Part 3): dedupe by canonical identity so a
+        # search can never show what looks like two separate players for
+        # the same real person (the alias-duplicate bug class) -- keeps
+        # the first (highest-priority) hit per canonical ID.
+        seen_cids = set()
+        deduped = []
+        for r in results:
+            cid = canonical_id(r["player"])
+            if cid in seen_cids:
+                continue
+            seen_cids.add(cid)
+            deduped.append(r)
+        return deduped
 
     def cmd_help(self) -> str:
         lines = ["Commands:"]

@@ -404,16 +404,26 @@ async function loadTargets() {
   const data = await api("/targets");
   const tbody = document.getElementById("targets-body");
   tbody.innerHTML = "";
+  // V3 Part 9: every column explicitly unit-labeled in the header
+  // above (pts vs $) -- never render a points field with a $ sign.
   data.targets.forEach(t => {
     const tr = document.createElement("tr");
     tr.className = recClass(t.recommendation_class.includes("PRIORITY") || t.recommendation_class.includes("BUY") ? "BUY" :
                               t.recommendation_class.includes("PASS") ? "PASS" : "");
-    tr.innerHTML = `<td>${t.player}</td><td>${t.position}</td><td>${t.total_score.toFixed(3)}</td>
-      <td>${t.recommendation_class}</td><td>$${t.recommended_stop.toFixed(0)}</td>
-      <td>$${t.expected_surplus_at_price.toFixed(1)}</td><td>$${t.starting_lineup_gain.toFixed(1)}</td>
-      <td>$${t.team_specific_value.toFixed(1)}</td><td>${t.role_probability_score}</td>
-      <td>${t.scarcity_score}</td><td>${t.tier_cliff_bonus}</td><td>${t.remaining_alternatives_count}</td>
-      <td>${t.price_confidence}</td><td>${t.position_need_score}</td><td>${t.price_evidence_score}</td><td>${t.bench_probability}</td>`;
+    const ceiling = t.exact_ceiling_dollars != null ? `$${t.exact_ceiling_dollars.toFixed(0)} (exact)` :
+                    t.approximate_ceiling_dollars != null ? `$${t.approximate_ceiling_dollars.toFixed(0)} (approx.)` : "--";
+    tr.innerHTML = `<td>${t.player}</td><td>${t.position}</td><td>${t.tier != null ? t.tier : "--"}</td>
+      <td>${t.projected_points != null ? t.projected_points.toFixed(1) : "--"}</td>
+      <td>${t.marginal_lineup_points != null ? t.marginal_lineup_points.toFixed(1) : "--"}</td>
+      <td>$${t.team_specific_value_dollars.toFixed(0)}</td>
+      <td>${t.expected_market_price_dollars != null ? "$" + t.expected_market_price_dollars.toFixed(0) : "--"}</td>
+      <td>${ceiling}</td>
+      <td><b>$${t.recommended_stop_dollars.toFixed(0)}</b></td>
+      <td>$${t.surplus_or_deficit_dollars.toFixed(1)}</td>
+      <td>${t.confidence}</td>
+      <td>${t.total_score.toFixed(3)}</td>
+      <td>${t.critical_review_required ? "CRITICAL_REVIEW_REQUIRED" : t.recommendation_class}</td>
+      <td>${t.reason || ""}</td>`;
     tbody.appendChild(tr);
   });
 }
