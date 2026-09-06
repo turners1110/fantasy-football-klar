@@ -412,20 +412,59 @@ document.getElementById("modal-submit").addEventListener("click", async () => {
 });
 
 // ---- My Roster ----
+// Official league structure (16 total: 9 starters [1 QB, 2 RB, 2 WR, 1 TE,
+// 3 FLEX] + 7 bench). FLEX-eligible positions are RB/WR/TE, so a team can
+// legally exceed a position's own required-starter count and still be
+// using those extra players productively via FLEX -- "Status" reflects
+// that instead of just flagging any count above the named-starter number
+// as a surplus.
+const REQUIRED_STARTERS = { QB: 1, RB: 2, WR: 2, TE: 1 };
+const FLEX_ELIGIBLE = ["RB", "WR", "TE"];
+const FLEX_SLOTS = 3;
+
 async function loadRoster() {
   const s = await api("/status");
   document.getElementById("roster-summary").innerHTML =
     `Budget remaining: <b>$${s.budget_remaining.toFixed(2)}</b> | Open slots: <b>${s.open_slots}</b> | ` +
     `Min reserve: <b>$${s.min_reserve.toFixed(2)}</b> | Legal max bid: <b>$${s.legal_max_bid.toFixed(2)}</b>`;
+
+  // Position counts & requirements table
+  const posBody = document.getElementById("roster-position-body");
+  posBody.innerHTML = "";
+  const counts = s.position_counts || {};
+  Object.keys(REQUIRED_STARTERS).forEach(pos => {
+    const required = REQUIRED_STARTERS[pos];
+    const current = counts[pos] || 0;
+    const stillNeeded = (s.position_needs && s.position_needs[pos]) || 0;
+    let status;
+    if (stillNeeded > 0) status = `Need ${stillNeeded} more starter${stillNeeded > 1 ? "s" : ""}`;
+    else if (FLEX_ELIGIBLE.includes(pos) && current > required) status = `${current - required} extra (FLEX-eligible)`;
+    else status = "Filled";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${pos}</td><td>${required}</td><td>${current}</td><td>${status}</td>`;
+    posBody.appendChild(tr);
+  });
+  const flexNeeded = (s.position_needs && s.position_needs.FLEX) || 0;
+  const flexRow = document.createElement("tr");
+  flexRow.innerHTML = `<td>FLEX (RB/WR/TE)</td><td>${FLEX_SLOTS}</td><td>--</td><td>${flexNeeded > 0 ? `Need ${flexNeeded} more` : "Filled"}</td>`;
+  posBody.appendChild(flexRow);
+
   const needs = Object.entries(s.position_needs).filter(([k, v]) => v > 0);
   document.getElementById("roster-needs").textContent = needs.length
     ? needs.map(([k, v]) => `${k}: ${v} needed`).join(" | ") : "All starting needs filled.";
+
+  // 16 total slots, correctly including protected-but-unlisted occupancy
+  // (college-rights players like Mendoza/Bond aren't in s.roster but ARE
+  // counted in s.open_slots -- so "filled" = 16 - open_slots, not
+  // roster.length, or this undercounts real occupancy).
+  const TOTAL_SLOTS = 16;
+  const filledCount = TOTAL_SLOTS - s.open_slots;
   const visual = document.getElementById("roster-slots-visual");
   visual.innerHTML = "";
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < TOTAL_SLOTS; i++) {
     const span = document.createElement("span");
-    span.className = i < s.roster.length ? "slot-filled" : "slot-open";
-    span.textContent = i < s.roster.length ? "✓" : "";
+    span.className = i < filledCount ? "slot-filled" : "slot-open";
+    span.textContent = i < filledCount ? "✓" : "";
     visual.appendChild(span);
   }
   const tbody = document.getElementById("roster-body");
