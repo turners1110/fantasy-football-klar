@@ -361,10 +361,17 @@ def test_cleanup_a_no_fifteen_man_roster_text_in_app_js():
     assert "15-man roster" not in js
 
 
-def test_cleanup_f_warning_present_when_overrides_empty(cli):
+def test_cleanup_f_warning_clears_now_that_overrides_are_filled(cli):
+    # Historically this asserted the warning was PRESENT because
+    # data/protected_player_overrides.csv was empty. Sam has since
+    # supplied Brad's and Reid's real 7th-protected-player names
+    # (Makai Lemon, Carnell Tate) from commissioner spreadsheet
+    # screenshots, so the mechanism now correctly clears the warning --
+    # see test_global_protected_player_warning_clears for the direct
+    # assertion, and test_protected_player_overrides_file_loads_both_named_players
+    # for confirmation the real file is what's driving this.
     status = cli.api_operational_status()
-    assert status["protected_player_warning"] is not None
-    assert "BRAD AND REID" in status["protected_player_warning"]
+    assert status["protected_player_warning"] is None
 
 
 def test_cleanup_f_template_file_exists():
@@ -463,8 +470,56 @@ def test_cleanup_e_sam_protected_breakdown(cli):
 
 
 def test_cleanup_e_brad_shows_unnamed_protected_slot(cli):
+    # As of the real data/protected_player_overrides.csv (commissioner
+    # screenshots confirmed Sam supplied), Brad's and Reid's 7th
+    # protected player is now NAMED (Makai Lemon / Carnell Tate), so
+    # unnamed_protected_count correctly clears to 0 for both -- see
+    # test_protected_player_overrides_resolve_brad_and_reid below for
+    # the full override-resolution trace.
     detail = cli.api_team_detail("Brad")
     b = detail["protected_breakdown"]
-    assert b["unnamed_protected_count"] == 1
+    assert b["unnamed_protected_count"] == 0
+    assert b["college_rights_count"] == 1
     assert b["total_occupied_count"] == 7
     assert b["open_auction_slots"] == 9
+
+
+# ---------------------------------------------------------------------------
+# Protected-player-overrides resolution: Brad's/Reid's real names now
+# supplied via data/protected_player_overrides.csv (commissioner
+# screenshots) -- Makai Lemon (Brad) and Carnell Tate (Reid).
+# ---------------------------------------------------------------------------
+
+def test_protected_player_overrides_file_loads_both_named_players(cli):
+    assert cli.protected_player_overrides == {"Makai Lemon", "Carnell Tate"}
+    assert cli.protected_player_overrides_by_team == {
+        "Brad": ["Makai Lemon"],
+        "Reid": ["Carnell Tate"],
+    }
+
+
+def test_protected_player_overrides_resolve_brad_and_reid(cli):
+    brad = cli.api_team_detail("Brad")
+    reid = cli.api_team_detail("Reid")
+    assert brad["college_rights_holdings"] == ["Makai Lemon"]
+    assert reid["college_rights_holdings"] == ["Carnell Tate"]
+    assert brad["protected_breakdown"]["unnamed_protected_count"] == 0
+    assert reid["protected_breakdown"]["unnamed_protected_count"] == 0
+
+
+def test_global_protected_player_warning_clears(cli):
+    status = cli.api_operational_status()
+    assert status["protected_player_warning"] is None
+
+
+def test_named_overrides_excluded_from_pool_search_and_sale(cli):
+    for name, team in [("Makai Lemon", "Brad"), ("Carnell Tate", "Reid")]:
+        assert name not in cli.store.state.available_pool
+        assert name not in cli.players
+        assert cli.api_search(name) == []
+        protected_hits = cli.api_search(name, include_protected=True)
+        assert len(protected_hits) == 1
+        assert protected_hits[0]["status"] == "COLLEGE_RIGHTS_HELD"
+        assert protected_hits[0]["owner"] == team
+        result = cli.cmd_sale(name, "Brandon", "5")
+        assert result.startswith("REFUSED:")

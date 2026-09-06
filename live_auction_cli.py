@@ -71,6 +71,29 @@ def _load_protected_player_overrides() -> set:
         return set()
 
 
+def _load_protected_player_overrides_by_team() -> dict:
+    """Same source file as _load_protected_player_overrides (single
+    canonical parse of data/protected_player_overrides.csv), but keeps
+    the internal_team_id -> [player_name, ...] association so
+    api_team_detail can show each team's now-named protected player(s)
+    instead of leaving them counted only as "unnamed_protected_count".
+    Empty/missing file or missing column -> empty dict, never an error."""
+    if not PROTECTED_PLAYER_OVERRIDES_PATH.exists():
+        return {}
+    try:
+        import pandas as pd
+        df = pd.read_csv(PROTECTED_PLAYER_OVERRIDES_PATH)
+        out: dict = {}
+        for _, row in df.iterrows():
+            team_id = str(row.get("internal_team_id", "")).strip()
+            name = str(row.get("player_name", "")).strip()
+            if team_id and name and name.lower() != "nan":
+                out.setdefault(team_id, []).append(name)
+        return {team_id: sorted(names) for team_id, names in out.items()}
+    except Exception:
+        return {}
+
+
 PROTECTED_PLAYER_IDENTITY_INCOMPLETE_WARNING = (
     "PROTECTED PLAYER IDENTITY INCOMPLETE FOR BRAD AND REID -- each officially holds "
     "7 protected players per the commissioner table, but only 6 are named in this system's "
@@ -322,6 +345,7 @@ class AuctionCLI:
         # Empty file today -> empty set, so this is a pure no-op until
         # Sam fills it in.
         self.protected_player_overrides = _load_protected_player_overrides()
+        self.protected_player_overrides_by_team = _load_protected_player_overrides_by_team()
         st.college_rights_excluded = set(COLLEGE_RIGHTS) | self.protected_player_overrides
         for overridden_name in self.protected_player_overrides:
             st.available_pool.pop(overridden_name, None)
@@ -1644,6 +1668,15 @@ class AuctionCLI:
             return None
         sold_by_team = [e for e in self.api_log() if e["team"] == team_id]
         college_rights_holdings = sorted(COLLEGE_RIGHTS) if team_id == self.store.state.sam_team_id else []
+        # Names supplied via data/protected_player_overrides.csv (e.g.
+        # Brad's/Reid's previously-unidentified 7th protected player)
+        # count as named college-rights holdings for their own team too,
+        # once Sam fills them in -- no separate display path needed.
+        college_rights_holdings = sorted(
+            set(college_rights_holdings) | set(
+                getattr(self, "protected_player_overrides_by_team", {}).get(team_id, [])
+            )
+        )
         # V3.1 CLEANUP E: one unified protected-occupancy breakdown,
         # never presenting the named veteran roster as if it were the
         # team's FULL protected roster. t.college_rights_count is a
@@ -1737,6 +1770,15 @@ class AuctionCLI:
             for name in COLLEGE_RIGHTS:
                 if query_norm in name.lower():
                     results.append({"player": name, "position": "?", "status": "COLLEGE_RIGHTS_HELD", "owner": "Sam"})
+            # Names supplied via data/protected_player_overrides.csv (e.g.
+            # Brad's/Reid's previously-unidentified 7th protected player)
+            # get the SAME transparent, non-sellable search treatment as
+            # Sam's Mendoza/Bond college-rights holds above -- never
+            # silently invisible to an include_protected search once named.
+            for team_id, names in getattr(self, "protected_player_overrides_by_team", {}).items():
+                for name in names:
+                    if query_norm in name.lower():
+                        results.append({"player": name, "position": "?", "status": "COLLEGE_RIGHTS_HELD", "owner": team_id})
         # GATE E (V3 repair, Part 3): dedupe by canonical identity so a
         # search can never show what looks like two separate players for
         # the same real person (the alias-duplicate bug class) -- keeps
