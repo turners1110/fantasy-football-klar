@@ -122,7 +122,7 @@ async function loadTeamDetail(teamId) {
   const rosterRows = t.roster.map(rosterRowHtml).join("<br>");
   const saleRows = t.sale_history.map(s => `${s.player} ($${s.price.toFixed(0)})`).join(", ") || "none yet";
   const rightsNote = t.college_rights_holdings.length
-    ? `<br><i>College-rights holdings (NOT part of the 15-man roster): ${t.college_rights_holdings.join(", ")}</i>` : "";
+    ? `<br><i>College-rights protected players occupy roster capacity but remain outside the veteran auction pool and do not consume veteran auction cash: ${t.college_rights_holdings.join(", ")}</i>` : "";
   div.innerHTML = `<h4>${teamId}</h4>Budget: $${t.budget_remaining.toFixed(2)} | Open slots: ${t.open_slots} | Legal max: $${t.legal_max_bid.toFixed(2)}<br>
     <b>Roster (${t.roster_count}):</b><br>${rosterRows}<br><b>Auction purchases:</b> ${saleRows}${rightsNote}`;
 }
@@ -136,7 +136,7 @@ async function loadAllRosters() {
   div.innerHTML = data.teams.map(t => {
     const rosterRows = t.roster.map(rosterRowHtml).join("<br>");
     const rightsNote = t.college_rights_holdings.length
-      ? `<br><i>College-rights holdings (NOT part of the 15-man roster): ${t.college_rights_holdings.join(", ")}</i>` : "";
+      ? `<br><i>College-rights protected players occupy roster capacity but remain outside the veteran auction pool and do not consume veteran auction cash: ${t.college_rights_holdings.join(", ")}</i>` : "";
     return `<div class="team-roster-block">
       <h4>${t.team} (${t.roster_count} players, $${t.budget_remaining.toFixed(0)} left)</h4>
       ${rosterRows}${rightsNote}
@@ -588,6 +588,13 @@ async function refreshOperationalStatus() {
     document.getElementById("opstat-connection").textContent = "OK";
     document.getElementById("opstat-exact").textContent = s.exact_freshness;
     document.getElementById("opstat-sim").textContent = s.market_prior_freshness;
+    const warnBanner = document.getElementById("protected-warning-banner");
+    if (s.protected_player_warning) {
+      warnBanner.textContent = "⚠ " + s.protected_player_warning;
+      warnBanner.classList.remove("hidden");
+    } else {
+      warnBanner.classList.add("hidden");
+    }
   } catch (e) {
     const el = document.getElementById("opstat-connection");
     if (el) el.textContent = window.__connectionStatus === "AUTH_REQUIRED" ? "AUTH_REQUIRED (enter LAN token)" : "DISCONNECTED";

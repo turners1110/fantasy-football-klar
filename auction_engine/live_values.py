@@ -17,11 +17,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from auction_model.config import BENCH_SIZE  # V3.1 REPAIR 3: canonical value (7), was a stale local 6
+
 BENCH_WEIGHT = 0.15  # matches auction_model.config.BENCH_POINT_WEIGHT
 STARTER_SLOTS = {"QB": 1, "RB": 2, "WR": 2, "TE": 1}
 FLEX_SLOTS = 3
 FLEX_ELIGIBLE = {"RB", "WR", "TE"}
-BENCH_SIZE = 6
 
 
 def greedy_best_lineup(players: list[dict]) -> tuple[float, float, dict]:

@@ -124,9 +124,20 @@ class PracticeDraftSession:
     def _build_md_team(self, team_id: str) -> MDTeam:
         t = self.cli.store.state.teams[team_id]
         roster = [(p["player_id"], p["position"], p["price"], p.get("projected_points", 0.0)) for p in t.roster]
+        # V3.1 REPAIR 5: pass the REAL official protected-but-unlisted
+        # occupancy through to MDTeam's explicit override -- without
+        # this, every AI team (and Sam) looked 2 (or 1, for Brad/Reid)
+        # slots more open than they officially are, understating
+        # max_bid_cap's reserve and slots_needed's feasibility gate
+        # throughout the whole practice draft. This is the likely direct
+        # cause of the 106/113 stall found in the prior pass: teams
+        # thought they had more room than they legally did, so budgets/
+        # feasibility drifted out of sync with the real 16-slot cap as
+        # the draft progressed.
         return MDTeam(
             name=team_id, budget_remaining=t.budget_remaining, roster=roster,
             archetype=self.archetype_by_team.get(team_id, "value_purist"),
+            protected_but_unlisted=t.college_rights_count,
         )
 
     def _build_md_pool(self) -> dict[str, MDPlayer]:

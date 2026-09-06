@@ -49,6 +49,14 @@ class Team:
     # kept independent of `private_value` above, which nomination.py still
     # reads as a multiplicative ratio and must not change meaning.
     noise_adjustment_cache: dict = field(default_factory=dict)
+    # V3.1 REPAIR 5: explicit slots-needed override for teams whose
+    # official roster includes protected occupants who are NEVER added
+    # to `roster` (Sam's Mendoza/Bond college-rights holds; Brad/Reid's
+    # one unidentified protected slot each). Defaults to 0 -- every
+    # other team/caller is completely unaffected. Do not infer this from
+    # len(roster) alone; the caller (e.g. PracticeDraftSession) must set
+    # it explicitly from the real TeamState.college_rights_count.
+    protected_but_unlisted: int = 0
 
     @property
     def strategy(self) -> Archetype:
@@ -56,7 +64,7 @@ class Team:
 
     @property
     def slots_needed(self) -> int:
-        return max(0, cfg.REQUIRED_ROSTER_SIZE - len(self.roster))
+        return max(0, cfg.REQUIRED_ROSTER_SIZE - len(self.roster) - self.protected_but_unlisted)
 
     @property
     def is_done(self) -> bool:

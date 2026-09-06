@@ -47,6 +47,40 @@ SUNDAY_FINAL_DIR = BASE_DIR / "outputs" / "auction_rebuild" / "sunday_final"
 
 COLLEGE_RIGHTS = {"Fernando Mendoza", "Isaiah Bond"}
 
+PROTECTED_PLAYER_OVERRIDES_PATH = BASE_DIR / "data" / "protected_player_overrides.csv"
+
+
+def _load_protected_player_overrides() -> set:
+    """V3.1 CLEANUP F: Brad's and Reid's 7th protected player is
+    unidentified. Rather than a code change once Sam supplies the
+    name(s), he fills in
+    data/protected_player_overrides.csv (see
+    outputs/auction_rebuild/live_v31/missing_protected_player_template.csv
+    for the exact columns) -- any named player_name row there is
+    excluded from the veteran auction pool automatically on next
+    launch, no code change required. Empty/missing file -> empty set,
+    never an error."""
+    if not PROTECTED_PLAYER_OVERRIDES_PATH.exists():
+        return set()
+    try:
+        import pandas as pd
+        df = pd.read_csv(PROTECTED_PLAYER_OVERRIDES_PATH)
+        names = df["player_name"].dropna().astype(str).str.strip()
+        return set(n for n in names if n)
+    except Exception:
+        return set()
+
+
+PROTECTED_PLAYER_IDENTITY_INCOMPLETE_WARNING = (
+    "PROTECTED PLAYER IDENTITY INCOMPLETE FOR BRAD AND REID -- each officially holds "
+    "7 protected players per the commissioner table, but only 6 are named in this system's "
+    "data for either team. The 7th protected player for each is UNKNOWN and may still be "
+    "searchable or appear as a sellable player in the auction pool for those two teams "
+    "specifically. Slot-count math (open slots/legal max bid) is correct for both teams "
+    "regardless. See data/protected_player_overrides.csv to supply the missing name(s) once "
+    "known -- no code change required."
+)
+
 COMMANDS = {
     "status": "Show Sam's budget, open slots, position needs, reserve, legal max bid, roster.",
     "sale <player> <team> <price>": "Record a sale through the real event engine.",
@@ -123,6 +157,12 @@ class AuctionCLI:
         # has moved on (Stage 2 STALE_EXACT_RESULT requirement).
         self._exact_cache: dict = {}
         self._exact_cache_sequence: int = self.store.state.sequence_number
+        # V3.1 REPAIR 4: sequence-bound TRUE exact-ceiling records, keyed
+        # by canonical_id -- see _record_exact_ceiling /
+        # _get_current_exact_ceiling_record. Distinct from _exact_cache
+        # above (which stores raw per-price purchase-vs-pass results,
+        # not a real ceiling) -- never conflate the two.
+        self._exact_ceiling_records: dict = {}
         self._static_hard_max = self._load_static_hard_max()
 
     def _rebuild_market_state_from_sales(self) -> "MarketAdjustmentState":
@@ -277,7 +317,15 @@ class AuctionCLI:
                                            college_rights_count=additional_protected)
         st.available_pool = {name: {"display_name": name, "position": p.position, "projected_points": p.projected_points,
                                      "base_value": p.base_value} for name, p in self.players.items()}
-        st.college_rights_excluded = set(COLLEGE_RIGHTS)
+        # V3.1 CLEANUP F: once Sam supplies Brad's/Reid's missing 7th
+        # protected player name(s) in data/protected_player_overrides.csv,
+        # they are excluded here automatically -- no code change needed.
+        # Empty file today -> empty set, so this is a pure no-op until
+        # Sam fills it in.
+        self.protected_player_overrides = _load_protected_player_overrides()
+        st.college_rights_excluded = set(COLLEGE_RIGHTS) | self.protected_player_overrides
+        for overridden_name in self.protected_player_overrides:
+            st.available_pool.pop(overridden_name, None)
         return st
 
     # ---- helpers ----
@@ -324,6 +372,8 @@ class AuctionCLI:
         # while wiring this CLI up -- see final_report.md.)
         if player in COLLEGE_RIGHTS:
             return f"REFUSED: {player} is a college-rights asset and cannot enter the veteran auction."
+        if player in getattr(self, "protected_player_overrides", set()):
+            return f"REFUSED: {player} is a protected player per data/protected_player_overrides.csv and cannot enter the veteran auction."
         if any(player in t.keeper_ids for t in self.store.state.teams.values()):
             return f"REFUSED: {player} is a keeper and cannot be sold in the veteran auction."
         if player not in self.players and player not in self._remaining_pool():
@@ -442,11 +492,20 @@ class AuctionCLI:
             rec.recommendation_type = "CRITICAL_REVIEW_REQUIRED"
             rec.reason = f"CRITICAL_REVIEW_REQUIRED ({', '.join(governed.critical_reasons)}). " + rec.reason
 
+        # V3.1 CLEANUP B: this used to print
+        # "Sam marginal roster value: $189.35" -- a $ sign in front of a
+        # POINTS quantity, exactly the units-mixing bug class this whole
+        # repair exists to catch, just in a text string instead of a
+        # JSON field. marginal_value is fantasy points; team-specific
+        # value/expected market price/recommended stop are dollars --
+        # displayed as clearly separate lines with their own units,
+        # never combined into one ambiguous number.
         lines = [
             f"{player} ({pos})",
-            f"  Live expected price: ${market['live_expected_price']:.0f}  [{market.get('calculation_label', '?')}]",
+            f"  Sam marginal roster value: {marginal_value:.1f} points  [{calc_label}]  (expected role: {expected_role})",
+            f"  Team-specific value: ${governed.dollar_ceiling:.0f}",
+            f"  Expected market price: ${market['live_expected_price']:.0f}  [{market.get('calculation_label', '?')}]",
             f"  Conservative estimate: ${market['live_expected_price'] * 1.15:.0f} (heuristic markup)",
-            f"  Sam marginal roster value: ${marginal_value:.2f}  [{calc_label}]  (expected role: {expected_role})",
             f"  Legal max bid: ${sam.legal_max_bid:.2f}",
             f"  RECOMMENDED STOP: ${rec.recommended_final_bid:.0f}  [{rec.recommendation_type}]",
             f"  Reason: {rec.reason}",
@@ -500,12 +559,21 @@ class AuctionCLI:
                 live_market_price = pre_draft_price
             proj = self.players[r.player].projected_points if r.player in self.players else info.get("projected_points", 0.0)
             tier = self.players[r.player].tier if r.player in self.players else None
-            exact_current = self._has_current_exact(r.player)
+            # V3.1 REPAIR 4: read the REAL sequence-bound exact-ceiling
+            # record -- never infer "exact is current" from the mere
+            # presence of a per-price cache entry (the old bug this
+            # replaces: any cached test price, even one from an
+            # unrelated `check`, was treated as proof a true ceiling had
+            # been solved, and the governed APPROXIMATE value was
+            # substituted in its place and labeled exact).
+            exact_record = self._get_current_exact_ceiling_record(r.player)
+            exact_current = exact_record is not None
             self._targets_extra_by_player[r.player] = {
                 "tier": tier, "projected_points": round(proj, 1),
                 "marginal_lineup_points": round(r.marginal_value, 2),
                 "expected_market_price_dollars": round(live_market_price, 1),
                 "exact_is_current": exact_current,
+                "exact_ceiling_dollars": exact_record["exact_ceiling_dollars"] if exact_record else None,
             }
             remaining_alts = max(0, pos_supply.get(r.position, 1) - 1)
             is_last = pos_supply.get(r.position, 0) <= 1 and needs.get(r.position, 0) > 0
@@ -552,21 +620,29 @@ class AuctionCLI:
             live_px = max(1.0, s.team_specific_value - s.expected_surplus_at_price)
             expected_role_full = "required starter" if s.starting_lineup_gain == s.team_specific_value and s.team_specific_value > 0 else (
                 "bench depth" if s.bench_probability > 0.5 else "FLEX starter")
+            extra = self._targets_extra_by_player.get(s.player, {})
+            exact_current = extra.get("exact_is_current", False)
             # s.team_specific_value is ALREADY a dollar-denominated governed
             # ceiling (see _scored_targets above) -- pass it through
             # precomputed_team_specific_dollar_value, never as
             # marginal_value_points, or it would be silently
             # double-converted from a dollar figure as if it were points.
-            governed = self._governed_ceiling(s.player, s.position, 0.0, expected_role_full, live_px,
-                                               precomputed_team_specific_dollar_value=s.team_specific_value)
+            # V3.1 REPAIR 4 (spec item 11): when a TRUE current exact
+            # ceiling exists, it must also be a real candidate in the
+            # governing min() -- not just displayed, but actually able to
+            # LOWER the recommended stop below the approximation.
+            governed = self._governed_ceiling(
+                s.player, s.position, 0.0, expected_role_full, live_px,
+                exact_ceiling=extra.get("exact_ceiling_dollars"),
+                exact_status="OPTIMAL" if exact_current else None, exact_is_current=exact_current,
+                precomputed_team_specific_dollar_value=s.team_specific_value,
+            )
             rec = compute_recommended_bid(
                 player=s.player, safety_adjusted_ceiling=governed.dollar_ceiling, legal_max_bid=sam.legal_max_bid,
                 portfolio_feasibility_limit=None, confidence=6, live_expected_price=live_px,
             )
             if governed.critical_review_required:
                 rec.recommendation_type = "CRITICAL_REVIEW_REQUIRED"
-            extra = self._targets_extra_by_player.get(s.player, {})
-            exact_current = extra.get("exact_is_current", False)
             # V3 Part 9: full required Targets-page field list, every
             # dollar-vs-points field explicitly unit-suffixed. Fields the
             # spec asks for that this pass genuinely cannot populate
@@ -584,7 +660,17 @@ class AuctionCLI:
                 "expected_market_price_dollars": extra.get("expected_market_price_dollars"),
                 "market_p25_p50_p75_p90_dollars": None,  # no validated Monte Carlo batch this pass -- honest None
                 "draft_probability": None,  # same reason
-                "exact_ceiling_dollars": (s.team_specific_value if exact_current else None),
+                # V3.1 REPAIR 4: this used to substitute the governed
+                # APPROXIMATE team-specific value (s.team_specific_value)
+                # here and label it "exact" whenever ANY per-price exact
+                # cache entry happened to exist for this player -- a
+                # real mislabeling bug, not a display issue. Now reads
+                # the TRUE binary-searched ceiling from the sequence-
+                # bound record (see _record_exact_ceiling /
+                # _get_current_exact_ceiling_record); exact_ceiling_dollars
+                # is null whenever no current exact solve exists, never
+                # backfilled with the approximation.
+                "exact_ceiling_dollars": extra.get("exact_ceiling_dollars"),
                 "approximate_ceiling_dollars": (None if exact_current else s.team_specific_value),
                 "exact_or_approximate_status": ("EXACT_CURRENT" if exact_current else "APPROXIMATE_NO_CURRENT_EXACT"),
                 "recommended_stop_dollars": rec.recommended_final_bid,
@@ -658,6 +744,43 @@ class AuctionCLI:
     def _invalidate_exact_cache(self):
         self._exact_cache = {}
         self._exact_cache_sequence = self.store.state.sequence_number
+        # V3.1 REPAIR 4: the sequence-bound exact-CEILING record (distinct
+        # from the raw per-price _exact_cache above) is explicitly
+        # invalidated on every state-changing event, not just left to
+        # rely on the sequence-match check at read time -- belt and
+        # suspenders, per the spec's "invalidate the record, or restore
+        # it only if its sequence still matches" requirement.
+        self._exact_ceiling_records = {}
+
+    def _record_exact_ceiling(self, player: str, ceiling: int | None, purchase_status: str, pass_status: str) -> None:
+        """V3.1 REPAIR 4: the ONE place a true binary-searched exact
+        ceiling gets written. Keyed by canonical_id so an alias lookup
+        (Gate E) still finds the same record. Every reader
+        (api_board/api_check/api_verdict/api_targets/CLI exact output)
+        must go through _get_current_exact_ceiling_record below --
+        NEVER infer "exact is current" from the presence of an arbitrary
+        per-price cache entry (the old bug: api_targets treated ANY
+        cached price-point as proof a real ceiling had been solved,
+        then substituted the approximate governed value in its place)."""
+        cid = canonical_id(player)
+        self._exact_ceiling_records[cid] = {
+            "player": player, "canonical_id": cid, "exact_ceiling_dollars": ceiling,
+            "sequence_number": self.store.state.sequence_number,
+            "purchase_status": purchase_status, "pass_status": pass_status,
+            "solver_status": "OPTIMAL" if (purchase_status == "OPTIMAL" and pass_status == "OPTIMAL") else "NONOPTIMAL",
+            "calculated_at": time.time(),
+        }
+
+    def _get_current_exact_ceiling_record(self, player: str) -> dict | None:
+        """Returns the saved exact-ceiling record for this player ONLY if
+        it was computed at the CURRENT auction sequence -- otherwise
+        None (stale), regardless of what per-price cache entries happen
+        to exist. This is the single source of truth for
+        exact_or_approximate_status everywhere in this file."""
+        rec = self._exact_ceiling_records.get(canonical_id(player))
+        if rec is None or rec["sequence_number"] != self.store.state.sequence_number:
+            return None
+        return rec
 
     # ---- Stage 2: exact on-demand checks ----
 
@@ -690,7 +813,16 @@ class AuctionCLI:
         if info is None:
             return None, False
         sam = self._sam()
-        n_auction_spots = max(0, 16 - len(sam.roster))
+        # V3.1 REPAIR 1: was `max(0, 16 - len(sam.roster))`, which
+        # ignores sam.college_rights_count (Mendoza/Bond occupy 2 real
+        # roster slots but are never IN sam.roster) -- this produced 10
+        # auction openings instead of the official 8, so the exact
+        # solver had been evaluating an impossible 18-occupant final
+        # roster (6 keepers + 10 purchases + 2 protected = 18) the
+        # entire time. `sam.open_slots` is the one canonical property
+        # that already accounts for this (see TeamState.open_slots in
+        # auction_engine/auction_state.py) -- use it, never re-derive it.
+        n_auction_spots = sam.open_slots
 
         pool_minus = self._pool_df_excluding(set())
         roster_with = sam.roster + [{"player_id": player, "position": info["position"], "price": test_price,
@@ -702,10 +834,12 @@ class AuctionCLI:
         result_purchase = exact_roster_solver.solve_exact_roster(
             pool_minus[pool_minus["player"] != player], budget=max(0.0, sam.budget_remaining - test_price),
             n_auction_spots=max(0, n_auction_spots - 1), keepers=keepers_with,
+            protected_but_unlisted=sam.college_rights_count,
         )
         pool_pass = self._pool_df_excluding({player})
         result_pass = exact_roster_solver.solve_exact_roster(
             pool_pass, budget=sam.budget_remaining, n_auction_spots=n_auction_spots, keepers=self._keepers_df_for_sam(),
+            protected_but_unlisted=sam.college_rights_count,
         )
         runtime = time.time() - t0
         payload = (result_purchase, result_pass, runtime, self.store.state.sequence_number)
@@ -768,12 +902,23 @@ class AuctionCLI:
         if governed.critical_review_required:
             rec.recommendation_type = "CRITICAL_REVIEW_REQUIRED"
 
+        # V3.1 REPAIR 4: the CLI's `exact` command must show the SAME
+        # true binary-searched ceiling api_exact/api_targets/api_board/
+        # api_verdict all use -- never a surplus-sign guess or a
+        # substituted approximation. Recorded to the same sequence-bound
+        # store so every reader agrees.
+        exact_ceiling = self._binary_search_exact_ceiling(player, info["position"])
+        if not stale:
+            self._record_exact_ceiling(player, exact_ceiling, result_purchase.status, result_pass.status)
+        ceiling_line = f"  EXACT CEILING (binary-searched): ${exact_ceiling:.0f}" if exact_ceiling is not None else "  EXACT CEILING (binary-searched): unavailable"
+
         lines = [
             f"{player} -- EXACT purchase-vs-pass at test price ${test_price:.0f}{stale_label}",
             f"  Purchase roster size: {len(result_purchase.selected)}  Pass roster size: {len(result_pass.selected)}",
             f"  Starting-lineup change: {surplus:+.2f}  Bench change: {bench_change:+.2f}",
             f"  Displaced player(s): {', '.join(displaced) if displaced else 'none'}",
             f"  Exact surplus at ${test_price:.0f}: {surplus:+.2f}",
+            ceiling_line,
             f"  Legal max bid: ${sam.legal_max_bid:.2f}",
             f"  RECOMMENDED STOP: ${rec.recommended_final_bid:.0f}  [{rec.recommendation_type}]",
             f"  Solver status: purchase={result_purchase.status} pass={result_pass.status}  "
@@ -836,6 +981,14 @@ class AuctionCLI:
         # Josh Jacobs post-fix finding: the fast $78 approximation
         # differed from the true $66 exact ceiling by $12).
         exact_ceiling = self._binary_search_exact_ceiling(player, info["position"])
+        if not stale:
+            # V3.1 REPAIR 4: this is the ONE place the true
+            # binary-searched ceiling is written to the sequence-bound
+            # record every other reader (api_board/api_check/api_verdict/
+            # api_targets/CLI) must use. Only recorded when the solve
+            # that produced it is itself current (not stale) -- a stale
+            # binary search must never overwrite a fresher record.
+            self._record_exact_ceiling(player, exact_ceiling, result_purchase.status, result_pass.status)
 
         governed = self._governed_ceiling(
             player, info["position"], real_marginal_points, expected_role_guess, max(1.0, info.get("base_value", 1.0)),
@@ -1196,6 +1349,13 @@ class AuctionCLI:
             "market_prior_observation_count": market_n,
             "market_prior_freshness": "STATIC_PRE_DRAFT_MARKET_PRIOR" + (
                 f" ({market_n} live observations blended in)" if market_n else " (no live observations yet)"),
+            # V3.1 CLEANUP F: visible until Sam supplies the missing
+            # names via data/protected_player_overrides.csv -- never
+            # silently marked resolved.
+            "protected_player_warning": (
+                None if getattr(self, "protected_player_overrides", set())
+                else PROTECTED_PLAYER_IDENTITY_INCOMPLETE_WARNING
+            ),
         }
 
     def api_board(self) -> list[dict]:
@@ -1227,7 +1387,17 @@ class AuctionCLI:
             except Exception:
                 live_price = pre_draft_price
                 calc_label = "SOLVER_FAILURE_FALLBACK"
-            governed = self._governed_ceiling(r.player, r.position, r.marginal_value, r.expected_role, live_price)
+            # V3.1 REPAIR 4: if a TRUE current exact ceiling exists for
+            # this player, it must be a real candidate lowering the
+            # governed stop here too -- api_board must never show a
+            # higher recommended_stop than a player's own genuinely
+            # solved exact ceiling.
+            exact_record = self._get_current_exact_ceiling_record(r.player)
+            governed = self._governed_ceiling(
+                r.player, r.position, r.marginal_value, r.expected_role, live_price,
+                exact_ceiling=(exact_record["exact_ceiling_dollars"] if exact_record else None),
+                exact_status="OPTIMAL" if exact_record else None, exact_is_current=exact_record is not None,
+            )
             rec = compute_recommended_bid(
                 player=r.player, safety_adjusted_ceiling=governed.dollar_ceiling, legal_max_bid=sam.legal_max_bid,
                 portfolio_feasibility_limit=None, confidence=6, live_expected_price=live_price,
@@ -1240,6 +1410,8 @@ class AuctionCLI:
                 "recommended_stop": rec.recommended_final_bid, "recommendation": rec_type,
                 "critical_review_required": governed.critical_review_required, "critical_reasons": governed.critical_reasons,
                 "calculation_label": calc_label + " | " + governed.calculation_label, "position_need": needs.get(r.position, 0),
+                "exact_ceiling_dollars": (exact_record["exact_ceiling_dollars"] if exact_record else None),
+                "exact_or_approximate_status": "EXACT_CURRENT" if exact_record else "APPROXIMATE_NO_CURRENT_EXACT",
             })
         return out
 
@@ -1261,7 +1433,15 @@ class AuctionCLI:
         rows = compute_live_sam_values(sam.roster, {player: info})
         marginal_value = rows[0].marginal_value if rows else 0.0
         expected_role = rows[0].expected_role if rows else "unknown"
-        governed = self._governed_ceiling(player, pos, marginal_value, expected_role, market["live_expected_price"])
+        # V3.1 REPAIR 4: same real-exact-record wiring as api_board/
+        # api_targets/api_verdict -- api_check must never show a
+        # recommended stop above a genuinely current exact ceiling.
+        exact_record = self._get_current_exact_ceiling_record(player)
+        governed = self._governed_ceiling(
+            player, pos, marginal_value, expected_role, market["live_expected_price"],
+            exact_ceiling=(exact_record["exact_ceiling_dollars"] if exact_record else None),
+            exact_status="OPTIMAL" if exact_record else None, exact_is_current=exact_record is not None,
+        )
         rec = compute_recommended_bid(
             player=player, safety_adjusted_ceiling=governed.dollar_ceiling, legal_max_bid=sam.legal_max_bid,
             portfolio_feasibility_limit=None, confidence=6, live_expected_price=market["live_expected_price"],
@@ -1277,6 +1457,8 @@ class AuctionCLI:
             "reason": (f"CRITICAL_REVIEW_REQUIRED ({', '.join(governed.critical_reasons)}). " if governed.critical_review_required else "") + rec.reason,
             "legal_max_bid": sam.legal_max_bid,
             "calculation_label": market.get("calculation_label", "APPROXIMATE_LIVE_ROSTER_VALUE"),
+            "exact_ceiling_dollars": (exact_record["exact_ceiling_dollars"] if exact_record else None),
+            "exact_or_approximate_status": "EXACT_CURRENT" if exact_record else "APPROXIMATE_NO_CURRENT_EXACT",
         }
 
     def _has_current_exact(self, player: str) -> bool:
@@ -1303,7 +1485,14 @@ class AuctionCLI:
         if check is None:
             return None
         sam = self._sam()
-        exact_current = self._has_current_exact(player)
+        # V3.1 REPAIR 4: use the real sequence-bound exact-ceiling record,
+        # not _has_current_exact's "any per-price cache entry exists"
+        # proxy -- so the nominee panel's exact_ceiling_dollars (when
+        # present) is genuinely the true binary-searched value, matching
+        # api_exact/api_targets/api_board/CLI exactly, never a fabricated
+        # or substituted number.
+        exact_record = self._get_current_exact_ceiling_record(player)
+        exact_current = exact_record is not None
         stop = check["recommended_stop"]
         legal_max = check["legal_max_bid"]
 
@@ -1338,8 +1527,8 @@ class AuctionCLI:
             "market_p25_p50_p75_p90_dollars": None,  # not wired to a validated Monte Carlo batch this pass -- honestly None, not fabricated
             "marginal_lineup_points": round(check["marginal_value"], 2),
             "team_specific_value_dollars": check["recommended_stop"],  # the governed ceiling IS the team-specific-value-aware stop (V3 Part 7)
-            "approximate_ceiling_dollars": check["recommended_stop"],
-            "exact_ceiling_dollars": None,  # only populated by /api/exact; this endpoint is the fast path
+            "approximate_ceiling_dollars": (None if exact_current else check["recommended_stop"]),
+            "exact_ceiling_dollars": (exact_record["exact_ceiling_dollars"] if exact_record else None),
             "exact_is_current": exact_current,
             "recommended_stop_dollars": stop,
             "legal_max_bid_dollars": legal_max,

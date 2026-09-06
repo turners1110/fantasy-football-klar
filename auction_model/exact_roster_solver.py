@@ -86,6 +86,25 @@ def _build_combined_pool(
     return combined.drop_duplicates("player", keep="first").reset_index(drop=True)
 
 
+def _active_roles(protected_but_unlisted: int) -> list[str]:
+    """V3.1 REPAIR 1: the roster-role model (STARTER_ROLES + BENCH_ROLES)
+    was always built assuming every one of the 16 roles is filled by a
+    real, selectable player -- true for every team with fully-named
+    protected occupancy, but NOT true for Sam (2 college-rights bench
+    slots) or Brad/Reid (1 unidentified protected slot each). Those
+    slots are real and occupied, but the people in them are never in
+    `keepers` or `auction_candidates` -- they cannot be assigned a role
+    by this solver at all. Trimming `protected_but_unlisted` BENCH
+    roles off the model (never starter roles -- a protected occupant
+    never displaces a real starting-lineup requirement) makes the
+    model's role count match the TRUE number of real, selectable
+    occupants this solve is actually choosing among."""
+    if protected_but_unlisted <= 0:
+        return list(ALL_ROLES)
+    trimmed_bench = BENCH_ROLES[: max(0, len(BENCH_ROLES) - protected_but_unlisted)]
+    return [r for r, _ in STARTER_ROLES] + trimmed_bench
+
+
 def _build_model(
     pool: pd.DataFrame,
     budget: float,
@@ -93,46 +112,49 @@ def _build_model(
     fix_starting: float | None = None,
     fix_bench: float | None = None,
     stage: int = 1,
+    protected_but_unlisted: int = 0,
 ) -> tuple[pulp.LpProblem, dict, dict]:
     prob = pulp.LpProblem("roster_exact", pulp.LpMaximize)
     players = list(pool.index)
-    y = pulp.LpVariable.dicts("y", (players, ALL_ROLES), cat=pulp.LpBinary)
+    active_roles = _active_roles(protected_but_unlisted)
+    active_bench_roles = [r for r in active_roles if r in BENCH_ROLES]
+    y = pulp.LpVariable.dicts("y", (players, active_roles), cat=pulp.LpBinary)
 
-    for role in ALL_ROLES:
+    for role in active_roles:
         prob += pulp.lpSum(y[i][role] for i in players) == 1, f"fill_{role}"
 
     for i in players:
-        prob += pulp.lpSum(y[i][role] for role in ALL_ROLES) <= 1, f"one_role_{i}"
+        prob += pulp.lpSum(y[i][role] for role in active_roles) <= 1, f"one_role_{i}"
 
     # Keepers must be selected
     for i, row in pool.iterrows():
         if row.get("is_keeper"):
-            prob += pulp.lpSum(y[i][role] for role in ALL_ROLES) == 1, f"keeper_{i}"
+            prob += pulp.lpSum(y[i][role] for role in active_roles) == 1, f"keeper_{i}"
 
     # Exactly n_auction_spots from non-keepers
     prob += (
         pulp.lpSum(
-            pulp.lpSum(y[i][role] for role in ALL_ROLES)
+            pulp.lpSum(y[i][role] for role in active_roles)
             for i, row in pool.iterrows() if not row.get("is_keeper")
         ) == n_auction_spots
     ), "auction_count"
 
     for i, row in pool.iterrows():
         pos = row["position"]
-        for role in ALL_ROLES:
+        for role in active_roles:
             if not _role_eligible(pos, role):
                 prob += y[i][role] == 0, f"pos_{i}_{role}"
 
     prob += (
         pulp.lpSum(
-            float(row["price"]) * pulp.lpSum(y[i][role] for role in ALL_ROLES)
+            float(row["price"]) * pulp.lpSum(y[i][role] for role in active_roles)
             for i, row in pool.iterrows() if not row.get("is_keeper")
         ) <= budget
     ), "budget"
 
     qb_players = [i for i, row in pool.iterrows() if row["position"] == "QB"]
     if qb_players:
-        prob += pulp.lpSum(y[i][role] for i in qb_players for role in ALL_ROLES) <= 2, "max_two_qb"
+        prob += pulp.lpSum(y[i][role] for i in qb_players for role in active_roles) <= 2, "max_two_qb"
 
     start_expr = pulp.lpSum(
         float(row["projected_points"]) * y[i][role]
@@ -140,10 +162,10 @@ def _build_model(
     )
     bench_expr = pulp.lpSum(
         float(row["projected_points"]) * y[i][role]
-        for i, row in pool.iterrows() for role in BENCH_ROLES
+        for i, row in pool.iterrows() for role in active_bench_roles
     )
     spend_expr = pulp.lpSum(
-        float(row["price"]) * pulp.lpSum(y[i][role] for role in ALL_ROLES)
+        float(row["price"]) * pulp.lpSum(y[i][role] for role in active_roles)
         for i, row in pool.iterrows() if not row.get("is_keeper")
     )
 
@@ -168,7 +190,7 @@ def _extract_solution(pool: pd.DataFrame, y: dict, players: list) -> tuple[pd.Da
     roles: dict[str, str] = {}
     start_pts = bench_pts = 0.0
     for i in players:
-        for role in ALL_ROLES:
+        for role in y[i]:  # the roles actually modeled for this solve (see _active_roles)
             if pulp.value(y[i][role]) and pulp.value(y[i][role]) > 0.5:
                 row = pool.loc[i].to_dict()
                 row["lineup_role"] = role
@@ -206,8 +228,26 @@ def solve_exact_roster(
     n_auction_spots: int,
     keepers: pd.DataFrame | None = None,
     exclude: set[str] | None = None,
+    protected_but_unlisted: int = 0,
 ) -> ExactSolveResult:
-    """Lexicographic exact solve for keepers + auction filling active roster spots (config.ACTIVE_ROSTER_SIZE, 16)."""
+    """Lexicographic exact solve for keepers + auction filling active roster spots (config.ACTIVE_ROSTER_SIZE, 16).
+
+    `protected_but_unlisted`: V3.1 REPAIR 1/2 -- the number of this
+    team's official protected roster slots that are occupied by players
+    who never appear in `keepers` and are never selectable from
+    `auction_candidates` (Sam's Mendoza/Bond college-rights holds, or
+    Brad/Reid's one unidentified protected slot). The solver still only
+    ever optimizes over `keepers` (fixed) + `n_auction_spots` (selected)
+    -- this parameter exists ONLY so the internal self-check below
+    compares against the team's TRUE total occupancy target
+    (keepers + protected_but_unlisted + n_auction_spots) instead of
+    blindly assuming every team's protected occupancy is fully named.
+    Before this fix, Sam's call site passed n_auction_spots=10 (derived
+    from len(roster) instead of the canonical open_slots property)
+    specifically because 6 keepers + 10 = 16 satisfied this check with
+    the WRONG numbers -- the check's own success is why the bug went
+    undetected. It is correctly caught now: 6 keepers + 8 real openings
+    + 2 protected_but_unlisted = 16, the true total."""
     exclude = exclude or set()
     keepers = keepers if keepers is not None else pd.DataFrame()
     warnings: list[str] = []
@@ -223,13 +263,15 @@ def solve_exact_roster(
         return ExactSolveResult(pd.DataFrame(), budget, 0.0, "INFEASIBLE", 0, 0, {}, ["empty_pool"])
 
     n_keepers = int(keepers["player"].nunique()) if not keepers.empty else 0
-    if n_keepers + n_auction_spots != config.AUCTION_PURCHASE_REQUIREMENT:
+    total_occupancy = n_keepers + n_auction_spots + protected_but_unlisted
+    if total_occupancy != config.AUCTION_PURCHASE_REQUIREMENT:
         warnings.append(
-            f"keeper+auction={n_keepers}+{n_auction_spots} != {config.AUCTION_PURCHASE_REQUIREMENT}"
+            f"keeper+auction+protected_but_unlisted={n_keepers}+{n_auction_spots}+{protected_but_unlisted} "
+            f"={total_occupancy} != {config.AUCTION_PURCHASE_REQUIREMENT}"
         )
 
     players = list(pool.index)
-    prob1, y1, expr1 = _build_model(pool, budget, n_auction_spots, stage=1)
+    prob1, y1, expr1 = _build_model(pool, budget, n_auction_spots, stage=1, protected_but_unlisted=protected_but_unlisted)
     status1 = _solve_stage(prob1)
     if status1 == "INFEASIBLE":
         return ExactSolveResult(pd.DataFrame(), budget, 0.0, "INFEASIBLE", 0, 0, {}, ["stage1_infeasible"])
@@ -237,12 +279,13 @@ def solve_exact_roster(
         return ExactSolveResult(pd.DataFrame(), budget, 0.0, "ERROR", 0, 0, {}, ["solver_error"])
 
     fix_start = pulp.value(expr1["start"])
-    prob2, y2, expr2 = _build_model(pool, budget, n_auction_spots, fix_starting=fix_start, stage=2)
+    prob2, y2, expr2 = _build_model(pool, budget, n_auction_spots, fix_starting=fix_start, stage=2, protected_but_unlisted=protected_but_unlisted)
     _solve_stage(prob2)
     fix_bench = pulp.value(expr2["bench"]) if pulp.LpStatus[prob2.status] == "Optimal" else 0.0
 
     prob3, y3, _ = _build_model(
         pool, budget, n_auction_spots, fix_starting=fix_start, fix_bench=fix_bench, stage=3,
+        protected_but_unlisted=protected_but_unlisted,
     )
     status3 = _solve_stage(prob3)
     final_status = status3 if status3 in {"OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL"} else status1

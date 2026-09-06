@@ -33,7 +33,13 @@ def compute_live_roster_paths(
     Returns {style: {"status", "players": [...], "starting_points", "spend", "unused_cash"}}.
     """
     hard_maxes = hard_maxes or {}
-    n_auction_spots = max(0, 16 - len(sam_team.roster))
+    # V3.1 REPAIR 2: was `max(0, 16 - len(sam_team.roster))`, which
+    # repeats REPAIR 1's exact same bug -- sam_team.roster never
+    # contains college-rights holds (Mendoza/Bond occupy 2 real slots
+    # via sam_team.college_rights_count, invisible to len(roster)), so
+    # this produced 10 openings instead of the official 8. Use the
+    # canonical TeamState.open_slots property instead of re-deriving it.
+    n_auction_spots = sam_team.open_slots
     keepers_df = _keepers_df(sam_team.roster)
     results = {}
 
@@ -68,6 +74,7 @@ def compute_live_roster_paths(
             continue
         result = exact_roster_solver.solve_exact_roster(
             pool_df, budget=sam_team.budget_remaining, n_auction_spots=n_auction_spots, keepers=keepers_df,
+            protected_but_unlisted=getattr(sam_team, "college_rights_count", 0),
         )
         if result.status not in ("OPTIMAL", "FEASIBLE_NOT_PROVEN_OPTIMAL"):
             results[style] = {"status": result.status, "players": [], "starting_points": None,
