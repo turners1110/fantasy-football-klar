@@ -208,7 +208,22 @@ function renderBoard() {
     return true;
   });
 
+  // Stop - Expected is derived (recommended_stop minus live_expected_price),
+  // not a stored field on the row -- computed here rather than persisted,
+  // same value shown in the column itself. Rows with no expected price
+  // sort last regardless of direction, since there's nothing to compare.
+  const stopMinusExpectedOf = r => (r.live_expected_price != null ? r.recommended_stop - r.live_expected_price : null);
+
   if (sortKey === "player") rows.sort((a, b) => a.player.localeCompare(b.player));
+  else if (sortKey === "stop_minus_expected") {
+    rows.sort((a, b) => {
+      const av = stopMinusExpectedOf(a), bv = stopMinusExpectedOf(b);
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return bv - av;
+    });
+  }
   else rows.sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0));
 
   // populate recommendation filter options once
@@ -777,17 +792,20 @@ function renderPracticeDraftPending(pending) {
   document.getElementById("pd-legal-max").textContent = pending.sam_legal_max_bid;
 }
 
-document.getElementById("pd-start").addEventListener("click", async () => {
+async function pdStartNewDraft() {
   const newSessionId = "practice-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
   const seed = parseInt(document.getElementById("pd-seed").value) || 909001;
-  try {
-    const r = await api("/practice-draft/start", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session_id: newSessionId, seed }) });
-    pdSessionId = newSessionId;
-    try { localStorage.setItem("sunday_practice_draft_session_id", pdSessionId); } catch (e) {}
-    document.getElementById("pd-status").textContent = "Practice draft started (session " + pdSessionId + ").";
-    renderPracticeDraftPending(r.pending);
-  } catch (e) { toastError(e, "Start practice draft"); }
+  const r = await api("/practice-draft/start", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: newSessionId, seed }) });
+  pdSessionId = newSessionId;
+  try { localStorage.setItem("sunday_practice_draft_session_id", pdSessionId); } catch (e) {}
+  document.getElementById("pd-status").textContent = "Practice draft started (session " + pdSessionId + ").";
+  renderPracticeDraftPending(r.pending);
+  return r;
+}
+
+document.getElementById("pd-start").addEventListener("click", async () => {
+  try { await pdStartNewDraft(); } catch (e) { toastError(e, "Start practice draft"); }
 });
 
 document.getElementById("pd-pass-btn").addEventListener("click", async () => {
@@ -866,8 +884,22 @@ async function pdAutoSimStep() {
 }
 
 document.getElementById("pd-autosim-btn").addEventListener("click", async () => {
-  if (!pdSessionId) { toast("Start a practice draft first."); return; }
   if (pdAutoSimRunning) return;
+  // If there's no active nomination showing -- no session yet, a
+  // completed draft, or a stale session left over from before a server
+  // restart -- start a fresh draft automatically instead of silently
+  // doing nothing. This was a real bug: clicking Auto-Simulate with no
+  // visible nomination used to exit instantly with zero bids/passes and
+  // no visible explanation.
+  if (document.getElementById("pd-nomination").classList.contains("hidden")) {
+    try {
+      document.getElementById("pd-autosim-status").textContent = "No active nomination -- starting a new practice draft first...";
+      await pdStartNewDraft();
+    } catch (e) {
+      toastError(e, "Auto-Simulate: start practice draft");
+      return;
+    }
+  }
   pdAutoSimRunning = true;
   document.getElementById("pd-autosim-btn").classList.add("hidden");
   document.getElementById("pd-autosim-stop-btn").classList.remove("hidden");
