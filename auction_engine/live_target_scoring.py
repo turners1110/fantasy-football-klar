@@ -52,8 +52,8 @@ def _role_probability_score(expected_role: str) -> float:
 
 def compute_target_score(
     player: str, position: str,
-    marginal_value: float, expected_role: str,
-    live_expected_price: float, exact_or_approx_ceiling: float,
+    team_specific_value_dollars: float, expected_role: str,
+    expected_market_price_dollars: float, exact_or_approximate_ceiling_dollars: float,
     hard_max: float | None,
     remaining_alternatives_count: int,
     is_last_legal_alternative: bool,
@@ -61,14 +61,21 @@ def compute_target_score(
     position_need_score: float,  # 0-1, raw (uncapped) need signal
     portfolio_paths_broken_if_missed: int,
 ) -> TargetScore:
-    ceiling = exact_or_approx_ceiling if exact_or_approx_ceiling else 1.0
-    expected_surplus = marginal_value - live_expected_price
-    starting_lineup_gain = marginal_value if expected_role in ("required starter", "FLEX starter") else 0.0
+    """V3.1 CLEANUP D: parameter names are explicit about units (dollars
+    vs points) -- this function is always called with a DOLLAR value in
+    team_specific_value_dollars (the governed team-specific ceiling),
+    never raw fantasy points; a caller that accidentally passes points
+    here is now much harder to miss in review, since the parameter name
+    itself asserts the unit. Do not rename these back to unit-ambiguous
+    names like the old `marginal_value`."""
+    ceiling = exact_or_approximate_ceiling_dollars if exact_or_approximate_ceiling_dollars else 1.0
+    expected_surplus_dollars = team_specific_value_dollars - expected_market_price_dollars
+    starting_lineup_gain = team_specific_value_dollars if expected_role in ("required starter", "FLEX starter") else 0.0
     role_prob = _role_probability_score(expected_role)
     bench_probability = 1.0 - role_prob if expected_role != "required starter" else 0.0
 
-    # price evidence: how much cheaper the live expected price is than the ceiling
-    price_evidence = max(-1.0, min(1.0, (ceiling - live_expected_price) / ceiling)) if ceiling > 0 else 0.0
+    # price evidence: how much cheaper the expected market price is than the ceiling
+    price_evidence = max(-1.0, min(1.0, (ceiling - expected_market_price_dollars) / ceiling)) if ceiling > 0 else 0.0
 
     scarcity_score = 1.0 if is_last_legal_alternative else max(0.0, 1.0 - 0.15 * remaining_alternatives_count)
     tier_cliff_bonus = 0.3 if is_last_legal_alternative else 0.0
@@ -87,7 +94,7 @@ def compute_target_score(
     # empty-slot-bias bug this scoring function exists to fix.
     ABSOLUTE_VALUE_SCALE = 150.0
     quality_component = (
-        0.40 * max(0.0, min(1.0, expected_surplus / ABSOLUTE_VALUE_SCALE))
+        0.40 * max(0.0, min(1.0, expected_surplus_dollars / ABSOLUTE_VALUE_SCALE))
         + 0.15 * role_prob
         + 0.15 * max(0.0, price_evidence)
         + 0.10 * scarcity_score
@@ -97,7 +104,7 @@ def compute_target_score(
                          + tier_cliff_bonus + portfolio_risk_penalty, 4)
 
     hard_max_val = hard_max if hard_max is not None else ceiling
-    if live_expected_price > hard_max_val:
+    if expected_market_price_dollars > hard_max_val:
         rec = "PASS_ABOVE_LIMIT"
     elif expected_role == "bench depth" and not is_last_legal_alternative:
         rec = "BENCH_DEPTH_ONLY"
@@ -105,11 +112,11 @@ def compute_target_score(
         rec = "TIER_CLIFF"
     elif raw_need > 0.7 and expected_role != "bench depth":
         rec = "STARTER_NEED"
-    elif price_evidence > 0.25 and expected_surplus > 0:
+    elif price_evidence > 0.25 and expected_surplus_dollars > 0:
         rec = "BUY_AT_DISCOUNT"
-    elif expected_surplus > ceiling * 0.3:
+    elif expected_surplus_dollars > ceiling * 0.3:
         rec = "PRIORITY_VALUE"
-    elif expected_surplus >= 0:
+    elif expected_surplus_dollars >= 0:
         rec = "FAIR_PRICE"
     elif ceiling <= 2:
         rec = "INSUFFICIENT_EVIDENCE"
@@ -118,8 +125,8 @@ def compute_target_score(
 
     return TargetScore(
         player=player, position=position, total_score=total_score, recommendation_class=rec,
-        expected_surplus_at_price=round(expected_surplus, 2), starting_lineup_gain=round(starting_lineup_gain, 2),
-        team_specific_value=round(marginal_value, 2), role_probability_score=round(role_prob, 3),
+        expected_surplus_at_price=round(expected_surplus_dollars, 2), starting_lineup_gain=round(starting_lineup_gain, 2),
+        team_specific_value=round(team_specific_value_dollars, 2), role_probability_score=round(role_prob, 3),
         scarcity_score=round(scarcity_score, 3), tier_cliff_bonus=tier_cliff_bonus,
         remaining_alternatives_count=remaining_alternatives_count, price_confidence=round(price_confidence, 3),
         position_need_score=round(capped_need_contribution, 4), price_evidence_score=round(price_evidence, 3),

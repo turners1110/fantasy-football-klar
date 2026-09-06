@@ -220,8 +220,8 @@ def main():
         rows = compute_live_sam_values(cli.store.state.teams["Sam"].roster, pool)
         r = rows[0]
         s = compute_target_score(
-            player=r.player, position=r.position, marginal_value=r.marginal_value, expected_role=r.expected_role,
-            live_expected_price=max(1.0, pool[tracked_rb]["base_value"]), exact_or_approx_ceiling=max(1.0, r.marginal_value),
+            player=r.player, position=r.position, team_specific_value_dollars=r.marginal_value, expected_role=r.expected_role,
+            expected_market_price_dollars=max(1.0, pool[tracked_rb]["base_value"]), exact_or_approximate_ceiling_dollars=max(1.0, r.marginal_value),
             hard_max=None, remaining_alternatives_count=10, is_last_legal_alternative=False,
             price_confidence=0.5, position_need_score=0.0, portfolio_paths_broken_if_missed=0,
         )

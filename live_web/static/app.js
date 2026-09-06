@@ -123,7 +123,11 @@ async function loadTeamDetail(teamId) {
   const saleRows = t.sale_history.map(s => `${s.player} ($${s.price.toFixed(0)})`).join(", ") || "none yet";
   const rightsNote = t.college_rights_holdings.length
     ? `<br><i>College-rights protected players occupy roster capacity but remain outside the veteran auction pool and do not consume veteran auction cash: ${t.college_rights_holdings.join(", ")}</i>` : "";
+  const b = t.protected_breakdown || {};
+  const unnamedNote = b.unnamed_protected_count > 0
+    ? ` <b style="color:#a05a00">(${b.unnamed_protected_count} protected slot identity unknown -- see warning banner)</b>` : "";
   div.innerHTML = `<h4>${teamId}</h4>Budget: $${t.budget_remaining.toFixed(2)} | Open slots: ${t.open_slots} | Legal max: $${t.legal_max_bid.toFixed(2)}<br>
+    <b>Protected breakdown:</b> veteran roster ${b.veteran_roster_count} + college-rights ${b.college_rights_count} + unnamed protected ${b.unnamed_protected_count} = ${b.total_occupied_count} occupied, ${b.open_auction_slots} open auction slots${unnamedNote}<br>
     <b>Roster (${t.roster_count}):</b><br>${rosterRows}<br><b>Auction purchases:</b> ${saleRows}${rightsNote}`;
 }
 document.getElementById("refresh-league").addEventListener("click", loadLeague);
