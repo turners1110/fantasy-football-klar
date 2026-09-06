@@ -523,3 +523,97 @@ def test_named_overrides_excluded_from_pool_search_and_sale(cli):
         assert protected_hits[0]["owner"] == team
         result = cli.cmd_sale(name, "Brandon", "5")
         assert result.startswith("REFUSED:")
+
+
+# ---------------------------------------------------------------------------
+# SAFETY-CRITICAL FIX: undo-oscillation bug in AuctionStateStore.undo_last().
+#
+# Reproduced directly before this fix: after 5 sales, 3 consecutive
+# cmd_undo() calls walked sequence_number 5 -> 4 -> 5 -> 5 (oscillating,
+# then stuck) instead of 5 -> 4 -> 3 -> 2, and the second undo call
+# actually RE-ADDED the just-removed sale rather than removing an
+# earlier one.
+#
+# Root cause: undo_last() took self.events[-1] unconditionally as "the
+# event to undo." That's only correct for the FIRST call -- after that,
+# self.events[-1] is the EVENT_UNDONE marker the previous undo just
+# appended, not a real mutating event. Since replay() unconditionally
+# skips every EVENT_UNDONE event by TYPE (independent of
+# skip_event_ids), passing that marker's own event_id in skip_event_ids
+# had zero effect, while the previously-undone real event was no longer
+# in the skip set at all -- so it silently came back.
+#
+# Fix: undo_last() now tracks the full set of already-undone real-event
+# ids, walks backward to find the most recent event that is neither an
+# EVENT_UNDONE marker nor already undone, and skips the UNION of every
+# previously-undone id plus the new one on replay -- so N consecutive
+# undo calls always walk back exactly N real events.
+# ---------------------------------------------------------------------------
+
+def _sell_n_players(cli, n, team="Brandon", start_price=5):
+    pool = list(cli.store.state.available_pool.keys())[:n]
+    for i, p in enumerate(pool):
+        cli.cmd_sale(p, team, str(start_price + i), confirmed=True)
+    return pool
+
+
+def test_undo_n_consecutive_calls_walk_back_n_steps_monotonically(cli):
+    sales = _sell_n_players(cli, 5)
+    seq_after_sales = cli.store.state.sequence_number
+    assert seq_after_sales == 5
+    assert set(sales) <= set(cli.store.state.sold_players.keys())
+
+    seen_sequences = [seq_after_sales]
+    for _ in range(4):
+        cli.cmd_undo()
+        seen_sequences.append(cli.store.state.sequence_number)
+
+    # Must decrease by exactly 1 each time -- never fewer, never
+    # oscillating back up.
+    assert seen_sequences == [5, 4, 3, 2, 1], f"undo sequence oscillated or stalled: {seen_sequences}"
+    # All 5 real sales must now be fully reverted after 5 undos total.
+    cli.cmd_undo()
+    assert cli.store.state.sold_players == {}
+    assert cli.store.state.sequence_number == 0
+    # A 6th undo (nothing left) must be a clean no-op, not an error or
+    # a state change.
+    result = cli.cmd_undo()
+    assert "nothing to undo" in result.lower()
+    assert cli.store.state.sequence_number == 0
+
+
+def test_undo_second_call_does_not_resurrect_the_first_undone_sale(cli):
+    """Direct regression for the exact observed symptom: undo #2 used
+    to bring back the player undo #1 had just removed, instead of
+    removing an earlier sale."""
+    sales = _sell_n_players(cli, 3)
+    last_sale, middle_sale, first_sale = sales[2], sales[1], sales[0]
+
+    cli.cmd_undo()
+    assert last_sale not in cli.store.state.sold_players
+    assert middle_sale in cli.store.state.sold_players
+
+    cli.cmd_undo()
+    assert last_sale not in cli.store.state.sold_players, "undo #2 resurrected the sale undo #1 just removed"
+    assert middle_sale not in cli.store.state.sold_players
+    assert first_sale in cli.store.state.sold_players
+
+
+def test_undo_fix_applies_identically_to_practice_draft_session():
+    """PracticeDraftSession.undo() delegates straight to
+    AuctionCLI.cmd_undo() -> AuctionStateStore.undo_last(), so the
+    production fix covers the practice path with no separate code
+    change -- verified directly against a real PracticeDraftSession's
+    own internal CLI/store, not just asserted from the shared code
+    path."""
+    from auction_engine.practice_draft_session import PracticeDraftSession
+    sess = PracticeDraftSession(session_id="test-undo-oscillation", seed=909001)
+    sales = _sell_n_players(sess.cli, 4)
+    seq_after_sales = sess.cli.store.state.sequence_number
+    assert seq_after_sales == 4
+
+    seen_sequences = [seq_after_sales]
+    for _ in range(3):
+        sess.undo()
+        seen_sequences.append(sess.cli.store.state.sequence_number)
+    assert seen_sequences == [4, 3, 2, 1], f"practice-mode undo sequence oscillated or stalled: {seen_sequences}"

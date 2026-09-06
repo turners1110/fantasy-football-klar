@@ -38,9 +38,41 @@ class AuctionStateStore:
         return event
 
     def undo_last(self) -> AuctionState:
-        if not self.events:
+        # ROOT-CAUSE FIX (undo-oscillation bug): this used to take
+        # self.events[-1] unconditionally as "the last event to undo."
+        # That is only correct for the FIRST undo call. After that,
+        # self.events[-1] is the EVENT_UNDONE marker just appended by the
+        # previous undo, not a real mutating event -- so a second undo
+        # would "undo" that marker instead of walking one step further
+        # back. Since replay() unconditionally skips every EVENT_UNDONE
+        # event by type (see replay() below), skipping the marker's own
+        # event_id in skip_event_ids had NO effect on the replayed state,
+        # while the previously-undone real event was no longer in the
+        # skip set at all -- so it silently came BACK. Net effect,
+        # reproduced directly: 5 sales -> undo x3 walked sequence_number
+        # 5 -> 4 -> 5 -> 5 (oscillating and then stuck) instead of
+        # 5 -> 4 -> 3 -> 2, and the second undo actually re-added the
+        # just-removed sale rather than removing an earlier one.
+        #
+        # Fix: track the full set of already-undone real-event ids, and
+        # find the most recent event that is (a) not itself an
+        # EVENT_UNDONE marker and (b) not already undone. Skip the
+        # UNION of all previously-undone ids plus this new one, so N
+        # consecutive undo calls always walk back exactly N real events,
+        # never fewer and never oscillating.
+        already_undone_ids = {
+            e.payload.get("undone_event_id") for e in self.events if e.event_type == "EVENT_UNDONE"
+        }
+        undone = None
+        for event in reversed(self.events):
+            if event.event_type == "EVENT_UNDONE":
+                continue
+            if event.event_id in already_undone_ids:
+                continue
+            undone = event
+            break
+        if undone is None:
             raise ValueError("no events to undo")
-        undone = self.events[-1]
         undo_event = AuctionEvent(
             event_type="EVENT_UNDONE", sequence_number=self._next_sequence(),
             payload={"undone_event_id": undone.event_id, "undone_event_type": undone.event_type},
@@ -48,7 +80,8 @@ class AuctionStateStore:
         self.events.append(undo_event)
         if self.log_path is not None:
             self._persist_event(undo_event)
-        self.state = replay(self.initial_state, self.events, skip_event_ids={undone.event_id})
+        skip_event_ids = already_undone_ids | {undone.event_id}
+        self.state = replay(self.initial_state, self.events, skip_event_ids=skip_event_ids)
         return self.state
 
     def correct_sale(self, player_id: str, display_name: str, position: str,
