@@ -106,13 +106,54 @@ class AuctionCLI:
                 self.store = AuctionStateStore(self.initial_state, log_path=self.log_path)
         else:
             self.store = AuctionStateStore(self.initial_state, log_path=self.log_path)
-        self.market_state = MarketAdjustmentState()
+        # GATE D FIX (V3 repair, Part 4 recovery): rebuild market
+        # adjustment state from the REAL sold-players history whenever
+        # we resume from an existing log -- previously this was always
+        # constructed empty on every launch, meaning a resumed session
+        # showed zero market-learning signal even though real sales had
+        # already happened (a fresh-draft market prior after a crash
+        # mid-draft, silently wrong). Uses the same
+        # MarketAdjustmentState.rebuild_from_sales the correction path
+        # already relies on ("correcting a sale price should rebuild all
+        # adjustments from the event log") -- one rebuild mechanism, not
+        # a second one invented for startup.
+        self.market_state = self._rebuild_market_state_from_sales()
         # exact-solve cache: keyed by (state_sequence_number, player, test_price) -- see
         # cmd_exact / _invalidate_exact_cache. Never shown as current if the state
         # has moved on (Stage 2 STALE_EXACT_RESULT requirement).
         self._exact_cache: dict = {}
         self._exact_cache_sequence: int = self.store.state.sequence_number
         self._static_hard_max = self._load_static_hard_max()
+
+    def _rebuild_market_state_from_sales(self) -> "MarketAdjustmentState":
+        """GATE D (V3 repair, Part 4): reconstructs every real sale's
+        market observation from self.store.state.sold_players (already
+        correctly resumed/replayed by AuctionStateStore.recover before
+        this runs), so a resumed session's market-learning signal
+        matches what it would have been had the process never
+        restarted. Mirrors exactly the (position, tier, actual_price,
+        expected_price) shape cmd_sale's own live add_observation call
+        uses -- expected_price is each player's static pre-draft
+        base_value (the same convention used everywhere else in this
+        file), tier is the same hardcoded "t1" placeholder used
+        everywhere else (a pre-existing, disclosed simplification, not
+        something this fix changes)."""
+        sales = []
+        for player_id, record in self.store.state.sold_players.items():
+            position = None
+            for t in self.store.state.teams.values():
+                for p in t.roster:
+                    if p["player_id"] == player_id:
+                        position = p["position"]
+                        break
+                if position:
+                    break
+            expected_price = self.players[player_id].base_value if player_id in self.players else record["sale_price"]
+            sales.append({
+                "position": position or "UNKNOWN", "tier": "t1",
+                "actual_price": record["sale_price"], "expected_price": max(1.0, expected_price),
+            })
+        return MarketAdjustmentState.rebuild_from_sales(sales)
 
     def _load_static_hard_max(self) -> dict:
         """Loads Phase 3G's per-player 'Safety-adjusted hard maximum'
@@ -608,6 +649,10 @@ class AuctionCLI:
         except ValueError as e:
             return f"Nothing to undo: {e}"
         self._invalidate_exact_cache()
+        # GATE D FIX (V3 repair, Part 4): same rebuild as cmd_correct --
+        # undoing a sale must remove its market-adjustment observation
+        # too, not leave it silently baked into the market prior forever.
+        self.market_state = self._rebuild_market_state_from_sales()
         return "Undo complete.\n\n" + self.cmd_status()
 
     def _invalidate_exact_cache(self):
@@ -1011,6 +1056,12 @@ class AuctionCLI:
         except IllegalEventError as e:
             return f"REFUSED: {e}"
         self._invalidate_exact_cache()
+        # GATE D FIX (V3 repair, Part 4): "correcting a sale price should
+        # rebuild all adjustments from the event log" -- market_state
+        # was never actually rebuilt after a correction before this fix,
+        # meaning a corrected price silently kept polluting the market
+        # prior with its OLD (wrong) observation forever.
+        self.market_state = self._rebuild_market_state_from_sales()
         return f"Corrected: {player} now sold to {team} for ${price_f:.0f}.\n\n" + self.cmd_status()
 
     def cmd_market(self) -> str:
