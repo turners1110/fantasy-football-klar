@@ -489,6 +489,19 @@ async function loadTargets() {
                               t.recommendation_class.includes("PASS") ? "PASS" : "");
     const ceiling = t.exact_ceiling_dollars != null ? `$${t.exact_ceiling_dollars.toFixed(0)} (exact)` :
                     t.approximate_ceiling_dollars != null ? `$${t.approximate_ceiling_dollars.toFixed(0)} (approx.)` : "--";
+    // Stop - Expected: positive means Sam's own ceiling exceeds what the
+    // room is expected to pay -- a signal this player is likely
+    // acquirable within his stop, not a claim the player is "cheap" in
+    // any absolute sense. Only meaningful when an expected market price
+    // actually exists (Monte Carlo/live-adjustment data), so left blank
+    // rather than a misleading number when that input is null.
+    let stopMinusExpected = "--";
+    let stopMinusExpectedClass = "";
+    if (t.expected_market_price_dollars != null) {
+      const diff = t.recommended_stop_dollars - t.expected_market_price_dollars;
+      stopMinusExpected = (diff >= 0 ? "+$" : "-$") + Math.abs(diff).toFixed(0);
+      stopMinusExpectedClass = diff >= 0 ? "stop-above-expected" : "stop-below-expected";
+    }
     tr.innerHTML = `<td>${t.player}</td><td>${t.position}</td><td>${t.tier != null ? t.tier : "--"}</td>
       <td>${t.projected_points != null ? t.projected_points.toFixed(1) : "--"}</td>
       <td>${t.marginal_lineup_points != null ? t.marginal_lineup_points.toFixed(1) : "--"}</td>
@@ -496,6 +509,7 @@ async function loadTargets() {
       <td>${t.expected_market_price_dollars != null ? "$" + t.expected_market_price_dollars.toFixed(0) : "--"}</td>
       <td>${ceiling}</td>
       <td><b>$${t.recommended_stop_dollars.toFixed(0)}</b></td>
+      <td class="${stopMinusExpectedClass}">${stopMinusExpected}</td>
       <td>$${t.surplus_or_deficit_dollars.toFixed(1)}</td>
       <td>${t.confidence}</td>
       <td>${t.total_score.toFixed(3)}</td>
